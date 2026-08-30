@@ -19,7 +19,8 @@ def scenario_paths() -> list[Path]:
 
 @pytest.mark.parametrize("path", scenario_paths())
 def test_all_declared_scenarios_validate(path: Path) -> None:
-    load_scenario(path)
+    scenario = load_scenario(path)
+    assert scenario.versions.oai == "2026.w35"
 
 
 def test_schema_rejects_undeclared_fields() -> None:

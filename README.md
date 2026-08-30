@@ -8,8 +8,9 @@ The Linux deployment layout is fixed for the first acceptance environment:
 
 ```text
 /home/yyx/6gcore/
-├── openairinterface5g/        # OAI, tag v2.4.0
-├── free5gc/                   # free5gc-compose, tag v4.2.3
+├── openairinterface5g/        # OAI, tag 2026.w35
+├── free5gc/                   # free5GC core source repository
+├── free5gc-compose/           # deployment/config repository, tag v4.1.0
 └── oai-free5gc-testbed/       # this repository
 ```
 
@@ -18,18 +19,22 @@ container names, networks, DNNs, or targets.
 
 ## First Linux setup
 
-Ubuntu 22.04 x86_64 is the acceptance host. Prepare the two pinned upstream checkouts if they
-are not already present, then copy this repository to the third path:
+Ubuntu 22.04 x86_64 is the acceptance host. Prepare the pinned upstream checkouts if they are
+not already present, then copy this repository to its sibling path:
 
 ```bash
 mkdir -p /home/yyx/6gcore
-git clone --branch v2.4.0 --depth 1 \
+git clone --branch 2026.w35 --depth 1 \
   https://gitlab.eurecom.fr/oai/openairinterface5g.git \
   /home/yyx/6gcore/openairinterface5g
-git clone --branch v4.2.3 --depth 1 \
+git clone --branch v4.1.0 --depth 1 \
   https://github.com/free5gc/free5gc-compose.git \
-  /home/yyx/6gcore/free5gc
+  /home/yyx/6gcore/free5gc-compose
 ```
+
+`free5gc` and `free5gc-compose` are different repositories. The testbed reads configuration
+only from `/home/yyx/6gcore/free5gc-compose`; the sibling `/home/yyx/6gcore/free5gc` checkout
+is retained as the user's free5GC core source tree and is not version-checked by the testbed.
 
 From the testbed repository, run:
 

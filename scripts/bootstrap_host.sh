@@ -8,7 +8,7 @@ test "$(pwd -P)" = /home/yyx/6gcore/oai-free5gc-testbed
 test "$ID" = ubuntu
 test "$VERSION_ID" = 22.04
 test -d /home/yyx/6gcore/openairinterface5g
-test -d /home/yyx/6gcore/free5gc
+test -d /home/yyx/6gcore/free5gc-compose
 
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl software-properties-common
@@ -27,10 +27,10 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker "$(id -un)"
 
-git -C /home/yyx/6gcore/openairinterface5g describe --tags --exact-match | grep -Fx v2.4.0
-git -C /home/yyx/6gcore/free5gc describe --tags --exact-match | grep -Fx v4.2.3
+git -C /home/yyx/6gcore/openairinterface5g describe --tags --exact-match | grep -Fx 2026.w35
+git -C /home/yyx/6gcore/free5gc-compose describe --tags --exact-match | grep -Fx v4.1.0
 test -z "$(git -C /home/yyx/6gcore/openairinterface5g status --porcelain)"
-test -z "$(git -C /home/yyx/6gcore/free5gc status --porcelain)"
+test -z "$(git -C /home/yyx/6gcore/free5gc-compose status --porcelain)"
 
 python3.12 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip

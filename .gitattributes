@@ -7,3 +7,4 @@
 *.json text eol=lf
 *.j2 text eol=lf
 *.md text eol=lf
+.env.example text eol=lf

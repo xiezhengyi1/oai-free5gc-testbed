@@ -2,8 +2,8 @@ schema_version: "1.0"
 scenario_id: single-ue-single-upf
 sources:
   oai: /home/yyx/6gcore/openairinterface5g
-  free5gc_compose: /home/yyx/6gcore/free5gc
-versions: {oai: v2.4.0, free5gc_compose: v4.2.3, gtp5g: v0.9.5}
+  free5gc_compose: /home/yyx/6gcore/free5gc-compose
+versions: {oai: "2026.w35", free5gc_compose: v4.1.0, gtp5g: v0.9.5}
 networks:
   sbi-net: {cidr: 172.30.0.0/24, bridge_name: tb-sbi}
   n2-net: {cidr: 172.31.0.0/24, bridge_name: tb-n2}
@@ -37,7 +37,6 @@ ran:
   numerology: 1
   bandwidth_rb: 106
   frequency_hz: 3619200000
-  ssb_arfcn: 516
   gnbs:
     - id: gnb-1
       container: oai-gnb-1

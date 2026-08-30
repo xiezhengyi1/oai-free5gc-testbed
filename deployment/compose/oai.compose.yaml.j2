@@ -1,7 +1,7 @@
 services:
 {% for gnb in scenario.ran.gnbs %}
   {{ gnb.container }}:
-    image: oaisoftwarealliance/oai-gnb:v2.4.0
+    image: oaisoftwarealliance/oai-gnb:2026.w35
     container_name: {{ gnb.container }}
     cap_drop: [ALL]
     cap_add: [SYS_NICE]
@@ -27,13 +27,13 @@ services:
 {% for ue in scenario.ues %}
 {% set serving_gnb = scenario.ran.gnbs | selectattr('id', 'equalto', ue.serving_gnb) | first %}
   {{ ue.container }}:
-    image: oaisoftwarealliance/oai-nr-ue:v2.4.0
+    image: oaisoftwarealliance/oai-nr-ue:2026.w35
     container_name: {{ ue.container }}
     cap_drop: [ALL]
     cap_add: [NET_ADMIN, NET_RAW, SYS_NICE]
     devices: ["/dev/net/tun:/dev/net/tun"]
     environment:
-      USE_ADDITIONAL_OPTIONS: "-E --sa --rfsim -r {{ scenario.ran.bandwidth_rb }} --numerology {{ scenario.ran.numerology }} --band {{ scenario.ran.band }} -C {{ scenario.ran.frequency_hz }} --ssb {{ scenario.ran.ssb_arfcn }} --rfsimulator.serveraddr {{ serving_gnb.container }} --log_config.global_log_options level,nocolor,time"
+      USE_ADDITIONAL_OPTIONS: "-E --rfsim -r {{ scenario.ran.bandwidth_rb }} --numerology {{ scenario.ran.numerology }} --band {{ scenario.ran.band }} -C {{ scenario.ran.frequency_hz }} --rfsimulator.[0].serveraddr {{ serving_gnb.container }} --log_config.global_log_options level,nocolor,time"
     volumes: ["./oai-config/{{ ue.id }}.conf:/opt/oai-nr-ue/etc/nr-ue.conf:ro"]
     deploy:
       resources:

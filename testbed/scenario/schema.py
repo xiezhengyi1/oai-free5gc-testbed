@@ -36,8 +36,8 @@ class SourceRoots(StrictModel):
 
 
 class VersionSpec(StrictModel):
-    oai: Literal["v2.4.0"]
-    free5gc_compose: Literal["v4.2.3"]
+    oai: Literal["2026.w35"]
+    free5gc_compose: Literal["v4.1.0"]
     gtp5g: Literal["v0.9.5"]
 
 
@@ -148,7 +148,6 @@ class RanSpec(StrictModel):
     numerology: Literal[1]
     bandwidth_rb: Literal[106]
     frequency_hz: Literal[3619200000]
-    ssb_arfcn: Literal[516]
     gnbs: tuple[GnbSpec, ...] = Field(min_length=1)
 
 

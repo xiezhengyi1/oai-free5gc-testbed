@@ -16,7 +16,7 @@ docker build -t oai-free5gc-testbed/link-emulator:0.1.0 \
 
 docker pull mongo:4.4
 for nf in amf ausf chf nef nrf nssf pcf smf udm udr upf webui; do
-  docker pull "free5gc/$nf:v4.2.3"
+  docker pull "free5gc/$nf:v4.1.0"
 done
 docker pull prom/prometheus:v3.12.0
 docker pull gcr.io/cadvisor/cadvisor:v0.57.0

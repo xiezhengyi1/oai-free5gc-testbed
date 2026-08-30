@@ -107,13 +107,15 @@ RUs = ({
   eNB_instances = [0];
   clock_src = "internal";
 });
-rfsimulator = {
-  serveraddr = "server";
-  serverport = 4043;
-  options = ();
-  modelname = "AWGN";
-  IQfile = "/tmp/rfsimulator.iqs";
-};
+rfsimulator = (
+  {
+    serveraddr = "server";
+    serverport = 4043;
+    options = ();
+    modelname = "AWGN";
+    IQfile = "/tmp/rfsimulator.iqs";
+  }
+);
 security = {
   ciphering_algorithms = ("nea0");
   integrity_algorithms = ("nia2", "nia0");
@@ -130,4 +132,3 @@ log_config = {
   rrc_log_level = "info";
   ngap_log_level = "debug";
 };
-
