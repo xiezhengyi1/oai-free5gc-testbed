@@ -1,0 +1,81 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    container_name: prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports: ["9090:9090"]
+    networks: [monitoring-net, control-net]
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.57.0
+    container_name: cadvisor
+    privileged: true
+    devices: ["/dev/kmsg:/dev/kmsg"]
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks: [monitoring-net]
+  grafana:
+    image: grafana/grafana:13.1.0
+    container_name: grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../../../../deployment/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../../../deployment/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+    networks: [monitoring-net]
+  ran-exporter:
+    image: oai-free5gc-testbed/control:0.1.0
+    container_name: ran-exporter
+    command: ["python", "-m", "testbed.telemetry.ran_exporter"]
+    environment: {RUN_ID: {{ run_id }}, RUN_DIR: /run}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../:/run
+    networks: [monitoring-net, control-net]
+  session-tracker:
+    image: oai-free5gc-testbed/control:0.1.0
+    container_name: session-tracker
+    command: ["python", "-m", "testbed.telemetry.session_tracker"]
+    environment: {RUN_ID: {{ run_id }}, RUN_DIR: /run}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../:/run
+    networks: [monitoring-net, control-net]
+  snapshot-builder:
+    image: oai-free5gc-testbed/control:0.1.0
+    container_name: snapshot-builder
+    command: ["uvicorn", "testbed.telemetry.snapshot_builder:app", "--host", "0.0.0.0", "--port", "8081"]
+    environment:
+      RUN_ID: {{ run_id }}
+      RUN_DIR: /run
+      MULTIAGENTS_DATABASE_URL: ${MULTIAGENTS_DATABASE_URL:?MULTIAGENTS_DATABASE_URL is required}
+    volumes: ["../:/run"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["8081:8081"]
+    networks:
+      monitoring-net: {}
+      control-net: {gw_priority: 1}
+  action-gateway:
+    image: oai-free5gc-testbed/control:0.1.0
+    container_name: action-gateway
+    command: ["uvicorn", "testbed.gateway.api:app", "--host", "0.0.0.0", "--port", "8080"]
+    environment:
+      RUN_ID: {{ run_id }}
+      RUN_DIR: /run
+      ACTION_GATEWAY_API_KEYS: ${ACTION_GATEWAY_API_KEYS:?ACTION_GATEWAY_API_KEYS is required}
+      MULTIAGENTS_DATABASE_URL: ${MULTIAGENTS_DATABASE_URL:?MULTIAGENTS_DATABASE_URL is required}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../:/run
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["8080:8080"]
+    networks:
+      monitoring-net: {}
+      control-net: {gw_priority: 1}
+      sbi-net: {}

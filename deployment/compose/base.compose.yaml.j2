@@ -1,0 +1,54 @@
+name: {{ project_name }}
+services: {}
+networks:
+  sbi-net:
+    name: {{ project_name }}-sbi
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.sbi.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.sbi.cidr }}}]}
+  n2-net:
+    name: {{ project_name }}-n2
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.n2.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.n2.cidr }}}]}
+  n3-net:
+    name: {{ project_name }}-n3
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.n3.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.n3.cidr }}}]}
+  n4-net:
+    name: {{ project_name }}-n4
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.n4.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.n4.cidr }}}]}
+  edge-n6-net:
+    name: {{ project_name }}-edge-n6
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.edge_n6.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.edge_n6.cidr }}}]}
+  cloud-n6-net:
+    name: {{ project_name }}-cloud-n6
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.cloud_n6.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.cloud_n6.cidr }}}]}
+  cloud-app-net:
+    name: {{ project_name }}-cloud-app
+    driver: bridge
+    internal: true
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.cloud_app.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.cloud_app.cidr }}}]}
+  monitoring-net:
+    name: {{ project_name }}-monitoring
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.monitoring.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.monitoring.cidr }}}]}
+  control-net:
+    name: {{ project_name }}-control
+    driver: bridge
+    driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.control.bridge_name }}}
+    ipam: {config: [{subnet: {{ scenario.networks.control.cidr }}}]}
+volumes:
+  mongodb-data: {}
+  prometheus-data: {}
+  grafana-data: {}
+

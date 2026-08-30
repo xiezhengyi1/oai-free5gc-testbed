@@ -1,0 +1,36 @@
+services:
+{% for service in scenario.services %}
+  {{ service.container }}:
+    image: oai-free5gc-testbed/app:0.1.0
+    container_name: {{ service.container }}
+    cap_drop: [ALL]
+{% if service.network == 'cloud-app-net' %}    cap_add: [NET_ADMIN]
+{% endif %}    environment:
+      SERVICE_INSTANCE_ID: {{ service.id }}
+      HTTP_PORT: "{{ service.port }}"
+      IPERF_PORT: "5201"
+      UDP_PORT: "5202"
+{% if service.network == 'cloud-app-net' %}      RETURN_ROUTE_CIDR: {{ scenario.networks.cloud_n6.cidr }}
+      RETURN_ROUTE_GATEWAY: {{ scenario.links[0].app_side_ip }}
+{% endif %}    deploy:
+      resources:
+        limits: {cpus: "{{ service.resources.cpus }}", memory: "{{ service.resources.memory_mb }}M"}
+    networks:
+      {{ service.network }}: {ipv4_address: {{ service.ip }}}
+{% endfor %}
+{% for link in scenario.links %}
+  {{ link.container }}:
+    image: oai-free5gc-testbed/link-emulator:0.1.0
+    container_name: {{ link.container }}
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN]
+    sysctls: {net.ipv4.ip_forward: "1"}
+    environment:
+      DELAY_MS: "{{ link.delay_ms }}"
+      JITTER_MS: "{{ link.jitter_ms }}"
+      LOSS_RATE: "{{ link.loss_rate }}"
+      BANDWIDTH_MBPS: "{{ link.bandwidth_mbps }}"
+    networks:
+      cloud-n6-net: {interface_name: n6, ipv4_address: {{ link.n6_ip }}}
+      cloud-app-net: {interface_name: app, ipv4_address: {{ link.app_side_ip }}}
+{% endfor %}

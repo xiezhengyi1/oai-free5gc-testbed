@@ -1,0 +1,68 @@
+schema_version: "1.0"
+scenario_id: two-gnb-mobility
+sources: {oai: /home/yyx/6gcore/openairinterface5g, free5gc_compose: /home/yyx/6gcore/free5gc}
+versions: {oai: v2.4.0, free5gc_compose: v4.2.3, gtp5g: v0.9.5}
+networks:
+  sbi-net: {cidr: 172.30.0.0/24, bridge_name: tb-sbi}
+  n2-net: {cidr: 172.31.0.0/24, bridge_name: tb-n2}
+  n3-net: {cidr: 172.32.0.0/24, bridge_name: tb-n3}
+  n4-net: {cidr: 172.33.0.0/24, bridge_name: tb-n4}
+  edge-n6-net: {cidr: 172.34.0.0/24, bridge_name: tb-edge-n6}
+  cloud-n6-net: {cidr: 172.35.0.0/24, bridge_name: tb-cloud-n6}
+  cloud-app-net: {cidr: 172.38.0.0/24, bridge_name: tb-cloud-app}
+  monitoring-net: {cidr: 172.36.0.0/24, bridge_name: tb-monitor}
+  control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
+plmn: {mcc: "208", mnc: "93", tac: 1}
+slices: [{id: embb, sst: 1, sd: "010203"}]
+sites: [{id: edge-a, type: edge}]
+core:
+  amf: {sbi_ip: 172.30.0.3, n2_ip: 172.31.0.10}
+  smf: {sbi_ip: 172.30.0.4, n4_ip: 172.33.0.10}
+  upfs:
+    - {id: edge-upf, container: free5gc-upf-edge, site_id: edge-a, n3_ip: 172.32.0.30, n4_ip: 172.33.0.30, n6_ip: 172.34.0.30, dnn: mec, ue_pool: 10.60.0.0/24}
+ran:
+  mode: rfsim
+  band: 78
+  numerology: 1
+  bandwidth_rb: 106
+  frequency_hz: 3619200000
+  ssb_arfcn: 516
+  gnbs:
+    - id: gnb-1
+      container: oai-gnb-1
+      site_id: edge-a
+      n2_ip: 172.31.0.20
+      n3_ip: 172.32.0.20
+      cells: [{id: cell-1, pci: 1, position: {x: 0, y: 0, z: 10}}]
+    - id: gnb-2
+      container: oai-gnb-2
+      site_id: edge-a
+      n2_ip: 172.31.0.21
+      n3_ip: 172.32.0.21
+      cells: [{id: cell-2, pci: 2, position: {x: 500, y: 0, z: 10}}]
+ues:
+  - id: ue-1
+    container: oai-nrue-1
+    traffic_sidecar: traffic-sidecar-ue-1
+    supi: imsi-208930000000001
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-1
+    sessions: [{id: mec-session, dnn: mec, slice_id: embb}]
+services:
+  - {id: inference-edge, container: mec-app-edge, service_id: inference, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.100, port: 8080, resources: {cpus: 1, memory_mb: 1024}}
+links: []
+flows:
+  - {id: mobility-flow, ue_id: ue-1, session_id: mec-session, service_instance_id: inference-edge, protocol: udp, src_port: 41001, dst_port: 5202, rate_mbps: 20, packet_size_bytes: 1200, sla: {latency_ms: 25, jitter_ms: 5, loss_rate: 0.005, guaranteed_bandwidth_mbps: 15}}
+mobility:
+  - {at_seconds: 30, ue_id: ue-1, target_gnb: gnb-2, position: {x: 450, y: 0, z: 1.5}}
+resources:
+  containers:
+    free5gc-upf-edge: {cpus: 2, memory_mb: 1024}
+    oai-gnb-1: {cpus: 6, memory_mb: 8192}
+    oai-gnb-2: {cpus: 6, memory_mb: 8192}
+    oai-nrue-1: {cpus: 4, memory_mb: 4096}
+    mec-app-edge: {cpus: 1, memory_mb: 1024}
+observability: {scrape_interval_seconds: 1, snapshot_interval_seconds: 5, snapshot_window_seconds: 10, prometheus: true, cadvisor: true, grafana: true, traffic_exporter: true, ran_exporter: true}
+runtime: {startup_timeout_seconds: 300, readiness_poll_seconds: 2, action_timeout_seconds: 60}
+integrations: {multiagents_database_url_env: MULTIAGENTS_DATABASE_URL, action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS}

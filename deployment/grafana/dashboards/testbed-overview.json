@@ -1,0 +1,44 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Flow throughput (Mbps)",
+      "id": 1,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "testbed_flow_throughput_mbps", "legendFormat": "{{flow_id}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Flow RTT (ms)",
+      "id": 2,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "testbed_flow_ping_rtt_ms", "legendFormat": "{{flow_id}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container CPU (cores)",
+      "id": 3,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [{"expr": "rate(container_cpu_usage_seconds_total{name=~\".+\"}[1m])", "legendFormat": "{{name}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "RAN metrics",
+      "id": 4,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"expr": "testbed_ran_metric", "legendFormat": "{{gnb}} {{metric}}"}]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["OAI", "free5GC", "testbed"],
+  "templating": {"list": []},
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "OAI + free5GC Testbed",
+  "uid": "oai-free5gc-testbed",
+  "version": 1
+}
