@@ -16,7 +16,7 @@ networks:
   control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
 plmn: {mcc: "208", mnc: "93", tac: 1}
 slices:
-  - {id: embb, sst: 1, sd: "010203"}
+  - {id: embb, sst: 1, sd: "010203", initial_state: running, capacity: {total_bandwidth_ul_mbps: 40, total_bandwidth_dl_mbps: 40, guaranteed_bandwidth_ul_mbps: 30, guaranteed_bandwidth_dl_mbps: 30}}
 sites:
   - {id: edge-a, type: edge}
 core:
@@ -75,7 +75,8 @@ flows:
     dst_port: 5202
     rate_mbps: 20
     packet_size_bytes: 1200
-    sla: {latency_ms: 20, jitter_ms: 5, loss_rate: 0.001, guaranteed_bandwidth_mbps: 15}
+    sla: {latency_ms: 20, jitter_ms: 5, loss_rate: 0.001, bandwidth_ul_mbps: 20, bandwidth_dl_mbps: 20, guaranteed_bandwidth_ul_mbps: 15, guaranteed_bandwidth_dl_mbps: 15, priority: 1}
+    allocation: {allocated_bandwidth_ul_mbps: 20, allocated_bandwidth_dl_mbps: 20}
 mobility: []
 resources:
   containers:

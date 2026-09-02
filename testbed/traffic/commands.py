@@ -20,7 +20,8 @@ def traffic_command(profile: TrafficProfile) -> list[str]:
         "86400",
         "-i",
         "1",
-        "--json-stream",
+        "--format",
+        "m",
         "--forceflush",
     ]
     if profile.five_tuple.protocol == "tcp":

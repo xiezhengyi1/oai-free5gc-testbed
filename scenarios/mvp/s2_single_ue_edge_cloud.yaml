@@ -16,7 +16,7 @@ networks:
   control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
 plmn: {mcc: "208", mnc: "93", tac: 1}
 slices:
-  - {id: embb, sst: 1, sd: "010203"}
+  - {id: embb, sst: 1, sd: "010203", initial_state: running, capacity: {total_bandwidth_ul_mbps: 100, total_bandwidth_dl_mbps: 50, guaranteed_bandwidth_ul_mbps: 60, guaranteed_bandwidth_dl_mbps: 25}}
 sites:
   - {id: edge-a, type: edge}
   - {id: central-cloud, type: cloud}
@@ -57,9 +57,9 @@ services:
 links:
   - {id: cloud-backhaul, container: cloud-link-emulator, n6_ip: 172.35.0.90, app_side_ip: 172.38.0.90, delay_ms: 25, jitter_ms: 3, loss_rate: 0.001, bandwidth_mbps: 200}
 flows:
-  - {id: inference-edge-flow, ue_id: ue-1, session_id: mec-session, service_instance_id: inference-edge, protocol: udp, src_port: 41001, dst_port: 5202, rate_mbps: 20, packet_size_bytes: 1200, sla: {latency_ms: 20, jitter_ms: 5, loss_rate: 0.001, guaranteed_bandwidth_mbps: 15}}
-  - {id: inference-cloud-flow, ue_id: ue-1, session_id: cloud-session, service_instance_id: inference-cloud, protocol: tcp, src_port: 41002, dst_port: 5201, rate_mbps: 50, packet_size_bytes: 1200, sla: {latency_ms: 80, jitter_ms: 10, loss_rate: 0.005, guaranteed_bandwidth_mbps: 30}}
-  - {id: inference-http-flow, ue_id: ue-1, session_id: cloud-session, service_instance_id: inference-cloud, protocol: http, src_port: 41003, dst_port: 8080, rate_mbps: 5, packet_size_bytes: 1200, sla: {latency_ms: 80, jitter_ms: 10, loss_rate: 0.005, guaranteed_bandwidth_mbps: 2}}
+  - {id: inference-edge-flow, ue_id: ue-1, session_id: mec-session, service_instance_id: inference-edge, protocol: udp, src_port: 41001, dst_port: 5202, rate_mbps: 20, packet_size_bytes: 1200, sla: {latency_ms: 20, jitter_ms: 5, loss_rate: 0.001, bandwidth_ul_mbps: 20, bandwidth_dl_mbps: 20, guaranteed_bandwidth_ul_mbps: 15, guaranteed_bandwidth_dl_mbps: 15, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 20, allocated_bandwidth_dl_mbps: 20}}
+  - {id: inference-cloud-flow, ue_id: ue-1, session_id: cloud-session, service_instance_id: inference-cloud, protocol: tcp, src_port: 41002, dst_port: 5201, rate_mbps: 50, packet_size_bytes: 1200, sla: {latency_ms: 80, jitter_ms: 10, loss_rate: 0.005, bandwidth_ul_mbps: 50, bandwidth_dl_mbps: 2.5, guaranteed_bandwidth_ul_mbps: 30, guaranteed_bandwidth_dl_mbps: 1.5, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 50, allocated_bandwidth_dl_mbps: 2.5}}
+  - {id: inference-http-flow, ue_id: ue-1, session_id: cloud-session, service_instance_id: inference-cloud, protocol: http, src_port: 41003, dst_port: 8080, rate_mbps: 5, packet_size_bytes: 1200, sla: {latency_ms: 80, jitter_ms: 10, loss_rate: 0.005, bandwidth_ul_mbps: 0.25, bandwidth_dl_mbps: 5, guaranteed_bandwidth_ul_mbps: 0.1, guaranteed_bandwidth_dl_mbps: 2, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 0.25, allocated_bandwidth_dl_mbps: 5}}
 mobility: []
 resources:
   containers:

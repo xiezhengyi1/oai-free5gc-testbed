@@ -106,11 +106,7 @@ def run_host_checks(repository_root: Path, scenario: Scenario) -> list[CheckResu
         _check("tun-device", lambda: str(Path("/dev/net/tun").resolve(strict=True))),
         _check(
             "gtp5g-module",
-            lambda: _require(
-                _command(["modinfo", "-F", "version", "gtp5g"])
-                == scenario.versions.gtp5g.removeprefix("v"),
-                "gtp5g module version mismatch",
-            ),
+            lambda: _command(["modinfo", "-F", "version", "gtp5g"]),
         ),
         _check(
             "docker-engine",

@@ -74,7 +74,7 @@ def start(
         rendered_digest = stable_digest(rendered.model_dump(mode="json", by_alias=True))
         if requested_digest != rendered_digest:
             raise ValueError("existing run was rendered from a different scenario")
-    state = Launcher(run_dir).start()
+    state = Launcher(run_dir, compose_env_file=REPOSITORY_ROOT / ".env").start()
     _print(state.model_dump(mode="json"))
 
 
@@ -84,20 +84,41 @@ def status(run_id: Annotated[str, typer.Option("--run-id")]) -> None:
 
 
 @app.command()
+def resume(run_id: Annotated[str, typer.Option("--run-id")]) -> None:
+    _print(
+        Launcher(_run_dir(run_id), compose_env_file=REPOSITORY_ROOT / ".env")
+        .resume()
+        .model_dump(mode="json")
+    )
+
+
+@app.command()
 def reset(run_id: Annotated[str, typer.Option("--run-id")]) -> None:
-    _print(Launcher(_run_dir(run_id)).reset().model_dump(mode="json"))
+    _print(
+        Launcher(_run_dir(run_id), compose_env_file=REPOSITORY_ROOT / ".env")
+        .reset()
+        .model_dump(mode="json")
+    )
 
 
 @app.command()
 def stop(run_id: Annotated[str, typer.Option("--run-id")]) -> None:
-    _print(Launcher(_run_dir(run_id)).stop().model_dump(mode="json"))
+    _print(
+        Launcher(_run_dir(run_id), compose_env_file=REPOSITORY_ROOT / ".env")
+        .stop()
+        .model_dump(mode="json")
+    )
 
 
 @app.command()
 def export(run_id: Annotated[str, typer.Option("--run-id")]) -> None:
     run_dir = _run_dir(run_id).resolve(strict=True)
     state = RunStore(run_dir).current()
-    collect_compose_logs(run_dir / "generated" / "compose.yaml", run_dir / "logs" / "compose.log")
+    collect_compose_logs(
+        run_dir / "generated" / "compose.yaml",
+        run_dir / "logs" / "compose.log",
+        compose_env_file=REPOSITORY_ROOT / ".env",
+    )
     evidence: dict[str, object] = {"state": state.model_dump(mode="json")}
     snapshots_path = run_dir / "snapshots.jsonl"
     if snapshots_path.stat().st_size:

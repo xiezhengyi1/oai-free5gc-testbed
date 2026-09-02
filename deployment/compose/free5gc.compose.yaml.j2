@@ -13,7 +13,7 @@ services:
     environment: {DB_URI: "mongodb://db/free5gc", GIN_MODE: release}
     volumes:
       - ./free5gc-config/nrfcfg.yaml:/free5gc/config/nrfcfg.yaml:ro
-      - ./free5gc-config/cert:/free5gc/cert:ro
+      - ./free5gc-config/cert:/free5gc/cert
     depends_on: [mongodb]
     networks:
       sbi-net: {aliases: [nrf.free5gc.org]}

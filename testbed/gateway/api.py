@@ -16,12 +16,15 @@ from testbed.gateway.contracts import (
     LifecycleAction,
     PolicyAction,
     ResourceAction,
+    SliceLifecycleAction,
+    SliceResourceAction,
 )
 from testbed.gateway.executor import ActionExecutor
 from testbed.scenario.loader import load_scenario
 from testbed.scenario.schema import StrictModel
 from testbed.state.lock_store import TargetLock
 from testbed.state.run_store import RunStore
+from testbed.state.slice_store import SliceState
 
 
 class RunRequest(StrictModel):
@@ -36,9 +39,10 @@ class ControlDispatch(StrictModel):
 
 
 run_dir = Path(os.environ["RUN_DIR"]).resolve(strict=True)
+active_run_id = os.environ["RUN_ID"]
 scenario = load_scenario(run_dir / "source-scenario.yaml")
 run_store = RunStore(run_dir)
-arbiter = ActionArbiter(run_dir, scenario)
+arbiter = ActionArbiter(run_dir, scenario, active_run_id)
 executor = ActionExecutor(run_dir, scenario)
 
 
@@ -68,11 +72,18 @@ def principal(x_api_key: Annotated[str, Header(alias="X-API-Key")]) -> str:
     return matches[0]
 
 
-def _validate_common(action: PolicyAction | ResourceAction | LifecycleAction, actor: str) -> None:
+def _validate_common(
+    action: (
+        PolicyAction | ResourceAction | LifecycleAction | SliceLifecycleAction | SliceResourceAction
+    ),
+    actor: str,
+) -> None:
     arbiter.authorize(actor, action)
     snapshot = arbiter.validate_snapshot(action.run_id, action.snapshot_id)
     if isinstance(action, PolicyAction):
         arbiter.validate_policy_target(action, snapshot)
+    elif isinstance(action, (SliceLifecycleAction, SliceResourceAction)):
+        arbiter.validate_slice_target(action.target.slice_id)
     else:
         arbiter.validate_container(action.target.container)
 
@@ -81,7 +92,7 @@ def _dispatch_control(operation: str) -> ControlDispatch:
     inspected = executor.docker.inspect("action-gateway")
     run_mount = next(item for item in inspected["Mounts"] if item["Destination"] == "/run")
     host_run_dir = Path(run_mount["Source"])
-    worker = f"testbed-{operation}-{run_dir.name}"
+    worker = f"testbed-{operation}-{active_run_id}"
     command = [
         "docker",
         "run",
@@ -106,7 +117,7 @@ def _dispatch_control(operation: str) -> ControlDispatch:
     ]
     subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
     return ControlDispatch(
-        run_id=run_dir.name,
+        run_id=active_run_id,
         operation=operation,
         worker_container=worker,
         status="accepted",
@@ -129,36 +140,47 @@ async def lock_conflict(_request: object, error: FileExistsError):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "run_id": run_dir.name}
+    return {"status": "ok", "run_id": active_run_id}
 
 
 @app.post("/v1/runs")
 def active_run(request: RunRequest, _actor: Annotated[str, Depends(principal)]):
-    if request.run_id != run_dir.name:
+    if request.run_id != active_run_id:
         raise HTTPException(status_code=404, detail="unknown run_id")
     return run_store.current()
 
 
 @app.get("/v1/runs/{run_id}")
 def run_status(run_id: str, _actor: Annotated[str, Depends(principal)]):
-    if run_id != run_dir.name:
+    if run_id != active_run_id:
         raise HTTPException(status_code=404, detail="unknown run_id")
     return run_store.current()
 
 
 @app.get("/v1/runs/{run_id}/readiness")
 def readiness(run_id: str, _actor: Annotated[str, Depends(principal)]):
-    if run_id != run_dir.name:
+    if run_id != active_run_id:
         raise HTTPException(status_code=404, detail="unknown run_id")
     state = run_store.current()
     return {"run_id": run_id, "phase": state.phase, "ready": state.phase == "RUNNING"}
+
+
+@app.get("/v1/slices", response_model=list[SliceState])
+def slices(_actor: Annotated[str, Depends(principal)]) -> list[SliceState]:
+    return list(executor.slice_store.list())
+
+
+@app.get("/v1/slices/{slice_id}", response_model=SliceState)
+def slice_status(slice_id: str, _actor: Annotated[str, Depends(principal)]) -> SliceState:
+    arbiter.validate_slice_target(slice_id)
+    return executor.slice_store.get(slice_id)
 
 
 @app.post("/v1/runs/{run_id}/reset", status_code=202)
 def reset(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispatch:
     if actor != "project":
         raise HTTPException(status_code=403, detail="reset requires the project principal")
-    if run_id != run_dir.name:
+    if run_id != active_run_id:
         raise HTTPException(status_code=404, detail="unknown run_id")
     return _dispatch_control("reset")
 
@@ -167,7 +189,7 @@ def reset(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDisp
 def stop(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispatch:
     if actor != "project":
         raise HTTPException(status_code=403, detail="stop requires the project principal")
-    if run_id != run_dir.name:
+    if run_id != active_run_id:
         raise HTTPException(status_code=404, detail="unknown run_id")
     return _dispatch_control("stop")
 
@@ -192,3 +214,23 @@ def lifecycle(action: LifecycleAction, actor: Annotated[str, Depends(principal)]
     _validate_common(action, actor)
     with TargetLock(run_dir / "locks", f"container:{action.target.container}"):
         return executor.lifecycle(action)
+
+
+@app.post("/v1/actions/slice-lifecycle", response_model=ActionReceipt)
+def slice_lifecycle(
+    action: SliceLifecycleAction,
+    actor: Annotated[str, Depends(principal)],
+) -> ActionReceipt:
+    _validate_common(action, actor)
+    with TargetLock(run_dir / "locks", "slice-catalog"):
+        return executor.slice_lifecycle(action)
+
+
+@app.post("/v1/actions/slice-resource", response_model=ActionReceipt)
+def slice_resource(
+    action: SliceResourceAction,
+    actor: Annotated[str, Depends(principal)],
+) -> ActionReceipt:
+    _validate_common(action, actor)
+    with TargetLock(run_dir / "locks", "slice-catalog"):
+        return executor.slice_resources(action)

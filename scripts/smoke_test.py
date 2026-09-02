@@ -14,10 +14,14 @@ def main() -> None:
     parser.add_argument("run_dir", type=Path)
     arguments = parser.parse_args()
     run_dir = arguments.run_dir.resolve(strict=True)
+    repository_root = Path(__file__).resolve().parents[1]
     state = RunStore(run_dir).current()
     if state.phase != "RUNNING":
         raise RuntimeError(f"run is not RUNNING: {state.phase}")
-    DockerAdapter(run_dir / "generated" / "compose.yaml").compose_config()
+    DockerAdapter(
+        run_dir / "generated" / "compose.yaml",
+        compose_env_file=repository_root / ".env",
+    ).compose_config()
     snapshot = SnapshotStore(run_dir).latest()
     incomplete = [
         flow["flow_id"]

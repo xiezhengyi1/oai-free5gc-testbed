@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from testbed.adapters.oai.ue_adapter import session_interface
 from testbed.scenario.schema import Scenario
 
 
@@ -20,7 +21,7 @@ def render_traffic_profiles(scenario: Scenario, destination: Path) -> None:
                 "ue_id": flow.ue_id,
                 "supi": ue.supi,
                 "session_id": flow.session_id,
-                "interface": f"oaitun_ue{session_index}",
+                "interface": session_interface(session_index),
                 "service_instance_id": service.id,
                 "five_tuple": {
                     "source_ip": "assigned-after-pdu-session",

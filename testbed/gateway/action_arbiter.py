@@ -3,28 +3,39 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
-from testbed.gateway.contracts import LifecycleAction, PolicyAction, ResourceAction
+from testbed.gateway.contracts import (
+    LifecycleAction,
+    PolicyAction,
+    ResourceAction,
+    SliceLifecycleAction,
+    SliceResourceAction,
+)
 from testbed.scenario.schema import Scenario
 from testbed.telemetry.models import UnifiedSnapshot
 from testbed.telemetry.snapshot_writer import SnapshotStore
 
 
 class ActionArbiter:
-    def __init__(self, run_dir: Path, scenario: Scenario) -> None:
+    def __init__(self, run_dir: Path, scenario: Scenario, run_id: str) -> None:
         self.run_dir = run_dir.resolve(strict=True)
         self.scenario = scenario
+        self.run_id = run_id
         self.snapshots = SnapshotStore(self.run_dir)
 
     def authorize(self, principal: str, action: object) -> None:
         if isinstance(action, PolicyAction) and principal != "multiagents":
             raise PermissionError("PolicyAction requires the multiagents principal")
-        if isinstance(action, (ResourceAction, LifecycleAction)) and principal != "project":
-            raise PermissionError(
-                "ResourceAction and LifecycleAction require the project principal"
+        if (
+            isinstance(
+                action,
+                (ResourceAction, LifecycleAction, SliceLifecycleAction, SliceResourceAction),
             )
+            and principal != "project"
+        ):
+            raise PermissionError("resource and lifecycle actions require the project principal")
 
     def validate_snapshot(self, run_id: str, snapshot_id: str) -> UnifiedSnapshot:
-        if run_id != self.run_dir.name:
+        if run_id != self.run_id:
             raise ValueError(f"action run_id does not match active run: {run_id}")
         snapshot = self.snapshots.get(snapshot_id)
         if snapshot.run_id != run_id:
@@ -52,3 +63,7 @@ class ActionArbiter:
     def validate_container(self, container: str) -> None:
         if container not in self.scenario.resources.containers:
             raise ValueError(f"container is not resource-action allowlisted: {container}")
+
+    def validate_slice_target(self, slice_id: str) -> None:
+        if slice_id not in {item.id for item in self.scenario.slices}:
+            raise ValueError(f"slice is not declared in the scenario catalog: {slice_id}")

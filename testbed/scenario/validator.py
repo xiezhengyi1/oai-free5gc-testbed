@@ -107,6 +107,30 @@ def validate_scenario(scenario: Scenario) -> None:
             if session.dnn not in dnn_to_upf:
                 raise ValueError(f"session {session.id} references unknown DNN {session.dnn}")
 
+    slice_usage = {
+        slice_id: {
+            session.dnn
+            for ue in ues.values()
+            for session in ue.sessions
+            if session.slice_id == slice_id
+        }
+        for slice_id in slices
+    }
+    unused_slices = sorted(slice_id for slice_id, dnns in slice_usage.items() if not dnns)
+    if unused_slices:
+        raise ValueError(f"slices have no declared PDU sessions: {unused_slices}")
+    slice_ids_by_dnn = {
+        dnn: {
+            session.slice_id for ue in ues.values() for session in ue.sessions if session.dnn == dnn
+        }
+        for dnn in dnn_to_upf
+    }
+    shared_dnns = {
+        dnn: sorted(slice_ids) for dnn, slice_ids in slice_ids_by_dnn.items() if len(slice_ids) > 1
+    }
+    if shared_dnns:
+        raise ValueError(f"managed slices require exclusive DNN/UPF bindings: {shared_dnns}")
+
     for service in services.values():
         if service.site_id not in sites:
             raise ValueError(f"service {service.id} references unknown site {service.site_id}")

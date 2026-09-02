@@ -3,32 +3,54 @@ from __future__ import annotations
 import re
 from typing import Any
 
-PATTERNS = {
-    "supi": re.compile(r"(?:SUPI|Supi)\[?(imsi-\d+)\]?"),
-    "pdu_session_id": re.compile(r"(?:PDU.?Session.?ID|PDUSessionID)\D+(\d+)", re.IGNORECASE),
-    "dnn": re.compile(r"(?:DNN|Dnn)\[?([a-z][a-z0-9-]+)\]?"),
-    "ue_ip": re.compile(
-        r"(?:PDUAddress|UE IP|PDU Address)\D+((?:\d{1,3}\.){3}\d{1,3})", re.IGNORECASE
-    ),
-    "qfi": re.compile(r"(?:QFI|Qfi)\D+(\d+)", re.IGNORECASE),
-    "five_qi": re.compile(r"(?:5QI|FiveQI)\D+(\d+)", re.IGNORECASE),
-    "ul_teid": re.compile(r"(?:UL TEID|UplinkTEID)\D+(0x[0-9a-fA-F]+|\d+)", re.IGNORECASE),
-    "dl_teid": re.compile(r"(?:DL TEID|DownlinkTEID)\D+(0x[0-9a-fA-F]+|\d+)", re.IGNORECASE),
-}
+SESSION_QOS = re.compile(
+    r"UE (\d+): assigned DRB (\d+) to QFI (\d+) \(5QI (\d+)\) in PDU session (\d+)",
+    re.IGNORECASE,
+)
+SESSION_UL_TEID = re.compile(
+    r"N3 GTP-U tunnel: PDUSession=(\d+)/UL TEID=(0x[0-9a-fA-F]+|\d+)",
+    re.IGNORECASE,
+)
+SESSION_DL_TEID = re.compile(
+    r"PDU Session Setup: ID=(\d+), outgoing TEID=(0x[0-9a-fA-F]+|\d+)",
+    re.IGNORECASE,
+)
 
 
-def parse_session_fields(log_text: str, supi: str, dnn: str) -> dict[str, Any]:
-    relevant = "\n".join(
-        line
-        for line in log_text.splitlines()
-        if supi in line or dnn in line or "TEID" in line or "QFI" in line
-    )
-    result: dict[str, Any] = {"supi": supi, "dnn": dnn}
-    for name, pattern in PATTERNS.items():
-        matches = pattern.findall(relevant)
-        if matches:
-            value: Any = matches[-1]
-            if name in {"pdu_session_id", "qfi", "five_qi"}:
-                value = int(value)
-            result[name] = value
+def _session_block(log_text: str, cu_ue_id: int, pdu_session_id: int) -> str:
+    events = list(SESSION_QOS.finditer(log_text))
+    selected = [
+        (index, event)
+        for index, event in enumerate(events)
+        if int(event.group(1)) == cu_ue_id and int(event.group(5)) == pdu_session_id
+    ]
+    if not selected:
+        return ""
+    index, event = selected[-1]
+    end = events[index + 1].start() if index + 1 < len(events) else len(log_text)
+    return log_text[event.start() : end]
+
+
+def parse_session_fields(
+    log_text: str,
+    supi: str,
+    dnn: str,
+    pdu_session_id: int,
+    cu_ue_id: int,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "supi": supi,
+        "dnn": dnn,
+        "pdu_session_id": pdu_session_id,
+    }
+    block = _session_block(log_text, cu_ue_id, pdu_session_id)
+    for event_ue_id, drb_id, qfi, five_qi, session_id in SESSION_QOS.findall(block):
+        if int(event_ue_id) == cu_ue_id and int(session_id) == pdu_session_id:
+            result.update(drb_id=int(drb_id), qfi=int(qfi), five_qi=int(five_qi))
+    for session_id, teid in SESSION_UL_TEID.findall(block):
+        if int(session_id) == pdu_session_id:
+            result["ul_teid"] = teid
+    for session_id, teid in SESSION_DL_TEID.findall(block):
+        if int(session_id) == pdu_session_id:
+            result["dl_teid"] = teid
     return result

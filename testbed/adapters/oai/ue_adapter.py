@@ -6,6 +6,10 @@ from typing import Any
 from testbed.adapters.docker_adapter import DockerAdapter
 
 
+def session_interface(session_index: int) -> str:
+    return "oaitun_ue1" if session_index == 1 else f"oaitun_ue1p{session_index}"
+
+
 class UeAdapter:
     def __init__(self, docker: DockerAdapter, container: str) -> None:
         self.docker = docker

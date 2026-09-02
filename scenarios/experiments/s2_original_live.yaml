@@ -1,0 +1,181 @@
+schema_version: "1.0"
+scenario_id: s2-original-live
+sources:
+  oai: /home/yyx/6gcore/openairinterface5g
+  free5gc_compose: /home/yyx/6gcore/free5gc-compose-v4.1.0-testbed
+versions: {oai: "2026.w35", free5gc_compose: v4.1.0, gtp5g: v0.9.5}
+networks:
+  sbi-net: {cidr: 172.30.0.0/24, bridge_name: tb-sbi}
+  n2-net: {cidr: 172.31.0.0/24, bridge_name: tb-n2}
+  n3-net: {cidr: 172.32.0.0/24, bridge_name: tb-n3}
+  n4-net: {cidr: 172.33.0.0/24, bridge_name: tb-n4}
+  edge-n6-net: {cidr: 172.34.0.0/24, bridge_name: tb-edge-n6}
+  cloud-n6-net: {cidr: 172.35.0.0/24, bridge_name: tb-cloud-n6}
+  cloud-app-net: {cidr: 172.38.0.0/24, bridge_name: tb-cloud-app}
+  monitoring-net: {cidr: 172.36.0.0/24, bridge_name: tb-monitor}
+  control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
+plmn: {mcc: "208", mnc: "93", tac: 1}
+slices:
+  - id: slice-1
+    sst: 1
+    sd: "000001"
+    initial_state: running
+    capacity: {total_bandwidth_ul_mbps: 56, total_bandwidth_dl_mbps: 112, guaranteed_bandwidth_ul_mbps: 42, guaranteed_bandwidth_dl_mbps: 90}
+  - id: slice-2
+    sst: 2
+    sd: "000001"
+    initial_state: running
+    capacity: {total_bandwidth_ul_mbps: 34, total_bandwidth_dl_mbps: 78, guaranteed_bandwidth_ul_mbps: 22, guaranteed_bandwidth_dl_mbps: 60}
+  - id: slice-3
+    sst: 3
+    sd: "000001"
+    initial_state: running
+    capacity: {total_bandwidth_ul_mbps: 20, total_bandwidth_dl_mbps: 54, guaranteed_bandwidth_ul_mbps: 12, guaranteed_bandwidth_dl_mbps: 37}
+sites:
+  - {id: edge-a, type: edge}
+core:
+  amf: {sbi_ip: 172.30.0.3, n2_ip: 172.31.0.10}
+  smf: {sbi_ip: 172.30.0.4, n4_ip: 172.33.0.10}
+  upfs:
+    - {id: slice-1-upf, container: free5gc-upf-slice-1, site_id: edge-a, n3_ip: 172.32.0.30, n4_ip: 172.33.0.30, n6_ip: 172.34.0.30, dnn: embb, ue_pool: 10.60.0.0/24}
+    - {id: slice-2-upf, container: free5gc-upf-slice-2, site_id: edge-a, n3_ip: 172.32.0.31, n4_ip: 172.33.0.31, n6_ip: 172.34.0.31, dnn: urllc, ue_pool: 10.61.0.0/24}
+    - {id: slice-3-upf, container: free5gc-upf-slice-3, site_id: edge-a, n3_ip: 172.32.0.32, n4_ip: 172.33.0.32, n6_ip: 172.34.0.32, dnn: mmtc, ue_pool: 10.62.0.0/24}
+ran:
+  mode: rfsim
+  band: 78
+  numerology: 1
+  bandwidth_rb: 106
+  frequency_hz: 3619200000
+  gnbs:
+    - id: gnb-1
+      container: oai-gnb-1
+      site_id: edge-a
+      n2_ip: 172.31.0.20
+      n3_ip: 172.32.0.20
+      cells:
+        - {id: cell-1, pci: 1, position: {x: 0.0, y: 0.0, z: 10.0}}
+    - id: gnb-2
+      container: oai-gnb-2
+      site_id: edge-a
+      n2_ip: 172.31.0.21
+      n3_ip: 172.32.0.21
+      cells:
+        - {id: cell-2, pci: 2, position: {x: 300.0, y: 0.0, z: 10.0}}
+    - id: gnb-3
+      container: oai-gnb-3
+      site_id: edge-a
+      n2_ip: 172.31.0.22
+      n3_ip: 172.32.0.22
+      cells:
+        - {id: cell-3, pci: 3, position: {x: 150.0, y: 260.0, z: 10.0}}
+ues:
+  - id: ue-1
+    container: oai-nrue-1
+    traffic_sidecar: traffic-sidecar-ue-1
+    supi: imsi-208930000000001
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-1
+    sessions:
+      - {id: remote-drive-session, dnn: embb, slice_id: slice-1}
+  - id: ue-2
+    container: oai-nrue-2
+    traffic_sidecar: traffic-sidecar-ue-2
+    supi: imsi-208930000000006
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-3
+    sessions:
+      - {id: factory-robot-session, dnn: embb, slice_id: slice-1}
+      - {id: iot-sensor-session, dnn: mmtc, slice_id: slice-3}
+  - id: ue-3
+    container: oai-nrue-3
+    traffic_sidecar: traffic-sidecar-ue-3
+    supi: imsi-208930000000005
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-3
+    sessions:
+      - {id: ar-gaming-control-session, dnn: urllc, slice_id: slice-2}
+      - {id: ar-gaming-video-session, dnn: mmtc, slice_id: slice-3}
+  - id: ue-4
+    container: oai-nrue-4
+    traffic_sidecar: traffic-sidecar-ue-4
+    supi: imsi-208930000000008
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-2
+    sessions:
+      - {id: telemedicine-session, dnn: urllc, slice_id: slice-2}
+      - {id: web-browse-session, dnn: mmtc, slice_id: slice-3}
+  - id: ue-5
+    container: oai-nrue-5
+    traffic_sidecar: traffic-sidecar-ue-5
+    supi: imsi-208930000000009
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-2
+    sessions:
+      - {id: video-4k-stream-session, dnn: embb, slice_id: slice-1}
+      - {id: video-4k-control-session, dnn: urllc, slice_id: slice-2}
+  - id: ue-6
+    container: oai-nrue-6
+    traffic_sidecar: traffic-sidecar-ue-6
+    supi: imsi-208930000000010
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-1
+    sessions:
+      - {id: cloud-render-session, dnn: urllc, slice_id: slice-2}
+      - {id: cloud-render-telemetry-session, dnn: embb, slice_id: slice-1}
+services:
+  - {id: remote-drive-app, container: remote-drive-app, service_id: remote-drive, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.100, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: factory-robot-app, container: factory-robot-app, service_id: factory-robot, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.101, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: iot-sensor-app, container: iot-sensor-app, service_id: iot-sensor, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.102, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: ar-gaming-app, container: ar-gaming-app, service_id: ar-gaming, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.103, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: telemedicine-app, container: telemedicine-app, service_id: telemedicine, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.104, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: web-browse-app, container: web-browse-app, service_id: web-browse, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.105, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: drone-control-app, container: drone-control-app, service_id: drone-control, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.106, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: video-4k-app, container: video-4k-app, service_id: video-4k, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.107, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+  - {id: cloud-render-app, container: cloud-render-app, service_id: cloud-render, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.108, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
+links: []
+flows:
+  - {id: remote-drive-video-1, ue_id: ue-1, session_id: remote-drive-session, service_instance_id: remote-drive-app, protocol: udp, src_port: 41001, dst_port: 5202, rate_mbps: 3.8, packet_size_bytes: 1000, sla: {latency_ms: 12, jitter_ms: 2, loss_rate: 0.0005, bandwidth_ul_mbps: 3.8, bandwidth_dl_mbps: 3, guaranteed_bandwidth_ul_mbps: 3, guaranteed_bandwidth_dl_mbps: 2.4, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 3.8, allocated_bandwidth_dl_mbps: 3}}
+  - {id: factory-robot-video-1, ue_id: ue-2, session_id: factory-robot-session, service_instance_id: factory-robot-app, protocol: udp, src_port: 42001, dst_port: 5202, rate_mbps: 3.8, packet_size_bytes: 1000, sla: {latency_ms: 10, jitter_ms: 1.5, loss_rate: 0.0005, bandwidth_ul_mbps: 3.8, bandwidth_dl_mbps: 3, guaranteed_bandwidth_ul_mbps: 3, guaranteed_bandwidth_dl_mbps: 2.4, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 3.8, allocated_bandwidth_dl_mbps: 3}}
+  - {id: iot-sensor-telemetry-1, ue_id: ue-2, session_id: iot-sensor-session, service_instance_id: iot-sensor-app, protocol: tcp, src_port: 42003, dst_port: 5201, rate_mbps: 0.2, packet_size_bytes: 125, sla: {latency_ms: 120, jitter_ms: 30, loss_rate: 0.02, bandwidth_ul_mbps: 0.2, bandwidth_dl_mbps: 0.05, guaranteed_bandwidth_ul_mbps: 0.12, guaranteed_bandwidth_dl_mbps: 0.03, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 0.2, allocated_bandwidth_dl_mbps: 0.05}}
+  - {id: ar-gaming-control-1, ue_id: ue-3, session_id: ar-gaming-control-session, service_instance_id: ar-gaming-app, protocol: udp, src_port: 43001, dst_port: 5202, rate_mbps: 0.25, packet_size_bytes: 250, sla: {latency_ms: 8, jitter_ms: 2, loss_rate: 0.0008, bandwidth_ul_mbps: 0.15, bandwidth_dl_mbps: 0.25, guaranteed_bandwidth_ul_mbps: 0.1, guaranteed_bandwidth_dl_mbps: 0.18, priority: 2}, allocation: {allocated_bandwidth_ul_mbps: 0.15, allocated_bandwidth_dl_mbps: 0.25}}
+  - {id: ar-gaming-video-2, ue_id: ue-3, session_id: ar-gaming-video-session, service_instance_id: ar-gaming-app, protocol: http, src_port: 43002, dst_port: 8080, rate_mbps: 15, packet_size_bytes: 1250, sla: {latency_ms: 15, jitter_ms: 4, loss_rate: 0.0015, bandwidth_ul_mbps: 0.5, bandwidth_dl_mbps: 15, guaranteed_bandwidth_ul_mbps: 0.3, guaranteed_bandwidth_dl_mbps: 12, priority: 3}, allocation: {allocated_bandwidth_ul_mbps: 0.5, allocated_bandwidth_dl_mbps: 15}}
+  - {id: telemedicine-video-1, ue_id: ue-4, session_id: telemedicine-session, service_instance_id: telemedicine-app, protocol: udp, src_port: 44001, dst_port: 5202, rate_mbps: 3.8, packet_size_bytes: 1000, sla: {latency_ms: 15, jitter_ms: 2, loss_rate: 0.0006, bandwidth_ul_mbps: 3.8, bandwidth_dl_mbps: 3, guaranteed_bandwidth_ul_mbps: 3, guaranteed_bandwidth_dl_mbps: 2.4, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 3.8, allocated_bandwidth_dl_mbps: 3}}
+  - {id: web-browse-session-1, ue_id: ue-4, session_id: web-browse-session, service_instance_id: web-browse-app, protocol: http, src_port: 44003, dst_port: 8080, rate_mbps: 1, packet_size_bytes: 1250, sla: {latency_ms: 90, jitter_ms: 35, loss_rate: 0.03, bandwidth_ul_mbps: 0.1, bandwidth_dl_mbps: 1, guaranteed_bandwidth_ul_mbps: 0.05, guaranteed_bandwidth_dl_mbps: 0.6, priority: 10}, allocation: {allocated_bandwidth_ul_mbps: 0.1, allocated_bandwidth_dl_mbps: 1}}
+  - {id: video-4k-stream-1, ue_id: ue-5, session_id: video-4k-stream-session, service_instance_id: video-4k-app, protocol: http, src_port: 45001, dst_port: 8080, rate_mbps: 25, packet_size_bytes: 1250, sla: {latency_ms: 35, jitter_ms: 12, loss_rate: 0.003, bandwidth_ul_mbps: 0.2, bandwidth_dl_mbps: 25, guaranteed_bandwidth_ul_mbps: 0.1, guaranteed_bandwidth_dl_mbps: 20, priority: 5}, allocation: {allocated_bandwidth_ul_mbps: 0.2, allocated_bandwidth_dl_mbps: 25}}
+  - {id: video-4k-control-2, ue_id: ue-5, session_id: video-4k-control-session, service_instance_id: video-4k-app, protocol: udp, src_port: 45002, dst_port: 5202, rate_mbps: 0.2, packet_size_bytes: 250, sla: {latency_ms: 25, jitter_ms: 6, loss_rate: 0.0015, bandwidth_ul_mbps: 0.1, bandwidth_dl_mbps: 0.2, guaranteed_bandwidth_ul_mbps: 0.05, guaranteed_bandwidth_dl_mbps: 0.1, priority: 4}, allocation: {allocated_bandwidth_ul_mbps: 0.1, allocated_bandwidth_dl_mbps: 0.2}}
+  - {id: cloud-render-stream-1, ue_id: ue-6, session_id: cloud-render-session, service_instance_id: cloud-render-app, protocol: http, src_port: 46001, dst_port: 8080, rate_mbps: 25, packet_size_bytes: 1250, sla: {latency_ms: 12, jitter_ms: 6, loss_rate: 0.002, bandwidth_ul_mbps: 0.5, bandwidth_dl_mbps: 25, guaranteed_bandwidth_ul_mbps: 0.3, guaranteed_bandwidth_dl_mbps: 20, priority: 4}, allocation: {allocated_bandwidth_ul_mbps: 0.5, allocated_bandwidth_dl_mbps: 25}}
+  - {id: cloud-render-telemetry-2, ue_id: ue-6, session_id: cloud-render-telemetry-session, service_instance_id: cloud-render-app, protocol: tcp, src_port: 46002, dst_port: 5201, rate_mbps: 0.1, packet_size_bytes: 125, sla: {latency_ms: 180, jitter_ms: 50, loss_rate: 0.02, bandwidth_ul_mbps: 0.1, bandwidth_dl_mbps: 0.05, guaranteed_bandwidth_ul_mbps: 0.05, guaranteed_bandwidth_dl_mbps: 0.03, priority: 9}, allocation: {allocated_bandwidth_ul_mbps: 0.1, allocated_bandwidth_dl_mbps: 0.05}}
+mobility: []
+resources:
+  system_cpuset_cpus: "0-1,16-17"
+  containers:
+    free5gc-upf-slice-1: {cpus: 1.0, memory_mb: 1024}
+    free5gc-upf-slice-2: {cpus: 1.0, memory_mb: 1024}
+    free5gc-upf-slice-3: {cpus: 1.0, memory_mb: 1024}
+    oai-gnb-1: {cpus: 2.0, memory_mb: 8192, cpuset_cpus: "2-3,18-19"}
+    oai-gnb-2: {cpus: 2.0, memory_mb: 8192, cpuset_cpus: "4-5,20-21"}
+    oai-gnb-3: {cpus: 2.0, memory_mb: 8192, cpuset_cpus: "6-7,22-23"}
+    oai-nrue-1: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "8,24"}
+    oai-nrue-2: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "9,25"}
+    oai-nrue-3: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "10,26"}
+    oai-nrue-4: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "11,27"}
+    oai-nrue-5: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "12,28"}
+    oai-nrue-6: {cpus: 1.0, memory_mb: 4096, cpuset_cpus: "13,29"}
+    remote-drive-app: {cpus: 0.5, memory_mb: 512}
+    factory-robot-app: {cpus: 0.5, memory_mb: 512}
+    iot-sensor-app: {cpus: 0.5, memory_mb: 512}
+    ar-gaming-app: {cpus: 0.5, memory_mb: 512}
+    telemedicine-app: {cpus: 0.5, memory_mb: 512}
+    web-browse-app: {cpus: 0.5, memory_mb: 512}
+    drone-control-app: {cpus: 0.5, memory_mb: 512}
+    video-4k-app: {cpus: 0.5, memory_mb: 512}
+    cloud-render-app: {cpus: 0.5, memory_mb: 512}
+observability: {scrape_interval_seconds: 2, snapshot_interval_seconds: 5, snapshot_window_seconds: 10, prometheus: true, cadvisor: true, grafana: true, traffic_exporter: true, ran_exporter: true}
+runtime: {startup_timeout_seconds: 600, readiness_poll_seconds: 2, action_timeout_seconds: 90}
+integrations: {multiagents_database_url_env: MULTIAGENTS_DATABASE_URL, action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS}

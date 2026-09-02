@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from ipaddress import ip_network
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from testbed.rendering.traffic_renderer import render_traffic_profiles
 from testbed.scenario.compiler import compile_scenario
 from testbed.scenario.loader import load_scenario
 from testbed.state.run_store import RunStore
+from testbed.state.slice_store import SliceStore
 
 TEMPLATES = (
     "base.compose.yaml.j2",
@@ -43,6 +45,16 @@ def _merge(left: dict[str, Any], right: dict[str, Any], path: str = "root") -> d
     return result
 
 
+def _apply_cpu_affinity(compose: dict[str, Any], scenario: Any) -> None:
+    system_cpuset = scenario.resources.system_cpuset_cpus
+    if system_cpuset is not None:
+        for service in compose["services"].values():
+            service["cpuset"] = system_cpuset
+    for container, resources in scenario.resources.containers.items():
+        if resources.cpuset_cpus is not None:
+            compose["services"][container]["cpuset"] = resources.cpuset_cpus
+
+
 def _render_compose(repository_root: Path, layout: RunLayout, scenario: Any, run_id: str) -> None:
     environment = Environment(
         loader=FileSystemLoader(repository_root / "deployment" / "compose"),
@@ -50,7 +62,15 @@ def _render_compose(repository_root: Path, layout: RunLayout, scenario: Any, run
         autoescape=False,
         keep_trailing_newline=True,
     )
-    context = {"scenario": scenario, "run_id": run_id, "project_name": f"testbed-{run_id}"}
+    sbi_dynamic_range = str(
+        tuple(ip_network(scenario.networks.sbi.cidr).subnets(prefixlen_diff=1))[1]
+    )
+    context = {
+        "scenario": scenario,
+        "run_id": run_id,
+        "project_name": f"testbed-{run_id}",
+        "sbi_dynamic_range": sbi_dynamic_range,
+    }
     compose: dict[str, Any] = {}
     for name in TEMPLATES:
         rendered = environment.get_template(name).render(**context)
@@ -58,6 +78,7 @@ def _render_compose(repository_root: Path, layout: RunLayout, scenario: Any, run
         if not isinstance(fragment, dict):
             raise ValueError(f"compose template did not render a mapping: {name}")
         compose = _merge(compose, fragment)
+    _apply_cpu_affinity(compose, scenario)
     (layout.generated / "compose.yaml").write_text(
         yaml.safe_dump(compose, sort_keys=False), encoding="utf-8"
     )
@@ -79,6 +100,7 @@ def render_run(repository_root: Path, scenario_path: Path, run_id: str) -> RunLa
     _render_compose(repository_root, layout, scenario, run_id)
     write_manifest(repository_root, layout, scenario, compiled)
     RunStore(layout.root).initialize()
+    SliceStore(layout.root).initialize(scenario)
     (layout.generated / "compiled-scenario.json").write_text(
         json.dumps(compiled.model_dump(mode="json"), indent=2, default=str) + "\n",
         encoding="utf-8",

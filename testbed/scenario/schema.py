@@ -11,6 +11,7 @@ ContainerName = Annotated[str, Field(pattern=r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{1,62}$
 Hex32 = Annotated[str, Field(pattern=r"^[0-9a-fA-F]{32}$")]
 IPv4Text = Annotated[str, Field(pattern=r"^(?:\d{1,3}\.){3}\d{1,3}$")]
 CIDRText = Annotated[str, Field(pattern=r"^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$")]
+CpuSetText = Annotated[str, Field(pattern=r"^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$")]
 
 
 class StrictModel(BaseModel):
@@ -61,10 +62,31 @@ class Plmn(StrictModel):
         return value
 
 
+class SliceCapacitySpec(StrictModel):
+    total_bandwidth_ul_mbps: Annotated[float, Field(gt=0)]
+    total_bandwidth_dl_mbps: Annotated[float, Field(gt=0)]
+    guaranteed_bandwidth_ul_mbps: Annotated[float, Field(ge=0)]
+    guaranteed_bandwidth_dl_mbps: Annotated[float, Field(ge=0)]
+
+    @model_validator(mode="after")
+    def guaranteed_capacity_within_total(self) -> SliceCapacitySpec:
+        if self.guaranteed_bandwidth_ul_mbps > self.total_bandwidth_ul_mbps:
+            raise ValueError(
+                "guaranteed slice UL capacity cannot exceed total UL capacity"
+            )
+        if self.guaranteed_bandwidth_dl_mbps > self.total_bandwidth_dl_mbps:
+            raise ValueError(
+                "guaranteed slice DL capacity cannot exceed total DL capacity"
+            )
+        return self
+
+
 class SliceSpec(StrictModel):
     id: Identifier
     sst: Annotated[int, Field(ge=0, le=255)]
     sd: Annotated[str, Field(pattern=r"^[0-9a-fA-F]{6}$")]
+    initial_state: Literal["running", "stopped", "deleted"]
+    capacity: SliceCapacitySpec
 
     @field_validator("sd")
     @classmethod
@@ -139,7 +161,7 @@ class GnbSpec(StrictModel):
     site_id: Identifier
     n2_ip: IPv4Text
     n3_ip: IPv4Text
-    cells: tuple[CellSpec, ...] = Field(min_length=1)
+    cells: tuple[CellSpec, ...] = Field(min_length=1, max_length=1)
 
 
 class RanSpec(StrictModel):
@@ -176,6 +198,7 @@ class UeSpec(StrictModel):
 class ResourceLimit(StrictModel):
     cpus: Annotated[float, Field(gt=0)]
     memory_mb: Annotated[int, Field(gt=0)]
+    cpuset_cpus: CpuSetText | None = None
 
 
 class ServiceSpec(StrictModel):
@@ -204,7 +227,24 @@ class SlaSpec(StrictModel):
     latency_ms: Annotated[float, Field(gt=0)]
     jitter_ms: Annotated[float, Field(ge=0)]
     loss_rate: Annotated[float, Field(ge=0, le=1)]
-    guaranteed_bandwidth_mbps: Annotated[float, Field(gt=0)]
+    bandwidth_ul_mbps: Annotated[float, Field(gt=0)]
+    bandwidth_dl_mbps: Annotated[float, Field(gt=0)]
+    guaranteed_bandwidth_ul_mbps: Annotated[float, Field(gt=0)]
+    guaranteed_bandwidth_dl_mbps: Annotated[float, Field(gt=0)]
+    priority: Annotated[int, Field(ge=1, le=255)]
+
+    @model_validator(mode="after")
+    def guaranteed_bandwidth_within_sla(self) -> SlaSpec:
+        if self.guaranteed_bandwidth_ul_mbps > self.bandwidth_ul_mbps:
+            raise ValueError("guaranteed UL bandwidth cannot exceed SLA UL bandwidth")
+        if self.guaranteed_bandwidth_dl_mbps > self.bandwidth_dl_mbps:
+            raise ValueError("guaranteed DL bandwidth cannot exceed SLA DL bandwidth")
+        return self
+
+
+class FlowAllocationSpec(StrictModel):
+    allocated_bandwidth_ul_mbps: Annotated[float, Field(gt=0)]
+    allocated_bandwidth_dl_mbps: Annotated[float, Field(gt=0)]
 
 
 class FlowSpec(StrictModel):
@@ -218,15 +258,29 @@ class FlowSpec(StrictModel):
     rate_mbps: Annotated[float, Field(gt=0)]
     packet_size_bytes: Annotated[int, Field(ge=64, le=65507)]
     sla: SlaSpec
+    allocation: FlowAllocationSpec
 
     @model_validator(mode="after")
-    def guaranteed_rate_not_above_offered_rate(self) -> FlowSpec:
-        if self.sla.guaranteed_bandwidth_mbps > self.rate_mbps:
-            raise ValueError("guaranteed bandwidth cannot exceed offered rate")
+    def allocation_covers_guaranteed_bandwidth(self) -> FlowSpec:
+        if (
+            self.allocation.allocated_bandwidth_ul_mbps
+            < self.sla.guaranteed_bandwidth_ul_mbps
+        ):
+            raise ValueError(
+                "allocated UL bandwidth cannot be below guaranteed UL bandwidth"
+            )
+        if (
+            self.allocation.allocated_bandwidth_dl_mbps
+            < self.sla.guaranteed_bandwidth_dl_mbps
+        ):
+            raise ValueError(
+                "allocated DL bandwidth cannot be below guaranteed DL bandwidth"
+            )
         return self
 
 
 class ResourcePlan(StrictModel):
+    system_cpuset_cpus: CpuSetText | None = None
     containers: dict[str, ResourceLimit]
 
 
@@ -243,7 +297,9 @@ class ObservabilitySpec(StrictModel):
     @model_validator(mode="after")
     def window_covers_interval(self) -> ObservabilitySpec:
         if self.snapshot_window_seconds < self.snapshot_interval_seconds:
-            raise ValueError("snapshot window must cover at least one snapshot interval")
+            raise ValueError(
+                "snapshot window must cover at least one snapshot interval"
+            )
         return self
 
 

@@ -13,7 +13,7 @@ networks:
   monitoring-net: {cidr: 172.36.0.0/24, bridge_name: tb-monitor}
   control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
 plmn: {mcc: "208", mnc: "93", tac: 1}
-slices: [{id: embb, sst: 1, sd: "010203"}]
+slices: [{id: embb, sst: 1, sd: "010203", initial_state: running, capacity: {total_bandwidth_ul_mbps: 80, total_bandwidth_dl_mbps: 20, guaranteed_bandwidth_ul_mbps: 60, guaranteed_bandwidth_dl_mbps: 10}}]
 sites: [{id: edge-a, type: edge}]
 core:
   amf: {sbi_ip: 172.30.0.3, n2_ip: 172.31.0.10}
@@ -46,7 +46,7 @@ services:
   - {id: inference-edge, container: mec-app-edge, service_id: inference, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.100, port: 8080, resources: {cpus: 0.5, memory_mb: 512}}
 links: []
 flows:
-  - {id: pressure-flow, ue_id: ue-1, session_id: mec-session, service_instance_id: inference-edge, protocol: tcp, src_port: 41001, dst_port: 5201, rate_mbps: 100, packet_size_bytes: 1200, sla: {latency_ms: 25, jitter_ms: 5, loss_rate: 0.005, guaranteed_bandwidth_mbps: 50}}
+  - {id: pressure-flow, ue_id: ue-1, session_id: mec-session, service_instance_id: inference-edge, protocol: tcp, src_port: 41001, dst_port: 5201, rate_mbps: 100, packet_size_bytes: 1200, sla: {latency_ms: 25, jitter_ms: 5, loss_rate: 0.005, bandwidth_ul_mbps: 100, bandwidth_dl_mbps: 5, guaranteed_bandwidth_ul_mbps: 50, guaranteed_bandwidth_dl_mbps: 2.5, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 100, allocated_bandwidth_dl_mbps: 5}}
 mobility: []
 resources:
   containers:

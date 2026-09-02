@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy import create_engine, text
 
+from testbed.artifacts.metrics_exporter import export_metrics
 from testbed.telemetry.models import UnifiedSnapshot
 
 
@@ -16,6 +17,7 @@ class SnapshotStore:
     def append(self, snapshot: UnifiedSnapshot) -> None:
         with self.path.open("a", encoding="utf-8") as handle:
             handle.write(snapshot.model_dump_json() + "\n")
+        export_metrics(self.path.parent, snapshot.model_dump(mode="json"))
 
     def get(self, snapshot_id: str) -> UnifiedSnapshot:
         for line in self.path.read_text(encoding="utf-8").splitlines():
@@ -102,13 +104,21 @@ def graph_summary(snapshot: UnifiedSnapshot) -> dict[str, Any]:
                         }
                     )
     slice_ids = {flow["session"]["snssai"] for flow in snapshot.flows}
+    slice_state_by_snssai = {item["snssai"]: item for item in snapshot.slice_states}
     for snssai in slice_ids:
+        slice_state = slice_state_by_snssai[snssai]
         nodes.append(
             {
                 "node_key": f"slice:{snssai}",
                 "node_type": "slice",
                 "label": snssai,
-                "properties": {"snssai": snssai, "sst": int(snssai[:2]), "sd": snssai[2:]},
+                "properties": {
+                    "snssai": snssai,
+                    "sst": int(snssai[:2]),
+                    "sd": snssai[2:],
+                    "slice_id": slice_state["slice_id"],
+                    "lifecycle_state": slice_state["phase"],
+                },
             }
         )
     for node in snapshot.ran_nodes:
@@ -144,7 +154,9 @@ def graph_summary(snapshot: UnifiedSnapshot) -> dict[str, Any]:
 
 class PostgresGraphWriter:
     def __init__(self, database_url: str) -> None:
-        self.engine = create_engine(database_url)
+        self.engine = create_engine(
+            database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        )
 
     def write(self, snapshot: UnifiedSnapshot) -> None:
         summary = graph_summary(snapshot)

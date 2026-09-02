@@ -21,6 +21,25 @@ def scenario_paths() -> list[Path]:
 def test_all_declared_scenarios_validate(path: Path) -> None:
     scenario = load_scenario(path)
     assert scenario.versions.oai == "2026.w35"
+    session_slice = {
+        (ue.id, session.id): session.slice_id
+        for ue in scenario.ues
+        for session in ue.sessions
+    }
+    for slice_item in scenario.slices:
+        flows = [
+            flow
+            for flow in scenario.flows
+            if session_slice[(flow.ue_id, flow.session_id)] == slice_item.id
+        ]
+        assert (
+            sum(flow.sla.guaranteed_bandwidth_ul_mbps for flow in flows)
+            <= slice_item.capacity.guaranteed_bandwidth_ul_mbps
+        )
+        assert (
+            sum(flow.sla.guaranteed_bandwidth_dl_mbps for flow in flows)
+            <= slice_item.capacity.guaranteed_bandwidth_dl_mbps
+        )
 
 
 def test_schema_rejects_undeclared_fields() -> None:
@@ -35,7 +54,9 @@ def test_validator_rejects_cidr_overlap() -> None:
     scenario = load_scenario(ROOT / "scenarios/mvp/s1_single_ue_single_upf.yaml")
     payload = scenario.networks.model_dump(mode="json", by_alias=True)
     payload["n2-net"] = NetworkSpec(cidr="172.30.0.0/24", bridge_name="bad-n2")
-    overlapping = scenario.model_copy(update={"networks": NetworkPlan.model_validate(payload)})
+    overlapping = scenario.model_copy(
+        update={"networks": NetworkPlan.model_validate(payload)}
+    )
     with pytest.raises(ValueError, match="CIDR overlap"):
         validate_scenario(overlapping)
 

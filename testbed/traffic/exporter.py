@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import re
 import select
@@ -23,6 +22,12 @@ from testbed.traffic.profiles import TrafficProfile, load_profiles
 LABELS = ("flow_id", "supi", "ue_id", "protocol", "service_instance_id")
 RUNNING = Gauge("testbed_flow_running", "Whether the traffic process is running", LABELS)
 THROUGHPUT = Gauge("testbed_flow_throughput_mbps", "Measured traffic throughput", LABELS)
+THROUGHPUT_UL = Gauge(
+    "testbed_flow_throughput_ul_mbps", "Measured uplink application throughput", LABELS
+)
+THROUGHPUT_DL = Gauge(
+    "testbed_flow_throughput_dl_mbps", "Measured downlink application throughput", LABELS
+)
 JITTER = Gauge("testbed_flow_jitter_ms", "UDP jitter", LABELS)
 LOSS = Gauge("testbed_flow_loss_ratio", "UDP loss ratio from zero to one", LABELS)
 RETRANSMITS = Counter("testbed_flow_tcp_retransmits_total", "TCP retransmissions", LABELS)
@@ -105,6 +110,10 @@ COMPAT_UDP_PARALLEL = Gauge(
 )
 
 PING_PATTERN = re.compile(r"icmp_seq=(\d+).*time=([0-9.]+)\s*ms")
+IPERF_INTERVAL_PATTERN = re.compile(
+    r"\[\s*\d+\]\s+([0-9.]+)-([0-9.]+)\s+sec\s+"
+    r"[0-9.]+\s+\S+Bytes\s+([0-9.]+)\s+Mbits/sec(?:\s+(\d+))?"
+)
 
 
 class BoundHTTPConnection(HTTPConnection):
@@ -120,6 +129,7 @@ class BoundHTTPConnection(HTTPConnection):
     def connect(self) -> None:
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.settimeout(self.timeout)
+        connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.setsockopt(
             socket.SOL_SOCKET, socket.SO_BINDTODEVICE, self.interface.encode() + b"\0"
         )
@@ -135,6 +145,36 @@ def _labels(profile: TrafficProfile) -> tuple[str, ...]:
         profile.ue_id,
         profile.five_tuple.protocol,
         profile.service_instance_id,
+    )
+
+
+def _initialize_flow_metrics(profile: TrafficProfile) -> None:
+    labels = _labels(profile)
+    RUNNING.labels(*labels).set(0)
+    THROUGHPUT.labels(*labels).set(0)
+    THROUGHPUT_UL.labels(*labels).set(0)
+    THROUGHPUT_DL.labels(*labels).set(0)
+    JITTER.labels(*labels).set(0)
+    LOSS.labels(*labels).set(0)
+    RETRANSMITS.labels(*labels)
+    PING_RTT.labels(*labels).set(0)
+    PING_RECEIVED.labels(*labels)
+    HTTP_LATENCY.labels(*labels).set(0)
+    HTTP_REQUESTS.labels(*labels)
+    UDP_LATENCY.labels(*labels).set(0)
+    UDP_SENT.labels(*labels)
+    UDP_RECEIVED.labels(*labels)
+
+
+def _parse_iperf_interval(line: str) -> tuple[float, float, float] | None:
+    match = IPERF_INTERVAL_PATTERN.search(line)
+    if match is None:
+        return None
+    started_at, ended_at, throughput_mbps, retransmits = match.groups()
+    return (
+        float(ended_at) - float(started_at),
+        float(throughput_mbps),
+        float(retransmits or 0),
     )
 
 
@@ -155,26 +195,21 @@ def _traffic_worker(profile: TrafficProfile, stop: threading.Event) -> None:
         for line in process.stdout:
             if stop.is_set():
                 break
-            event = json.loads(line)
-            if event.get("event") == "interval":
-                data = event["data"]
-                interval = data.get("sum") or data.get("sum_sent")
-                THROUGHPUT.labels(*labels).set(float(interval["bits_per_second"]) / 1_000_000)
-                RETRANSMITS.labels(*labels).inc(float(interval["retransmits"]))
-                COMPAT_TCP_SENT_BYTES.inc(float(interval["bytes"]))
-                COMPAT_TCP_RETRANSMITS.inc(float(interval["retransmits"]))
-                COMPAT_TCP_BPS.set(float(interval["bits_per_second"]))
-                streams = data.get("streams", [])
-                rtts_ms = [
-                    float(item["rtt"]) / 1000 for item in streams if "rtt" in item
-                ]
-                COMPAT_TCP_INTERVAL_RETRANSMITS.set(float(interval["retransmits"]))
-                COMPAT_TCP_RTT_AVERAGE.set(
-                    sum(rtts_ms) / len(rtts_ms) if rtts_ms else 0
-                )
-                COMPAT_TCP_RTT_MAXIMUM.set(max(rtts_ms) if rtts_ms else 0)
-                COMPAT_TCP_PARALLEL.set(max(1, len(streams)))
+            interval = _parse_iperf_interval(line)
+            if interval is not None:
+                duration, throughput_mbps, retransmits = interval
+                bits_per_second = throughput_mbps * 1_000_000
+                THROUGHPUT.labels(*labels).set(throughput_mbps)
+                THROUGHPUT_UL.labels(*labels).set(throughput_mbps)
+                RETRANSMITS.labels(*labels).inc(retransmits)
+                COMPAT_TCP_SENT_BYTES.inc(bits_per_second * duration / 8)
+                COMPAT_TCP_RETRANSMITS.inc(retransmits)
+                COMPAT_TCP_BPS.set(bits_per_second)
+                COMPAT_TCP_INTERVAL_RETRANSMITS.set(retransmits)
+                COMPAT_TCP_PARALLEL.set(1)
                 COMPAT_TCP_SEQUENCE.inc()
+        if stop.is_set():
+            return
         return_code = process.wait(timeout=5)
         if not stop.is_set() and return_code != 0:
             stderr = process.stderr.read() if process.stderr else ""
@@ -212,6 +247,7 @@ def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     jitter_ms = 0.0
     previous_rtt_ms: float | None = None
     received_bytes_window = 0
+    sent_bytes_window = 0
     received_window = 0
     lost_window = 0
     next_send = time.monotonic()
@@ -228,6 +264,7 @@ def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
                 sequence += 1
                 packet = header.pack(sequence, now) + payload
                 udp_socket.send(packet)
+                sent_bytes_window += len(packet)
                 pending[sequence] = now
                 sent_order.append((sequence, now))
                 UDP_SENT.labels(*labels).inc()
@@ -264,14 +301,18 @@ def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
             elapsed = now - last_report
             if elapsed >= 1.0:
                 bits_per_second = received_bytes_window * 8 / elapsed
+                uplink_bits_per_second = sent_bytes_window * 8 / elapsed
                 resolved = received_window + lost_window
                 loss_ratio = lost_window / resolved if resolved else 0.0
-                THROUGHPUT.labels(*labels).set(bits_per_second / 1_000_000)
+                THROUGHPUT.labels(*labels).set(uplink_bits_per_second / 1_000_000)
+                THROUGHPUT_UL.labels(*labels).set(uplink_bits_per_second / 1_000_000)
+                THROUGHPUT_DL.labels(*labels).set(bits_per_second / 1_000_000)
                 JITTER.labels(*labels).set(jitter_ms)
                 LOSS.labels(*labels).set(loss_ratio)
                 COMPAT_UDP_JITTER.set(jitter_ms)
                 COMPAT_UDP_BPS.set(bits_per_second)
                 received_bytes_window = 0
+                sent_bytes_window = 0
                 received_window = 0
                 lost_window = 0
                 last_report = now
@@ -287,6 +328,10 @@ def _ping_worker(profile: TrafficProfile, stop: threading.Event) -> None:
         ping_command(profile), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1
     )
     previous_sequence: int | None = None
+    previous_rtt_ms: float | None = None
+    jitter_ms = 0.0
+    sent_total = 0
+    received_total = 0
     rtt_sum = 0.0
     rtt_count = 0
     COMPAT_PING_RUNNING.set(1)
@@ -303,16 +348,26 @@ def _ping_worker(profile: TrafficProfile, stop: threading.Event) -> None:
                 sent = 1 if previous_sequence is None else max(1, sequence - previous_sequence)
                 lost = sent - 1
                 previous_sequence = sequence
+                sent_total += sent
+                received_total += 1
+                if previous_rtt_ms is not None:
+                    jitter_ms += (abs(rtt_ms - previous_rtt_ms) - jitter_ms) / 16
+                previous_rtt_ms = rtt_ms
                 rtt_sum += rtt_ms
                 rtt_count += 1
                 PING_RTT.labels(*labels).set(rtt_ms)
                 PING_RECEIVED.labels(*labels).inc()
+                if profile.five_tuple.protocol != "udp":
+                    JITTER.labels(*labels).set(jitter_ms)
+                    LOSS.labels(*labels).set((sent_total - received_total) / sent_total)
                 COMPAT_PING_SENT.inc(sent)
                 COMPAT_PING_RECEIVED.inc()
                 COMPAT_PING_LOST.inc(lost)
                 COMPAT_PING_RTT.set(rtt_ms)
                 COMPAT_PING_RTT_SUM.set(rtt_sum)
                 COMPAT_PING_RTT_COUNT.set(rtt_count)
+        if stop.is_set():
+            return
         return_code = process.wait(timeout=5)
         if not stop.is_set() and return_code != 0:
             stderr = process.stderr.read() if process.stderr else ""
@@ -330,6 +385,10 @@ def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     RUNNING.labels(*labels).set(1)
     COMPAT_TRAFFIC_RUNNING.set(1)
     connection = BoundHTTPConnection(profile)
+    previous_latency_ms: float | None = None
+    jitter_ms = 0.0
+    received_bytes_window = 0
+    last_report = time.monotonic()
     try:
         while not stop.is_set():
             started = time.monotonic()
@@ -339,9 +398,22 @@ def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
             if response.status != 200:
                 raise RuntimeError(f"HTTP flow received status {response.status}")
             elapsed = time.monotonic() - started
-            HTTP_LATENCY.labels(*labels).set(elapsed * 1000)
+            latency_ms = elapsed * 1000
+            if previous_latency_ms is not None:
+                jitter_ms += (abs(latency_ms - previous_latency_ms) - jitter_ms) / 16
+            previous_latency_ms = latency_ms
+            HTTP_LATENCY.labels(*labels).set(latency_ms)
             HTTP_REQUESTS.labels(*labels).inc()
-            THROUGHPUT.labels(*labels).set(len(body) * 8 / elapsed / 1_000_000)
+            JITTER.labels(*labels).set(jitter_ms)
+            received_bytes_window += len(body)
+            now = time.monotonic()
+            report_elapsed = now - last_report
+            if report_elapsed >= 1.0:
+                downlink_mbps = received_bytes_window * 8 / report_elapsed / 1_000_000
+                THROUGHPUT.labels(*labels).set(downlink_mbps)
+                THROUGHPUT_DL.labels(*labels).set(downlink_mbps)
+                received_bytes_window = 0
+                last_report = now
             stop.wait(max(0.0, interval - elapsed))
     finally:
         connection.close()
@@ -356,6 +428,8 @@ def main() -> None:
     signal.signal(signal.SIGTERM, lambda _signal, _frame: stop.set())
     signal.signal(signal.SIGINT, lambda _signal, _frame: stop.set())
     start_http_server(9101)
+    for profile in profiles:
+        _initialize_flow_metrics(profile)
     with ThreadPoolExecutor(max_workers=len(profiles) * 2) as executor:
         futures = []
         for profile in profiles:
@@ -372,6 +446,8 @@ def main() -> None:
         if failures:
             COMPAT_STREAM_ERRORS.inc(len(failures))
             stop.set()
+            wait(futures)
+            raise failures[0]
         for future in futures:
             future.result()
 

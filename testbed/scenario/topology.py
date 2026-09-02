@@ -11,6 +11,18 @@ def build_topology(scenario: Scenario) -> dict[str, list[dict[str, Any]]]:
     upf_by_dnn = {item.dnn: item for item in scenario.core.upfs}
     service_by_id = {item.id: item for item in scenario.services}
 
+    for slice_item in scenario.slices:
+        nodes.append(
+            {
+                "id": slice_item.id,
+                "type": "slice",
+                "attributes": {
+                    "sst": slice_item.sst,
+                    "sd": slice_item.sd,
+                    "initial_state": slice_item.initial_state,
+                },
+            }
+        )
     for site in scenario.sites:
         nodes.append({"id": site.id, "type": "site", "attributes": {"site_type": site.type}})
     for gnb in scenario.ran.gnbs:
@@ -22,6 +34,15 @@ def build_topology(scenario: Scenario) -> dict[str, list[dict[str, Any]]]:
     for upf in scenario.core.upfs:
         nodes.append({"id": upf.id, "type": "upf", "attributes": {"dnn": upf.dnn}})
         edges.append({"source": upf.site_id, "target": upf.id, "type": "hosts"})
+    slice_upf_edges = {
+        (session.slice_id, upf_by_dnn[session.dnn].id)
+        for ue in scenario.ues
+        for session in ue.sessions
+    }
+    edges.extend(
+        {"source": slice_id, "target": upf_id, "type": "uses_upf"}
+        for slice_id, upf_id in sorted(slice_upf_edges)
+    )
     for service in scenario.services:
         nodes.append(
             {
@@ -52,6 +73,7 @@ def build_topology(scenario: Scenario) -> dict[str, list[dict[str, Any]]]:
             edges.extend(
                 [
                     {"source": ue.id, "target": flow.id, "type": "originates"},
+                    {"source": session.slice_id, "target": flow.id, "type": "carries"},
                     {"source": flow.id, "target": upf.id, "type": "traverses"},
                     {"source": flow.id, "target": service.id, "type": "terminates_at"},
                 ]

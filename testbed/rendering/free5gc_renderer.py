@@ -62,7 +62,11 @@ def _subscriber_payload(scenario: Scenario, ue: UeSpec) -> dict[str, Any]:
                     "allowedSscModes": ["SSC_MODE_1"],
                 },
                 "sessionAmbr": {"uplink": "1 Gbps", "downlink": "1 Gbps"},
-                "5gQosProfile": {"5qi": 9, "arp": {"priorityLevel": 8}, "priorityLevel": 8},
+                "5gQosProfile": {
+                    "5qi": 9,
+                    "arp": {"priorityLevel": 8, "preemptCap": "", "preemptVuln": ""},
+                    "priorityLevel": 8,
+                },
             }
             for session in sessions
         }
@@ -155,7 +159,8 @@ def _patch_smf(scenario: Scenario, config: dict[str, Any]) -> None:
                 ],
             }
         )
-    up_nodes: dict[str, Any] = {gnb.id: {"type": "AN"} for gnb in scenario.ran.gnbs}
+    access_network = "access-network"
+    up_nodes: dict[str, Any] = {access_network: {"type": "AN"}}
     links: list[dict[str, str]] = []
     for upf in scenario.core.upfs:
         slice_infos = []
@@ -180,7 +185,7 @@ def _patch_smf(scenario: Scenario, config: dict[str, Any]) -> None:
                 {"interfaceType": "N3", "endpoints": [upf.n3_ip], "networkInstances": [upf.dnn]}
             ],
         }
-        links.extend({"A": gnb.id, "B": upf.id} for gnb in scenario.ran.gnbs)
+        links.append({"A": access_network, "B": upf.id})
     body["userplaneInformation"] = {"upNodes": up_nodes, "links": links}
 
 

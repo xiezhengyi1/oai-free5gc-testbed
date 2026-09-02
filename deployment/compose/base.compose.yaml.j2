@@ -5,7 +5,7 @@ networks:
     name: {{ project_name }}-sbi
     driver: bridge
     driver_opts: {com.docker.network.bridge.name: {{ scenario.networks.sbi.bridge_name }}}
-    ipam: {config: [{subnet: {{ scenario.networks.sbi.cidr }}}]}
+    ipam: {config: [{subnet: {{ scenario.networks.sbi.cidr }}, ip_range: {{ sbi_dynamic_range }}}]}
   n2-net:
     name: {{ project_name }}-n2
     driver: bridge

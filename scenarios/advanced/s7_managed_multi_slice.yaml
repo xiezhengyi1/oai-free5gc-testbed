@@ -1,0 +1,131 @@
+schema_version: "1.0"
+scenario_id: managed-multi-slice
+sources:
+  oai: /home/yyx/6gcore/openairinterface5g
+  free5gc_compose: /home/yyx/6gcore/free5gc-compose-v4.1.0-testbed
+versions: {oai: "2026.w35", free5gc_compose: v4.1.0, gtp5g: v0.9.5}
+networks:
+  sbi-net: {cidr: 172.30.0.0/24, bridge_name: tb-sbi}
+  n2-net: {cidr: 172.31.0.0/24, bridge_name: tb-n2}
+  n3-net: {cidr: 172.32.0.0/24, bridge_name: tb-n3}
+  n4-net: {cidr: 172.33.0.0/24, bridge_name: tb-n4}
+  edge-n6-net: {cidr: 172.34.0.0/24, bridge_name: tb-edge-n6}
+  cloud-n6-net: {cidr: 172.35.0.0/24, bridge_name: tb-cloud-n6}
+  cloud-app-net: {cidr: 172.38.0.0/24, bridge_name: tb-cloud-app}
+  monitoring-net: {cidr: 172.36.0.0/24, bridge_name: tb-monitor}
+  control-net: {cidr: 172.37.0.0/24, bridge_name: tb-control}
+plmn: {mcc: "208", mnc: "93", tac: 1}
+slices:
+  - {id: embb, sst: 1, sd: "010203", initial_state: running, capacity: {total_bandwidth_ul_mbps: 20, total_bandwidth_dl_mbps: 80, guaranteed_bandwidth_ul_mbps: 10, guaranteed_bandwidth_dl_mbps: 40}}
+  - {id: urllc, sst: 2, sd: "020304", initial_state: running, capacity: {total_bandwidth_ul_mbps: 30, total_bandwidth_dl_mbps: 30, guaranteed_bandwidth_ul_mbps: 20, guaranteed_bandwidth_dl_mbps: 20}}
+  - {id: mmtc, sst: 3, sd: "030405", initial_state: running, capacity: {total_bandwidth_ul_mbps: 5, total_bandwidth_dl_mbps: 10, guaranteed_bandwidth_ul_mbps: 2, guaranteed_bandwidth_dl_mbps: 5}}
+sites:
+  - {id: edge-a, type: edge}
+  - {id: central-cloud, type: cloud}
+core:
+  amf: {sbi_ip: 172.30.0.3, n2_ip: 172.31.0.10}
+  smf: {sbi_ip: 172.30.0.4, n4_ip: 172.33.0.10}
+  upfs:
+    - {id: embb-upf, container: free5gc-upf-embb, site_id: edge-a, n3_ip: 172.32.0.30, n4_ip: 172.33.0.30, n6_ip: 172.34.0.30, dnn: embb, ue_pool: 10.60.0.0/24}
+    - {id: urllc-upf, container: free5gc-upf-urllc, site_id: edge-a, n3_ip: 172.32.0.31, n4_ip: 172.33.0.31, n6_ip: 172.34.0.31, dnn: urllc, ue_pool: 10.62.0.0/24}
+    - {id: mmtc-upf, container: free5gc-upf-mmtc, site_id: central-cloud, n3_ip: 172.32.0.40, n4_ip: 172.33.0.40, n6_ip: 172.35.0.40, dnn: mmtc, ue_pool: 10.61.0.0/24}
+ran:
+  mode: rfsim
+  band: 78
+  numerology: 1
+  bandwidth_rb: 106
+  frequency_hz: 3619200000
+  gnbs:
+    - id: gnb-1
+      container: oai-gnb-1
+      site_id: edge-a
+      n2_ip: 172.31.0.20
+      n3_ip: 172.32.0.20
+      cells:
+        - {id: cell-1, pci: 1, position: {x: 0.0, y: 0.0, z: 10.0}}
+    - id: gnb-2
+      container: oai-gnb-2
+      site_id: edge-a
+      n2_ip: 172.31.0.21
+      n3_ip: 172.32.0.21
+      cells:
+        - {id: cell-2, pci: 2, position: {x: 500.0, y: 0.0, z: 10.0}}
+ues:
+  - id: ue-1
+    container: oai-nrue-1
+    traffic_sidecar: traffic-sidecar-ue-1
+    supi: imsi-208930000000001
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-1
+    sessions:
+      - {id: embb-session, dnn: embb, slice_id: embb}
+      - {id: urllc-session, dnn: urllc, slice_id: urllc}
+      - {id: mmtc-session, dnn: mmtc, slice_id: mmtc}
+  - id: ue-2
+    container: oai-nrue-2
+    traffic_sidecar: traffic-sidecar-ue-2
+    supi: imsi-208930000000002
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-2
+    sessions:
+      - {id: embb-session, dnn: embb, slice_id: embb}
+      - {id: urllc-session, dnn: urllc, slice_id: urllc}
+      - {id: mmtc-session, dnn: mmtc, slice_id: mmtc}
+  - id: ue-3
+    container: oai-nrue-3
+    traffic_sidecar: traffic-sidecar-ue-3
+    supi: imsi-208930000000003
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-1
+    sessions:
+      - {id: urllc-session, dnn: urllc, slice_id: urllc}
+      - {id: mmtc-session, dnn: mmtc, slice_id: mmtc}
+  - id: ue-4
+    container: oai-nrue-4
+    traffic_sidecar: traffic-sidecar-ue-4
+    supi: imsi-208930000000004
+    key: 8baf473f2f8fd09487cccbd7097c6862
+    opc: 8e27b6af0e692e750f32667a3b14605d
+    serving_gnb: gnb-2
+    sessions:
+      - {id: urllc-session, dnn: urllc, slice_id: urllc}
+      - {id: mmtc-session, dnn: mmtc, slice_id: mmtc}
+services:
+  - {id: embb-app, container: embb-app-edge, service_id: broadband, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.100, port: 8080, resources: {cpus: 2.0, memory_mb: 2048}}
+  - {id: urllc-app, container: urllc-app-edge, service_id: realtime-control, site_id: edge-a, network: edge-n6-net, ip: 172.34.0.110, port: 8080, resources: {cpus: 2.0, memory_mb: 2048}}
+  - {id: mmtc-app, container: mmtc-app-cloud, service_id: sensor-aggregation, site_id: central-cloud, network: cloud-app-net, ip: 172.38.0.100, port: 8080, resources: {cpus: 2.0, memory_mb: 2048}}
+links:
+  - {id: cloud-backhaul, container: cloud-link-emulator, n6_ip: 172.35.0.90, app_side_ip: 172.38.0.90, delay_ms: 25, jitter_ms: 3, loss_rate: 0.001, bandwidth_mbps: 200}
+flows:
+  - {id: ue-1-embb-flow, ue_id: ue-1, session_id: embb-session, service_instance_id: embb-app, protocol: http, src_port: 41101, dst_port: 8080, rate_mbps: 20, packet_size_bytes: 1200, sla: {latency_ms: 30, jitter_ms: 8, loss_rate: 0.005, bandwidth_ul_mbps: 1, bandwidth_dl_mbps: 20, guaranteed_bandwidth_ul_mbps: 0.5, guaranteed_bandwidth_dl_mbps: 10, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 1, allocated_bandwidth_dl_mbps: 20}}
+  - {id: ue-1-urllc-flow, ue_id: ue-1, session_id: urllc-session, service_instance_id: urllc-app, protocol: udp, src_port: 41102, dst_port: 5202, rate_mbps: 5, packet_size_bytes: 512, sla: {latency_ms: 10, jitter_ms: 2, loss_rate: 0.0001, bandwidth_ul_mbps: 5, bandwidth_dl_mbps: 5, guaranteed_bandwidth_ul_mbps: 4, guaranteed_bandwidth_dl_mbps: 4, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 5, allocated_bandwidth_dl_mbps: 5}}
+  - {id: ue-1-mmtc-flow, ue_id: ue-1, session_id: mmtc-session, service_instance_id: mmtc-app, protocol: http, src_port: 41103, dst_port: 8080, rate_mbps: 0.1, packet_size_bytes: 256, sla: {latency_ms: 200, jitter_ms: 50, loss_rate: 0.01, bandwidth_ul_mbps: 0.01, bandwidth_dl_mbps: 0.1, guaranteed_bandwidth_ul_mbps: 0.005, guaranteed_bandwidth_dl_mbps: 0.05, priority: 9}, allocation: {allocated_bandwidth_ul_mbps: 0.01, allocated_bandwidth_dl_mbps: 0.1}}
+  - {id: ue-2-embb-flow, ue_id: ue-2, session_id: embb-session, service_instance_id: embb-app, protocol: http, src_port: 42101, dst_port: 8080, rate_mbps: 20, packet_size_bytes: 1200, sla: {latency_ms: 30, jitter_ms: 8, loss_rate: 0.005, bandwidth_ul_mbps: 1, bandwidth_dl_mbps: 20, guaranteed_bandwidth_ul_mbps: 0.5, guaranteed_bandwidth_dl_mbps: 10, priority: 8}, allocation: {allocated_bandwidth_ul_mbps: 1, allocated_bandwidth_dl_mbps: 20}}
+  - {id: ue-2-urllc-flow, ue_id: ue-2, session_id: urllc-session, service_instance_id: urllc-app, protocol: udp, src_port: 42102, dst_port: 5202, rate_mbps: 5, packet_size_bytes: 512, sla: {latency_ms: 10, jitter_ms: 2, loss_rate: 0.0001, bandwidth_ul_mbps: 5, bandwidth_dl_mbps: 5, guaranteed_bandwidth_ul_mbps: 4, guaranteed_bandwidth_dl_mbps: 4, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 5, allocated_bandwidth_dl_mbps: 5}}
+  - {id: ue-2-mmtc-flow, ue_id: ue-2, session_id: mmtc-session, service_instance_id: mmtc-app, protocol: http, src_port: 42103, dst_port: 8080, rate_mbps: 0.1, packet_size_bytes: 256, sla: {latency_ms: 200, jitter_ms: 50, loss_rate: 0.01, bandwidth_ul_mbps: 0.01, bandwidth_dl_mbps: 0.1, guaranteed_bandwidth_ul_mbps: 0.005, guaranteed_bandwidth_dl_mbps: 0.05, priority: 9}, allocation: {allocated_bandwidth_ul_mbps: 0.01, allocated_bandwidth_dl_mbps: 0.1}}
+  - {id: ue-3-urllc-flow, ue_id: ue-3, session_id: urllc-session, service_instance_id: urllc-app, protocol: udp, src_port: 43102, dst_port: 5202, rate_mbps: 1, packet_size_bytes: 512, sla: {latency_ms: 10, jitter_ms: 2, loss_rate: 0.0001, bandwidth_ul_mbps: 1, bandwidth_dl_mbps: 1, guaranteed_bandwidth_ul_mbps: 0.8, guaranteed_bandwidth_dl_mbps: 0.8, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 1, allocated_bandwidth_dl_mbps: 1}}
+  - {id: ue-3-mmtc-flow, ue_id: ue-3, session_id: mmtc-session, service_instance_id: mmtc-app, protocol: http, src_port: 43103, dst_port: 8080, rate_mbps: 0.1, packet_size_bytes: 256, sla: {latency_ms: 200, jitter_ms: 50, loss_rate: 0.01, bandwidth_ul_mbps: 0.01, bandwidth_dl_mbps: 0.1, guaranteed_bandwidth_ul_mbps: 0.005, guaranteed_bandwidth_dl_mbps: 0.05, priority: 9}, allocation: {allocated_bandwidth_ul_mbps: 0.01, allocated_bandwidth_dl_mbps: 0.1}}
+  - {id: ue-4-urllc-flow, ue_id: ue-4, session_id: urllc-session, service_instance_id: urllc-app, protocol: udp, src_port: 44102, dst_port: 5202, rate_mbps: 1, packet_size_bytes: 512, sla: {latency_ms: 10, jitter_ms: 2, loss_rate: 0.0001, bandwidth_ul_mbps: 1, bandwidth_dl_mbps: 1, guaranteed_bandwidth_ul_mbps: 0.8, guaranteed_bandwidth_dl_mbps: 0.8, priority: 1}, allocation: {allocated_bandwidth_ul_mbps: 1, allocated_bandwidth_dl_mbps: 1}}
+  - {id: ue-4-mmtc-flow, ue_id: ue-4, session_id: mmtc-session, service_instance_id: mmtc-app, protocol: http, src_port: 44103, dst_port: 8080, rate_mbps: 0.1, packet_size_bytes: 256, sla: {latency_ms: 200, jitter_ms: 50, loss_rate: 0.01, bandwidth_ul_mbps: 0.01, bandwidth_dl_mbps: 0.1, guaranteed_bandwidth_ul_mbps: 0.005, guaranteed_bandwidth_dl_mbps: 0.05, priority: 9}, allocation: {allocated_bandwidth_ul_mbps: 0.01, allocated_bandwidth_dl_mbps: 0.1}}
+mobility: []
+resources:
+  system_cpuset_cpus: "0-1,16-17"
+  containers:
+    free5gc-upf-embb: {cpus: 2.0, memory_mb: 1024}
+    free5gc-upf-urllc: {cpus: 2.0, memory_mb: 1024}
+    free5gc-upf-mmtc: {cpus: 2.0, memory_mb: 1024}
+    oai-gnb-1: {cpus: 3.0, memory_mb: 8192, cpuset_cpus: "2-4,18-20"}
+    oai-gnb-2: {cpus: 3.0, memory_mb: 8192, cpuset_cpus: "5-7,21-23"}
+    oai-nrue-1: {cpus: 2.0, memory_mb: 4096, cpuset_cpus: "8-9,24-25"}
+    oai-nrue-2: {cpus: 2.0, memory_mb: 4096, cpuset_cpus: "10-11,26-27"}
+    oai-nrue-3: {cpus: 2.0, memory_mb: 4096, cpuset_cpus: "12-13,28-29"}
+    oai-nrue-4: {cpus: 2.0, memory_mb: 4096, cpuset_cpus: "14-15,30-31"}
+    embb-app-edge: {cpus: 2.0, memory_mb: 2048}
+    urllc-app-edge: {cpus: 2.0, memory_mb: 2048}
+    mmtc-app-cloud: {cpus: 2.0, memory_mb: 2048}
+observability: {scrape_interval_seconds: 2, snapshot_interval_seconds: 5, snapshot_window_seconds: 10, prometheus: true, cadvisor: true, grafana: true, traffic_exporter: true, ran_exporter: true}
+runtime: {startup_timeout_seconds: 420, readiness_poll_seconds: 2, action_timeout_seconds: 90}
+integrations: {multiagents_database_url_env: MULTIAGENTS_DATABASE_URL, action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS}

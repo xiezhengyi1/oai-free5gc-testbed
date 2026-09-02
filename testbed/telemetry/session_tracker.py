@@ -9,7 +9,9 @@ from pathlib import Path
 from prometheus_client import Gauge, start_http_server
 
 from testbed.adapters.docker_adapter import DockerAdapter
+from testbed.adapters.oai.ue_adapter import session_interface
 from testbed.telemetry.free5gc_event_parser import parse_session_fields
+from testbed.telemetry.ran_exporter import parse_ran_ues, parse_ue_rnti
 
 SESSION_COMPLETE = Gauge(
     "testbed_session_correlation_complete",
@@ -21,14 +23,27 @@ SESSION_COMPLETE = Gauge(
 def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, object]]:
     compiled = json.loads((run_dir / "compiled-scenario.json").read_text(encoding="utf-8"))
     scenario = compiled["scenario"]
-    smf_logs = docker.container_logs("free5gc-smf")
+    gnb_logs = {
+        gnb["id"]: docker.container_logs(gnb["container"], tail="all")
+        for gnb in scenario["ran"]["gnbs"]
+    }
+    ran_by_gnb = {gnb_id: parse_ran_ues(log_text) for gnb_id, log_text in gnb_logs.items()}
     records: list[dict[str, object]] = []
     for ue in scenario["ues"]:
+        rnti = parse_ue_rnti(docker.container_logs(ue["container"], tail="all"))
+        ran_record = ran_by_gnb[ue["serving_gnb"]][rnti]
+        cu_ue_id = int(ran_record["cu_ue_id"])
         interfaces = json.loads(docker.exec(ue["container"], ["ip", "-j", "addr", "show"]))
         interface_by_name = {item["ifname"]: item for item in interfaces}
         for index, session in enumerate(ue["sessions"], start=1):
-            record = parse_session_fields(smf_logs, ue["supi"], session["dnn"])
-            interface_name = f"oaitun_ue{index}"
+            record = parse_session_fields(
+                gnb_logs[ue["serving_gnb"]],
+                ue["supi"],
+                session["dnn"],
+                index,
+                cu_ue_id,
+            )
+            interface_name = session_interface(index)
             address_info = interface_by_name[interface_name]["addr_info"]
             ipv4 = next(item["local"] for item in address_info if item["family"] == "inet")
             record.update(
@@ -38,6 +53,8 @@ def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, obj
                     "slice_id": session["slice_id"],
                     "pdu_session_id": index,
                     "ue_ip": ipv4,
+                    "rnti": f"0x{rnti:04x}",
+                    "cu_ue_id": cu_ue_id,
                 }
             )
             complete = all(name in record for name in ("qfi", "five_qi", "ul_teid", "dl_teid"))
@@ -60,6 +77,8 @@ def main() -> None:
         temporary = output.with_suffix(".json.tmp")
         temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
         temporary.replace(output)
+        if all(record["correlation_status"] == "complete" for record in records):
+            stop.wait()
         stop.wait(1)
 
 

@@ -77,6 +77,21 @@ class RunStore:
             )
         )
 
+    def recover(self, evidence: dict[str, Any]) -> RunState:
+        current = self.current()
+        if current.phase not in (RunPhase.RUNNING, RunPhase.FAILED):
+            raise ValueError(f"recover requires RUNNING or FAILED phase, observed {current.phase}")
+        return self._write(
+            RunState(
+                run_id=current.run_id,
+                phase=RunPhase.RUNNING,
+                sequence=current.sequence + 1,
+                reset_generation=current.reset_generation,
+                observed_at=datetime.now(UTC),
+                evidence=evidence,
+            )
+        )
+
     def reset(self) -> RunState:
         current = self.current()
         state = RunState.created(current.run_id, current.reset_generation + 1).model_copy(

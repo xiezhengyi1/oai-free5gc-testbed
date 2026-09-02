@@ -9,10 +9,11 @@ from testbed.scenario.schema import Scenario
 
 def render_prometheus(scenario: Scenario, destination: Path) -> None:
     traffic_targets = [f"{ue.container}:9101" for ue in scenario.ues]
+    scrape_timeout_milliseconds = scenario.observability.scrape_interval_seconds * 800
     payload = {
         "global": {
             "scrape_interval": f"{scenario.observability.scrape_interval_seconds}s",
-            "scrape_timeout": "800ms",
+            "scrape_timeout": f"{scrape_timeout_milliseconds}ms",
             "evaluation_interval": f"{scenario.observability.scrape_interval_seconds}s",
         },
         "scrape_configs": [

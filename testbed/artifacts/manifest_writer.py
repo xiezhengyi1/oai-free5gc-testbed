@@ -33,6 +33,7 @@ class RunLayout:
             path.mkdir()
         for name in ("actions.jsonl", "receipts.jsonl", "snapshots.jsonl", "state.jsonl"):
             (root / name).touch()
+        (metrics / "snapshots.jsonl").hardlink_to(root / "snapshots.jsonl")
         return cls(root=root, generated=generated, logs=logs, metrics=metrics, pcaps=pcaps)
 
 

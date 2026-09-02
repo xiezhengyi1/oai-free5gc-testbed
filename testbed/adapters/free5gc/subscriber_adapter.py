@@ -36,6 +36,7 @@ class SubscriberAdapter:
         plmn_id: str,
         flow_rule: dict[str, Any],
         qos_flow: dict[str, Any],
+        charging_data: dict[str, Any],
     ) -> dict[str, Any]:
         subscriber = self.get(ue_id, plmn_id)
         policy_key = (
@@ -49,8 +50,29 @@ class SubscriberAdapter:
 
         flow_rules = [item for item in subscriber.get("FlowRules", []) if not matches(item)]
         qos_flows = [item for item in subscriber.get("QosFlows", []) if not matches(item)]
+        charging_key = (
+            charging_data["snssai"],
+            charging_data["dnn"],
+            charging_data["qosRef"],
+            charging_data["filter"],
+        )
+
+        def charging_matches(item: dict[str, Any]) -> bool:
+            return (
+                item.get("snssai"),
+                item.get("dnn"),
+                item.get("qosRef"),
+                item.get("filter"),
+            ) == charging_key
+
+        charging_rows = [
+            item
+            for item in subscriber.get("ChargingDatas", [])
+            if not charging_matches(item)
+        ]
         subscriber["FlowRules"] = [*flow_rules, flow_rule]
         subscriber["QosFlows"] = [*qos_flows, qos_flow]
+        subscriber["ChargingDatas"] = [*charging_rows, charging_data]
         response = httpx.put(
             self._url(ue_id, plmn_id), json=subscriber, timeout=self.timeout_seconds
         )
@@ -58,7 +80,16 @@ class SubscriberAdapter:
         observed = self.get(ue_id, plmn_id)
         observed_rule = next(item for item in observed.get("FlowRules", []) if matches(item))
         observed_qos = next(item for item in observed.get("QosFlows", []) if matches(item))
-        if observed_rule != flow_rule or observed_qos != qos_flow:
+        observed_charging = next(
+            item
+            for item in observed.get("ChargingDatas", [])
+            if charging_matches(item)
+        )
+        if (
+            observed_rule != flow_rule
+            or observed_qos != qos_flow
+            or observed_charging != charging_data
+        ):
             raise RuntimeError(f"policy readback mismatch for {ue_id}/{policy_key}")
         return observed
 

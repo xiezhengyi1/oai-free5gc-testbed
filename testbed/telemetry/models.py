@@ -14,6 +14,7 @@ class UnifiedSnapshot(StrictModel):
     observed_from: datetime
     observed_to: datetime
     topology: dict[str, Any]
+    slice_states: tuple[dict[str, Any], ...]
     sessions: tuple[dict[str, Any], ...]
     flows: tuple[dict[str, Any], ...]
     ran_nodes: tuple[dict[str, Any], ...]
