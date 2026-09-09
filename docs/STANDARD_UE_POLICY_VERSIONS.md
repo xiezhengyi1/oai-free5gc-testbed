@@ -4,7 +4,7 @@
 
 | 仓库 | 实现提交 | 分支 |
 |---|---|---|
-| Multiagents | 97bf3a1 | codex/standard-ue-policy |
+| Multiagents | 58e43ef（主改造 97bf3a1，加空切片回归修复） | codex/standard-ue-policy |
 | oai-free5gc-testbed | d918e1d | codex/standard-ue-policy |
 | openairinterface5g-build | 6deba55 | codex/standard-ue-policy |
 | ue-policy-work/pcf | 8a421e4 | codex/standard-ue-policy |

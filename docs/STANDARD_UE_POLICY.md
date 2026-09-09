@@ -35,7 +35,9 @@ AM：使用真正的 AM policy association，PCF notification → AMF → NGAP U
 - RFSP=64 和后续 65 到达 gNB；AMF 收到 UEContextModificationResponse。验收范围为 `gnb_context_and_ngap_response`，`radio_mapping=none`。
 - 抓包独立观察到 TCP/8080 在 N3 `10.230.32.30`、`.31` 两个 UPF 上的双向 GTP-U。原始 capture 的 UE IP 为 `10.231.60.2`、`10.231.61.2`，TEID 见证据。重注册后 IP/TEID 可变化，不将旧抓包字段冒充当前值。
 - 5 类负例：未订阅 DNN、未订阅切片、旧版本、重复 precedence、未知 SUPI，均被拒绝且不改变已完成的 PCF version。
-- 测试床 51 项单测；Multiagents 16 项集成/翻译测试；PCF codec/store 测试；AMF 相关包和 NAS message 测试通过。OAI 全量 UE/gNB 目标构建通过；独立 C 解析器通过 ASan/UBSan、金向量、截断和逐位扰动测试。不是完整上游全量测试集。
+- 测试床 51 项单测；Multiagents 最终 17 项集成/翻译测试；PCF codec/store 测试；AMF 相关包和 NAS message 测试通过。OAI 全量 UE/gNB 目标构建通过；独立 C 解析器通过 ASan/UBSan、金向量、截断和逐位扰动测试。不是完整上游全量测试集。
+
+交付前额外覆盖了空切片：业务全部迁出后，该切片时延、抖动、丢包率为 null（无观测），不是 0；Multiagents 接受这一明确语义且不生成伪数值指标。最终正式适配器复验 `multiagents-20260909T103059.914265Z/` 两项操作均成功，包含迁回后的拓扑/切片归属快照。
 
 证据目录：`artifacts/runs/phase2-isolated/ue-policy/evidence/`。保留首轮 AM 失败记录（gNB decoder 未放行 procedure 40）与修复后的成功记录；不能只保留成功结果。`20260909T100430.406690Z/` 是双项成功验收，`multiagents-20260909T101030.256583Z/` 是正式适配器两操作反馈。`gtpu-path-summary.json` 从原始 pcap 解码得出。`any` 抓包可能重复，且存在内核丢包，不能用于精确吞吐统计。NAS 有安全保护，抓包不是独立的明文 NAS 一致性解码认证。
 
