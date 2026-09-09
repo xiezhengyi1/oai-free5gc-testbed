@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 from datetime import UTC, datetime
@@ -20,6 +21,7 @@ from testbed.gateway.contracts import (
     SliceLifecycleAction,
     SliceResourceAction,
 )
+from testbed.gateway.policy_rebind import rebind_policy
 from testbed.gateway.policy_translator import translate_policy
 from testbed.gateway.policy_watchdog import PolicyWatchdog
 from testbed.gateway.postcondition_verifier import verify_resources, verify_restart
@@ -34,6 +36,7 @@ from testbed.state.action_store import ActionStore
 from testbed.state.flow_allocation_store import FlowAllocationStore
 from testbed.state.slice_store import SliceStore
 from testbed.telemetry.models import UnifiedSnapshot
+from testbed.telemetry.session_tracker import refresh_sessions
 
 
 class ActionExecutor:
@@ -110,7 +113,32 @@ class ActionExecutor:
         accepted_at = datetime.now(UTC)
         self.actions.append_action(action.model_dump(mode="json"))
         ue = next(item for item in self.scenario.ues if item.supi == action.target.supi)
-        translated = translate_policy(self.scenario, action)
+        policy_before = None
+        target_scenario = self.scenario
+        if "UE_POLICY_ADMIN_TOKEN" in os.environ:
+            policy_before = self.pcf.ue_policy(ue.supi)
+            records = policy_before["ue_policy_associations"]
+            if len(records) != 1 or records[0]["status"] != "complete":
+                raise ValueError("SM re-registration requires a completed URSP to preserve")
+            route = json.loads(
+                (
+                    self.run_dir / "ue-policy" / ue.id / f"{action.target.flow_id}.route.json"
+                ).read_text()
+            )
+            if (accepted_at - datetime.fromisoformat(route["observed_at"])).total_seconds() > 5:
+                raise ValueError("SM target has no fresh UE-selected PDU route")
+            session = ue.sessions[route["pdu_session_id"] - 1]
+            target_scenario = self.scenario.model_copy(
+                update={
+                    "flows": tuple(
+                        flow.model_copy(update={"session_id": session.id})
+                        if flow.id == action.target.flow_id
+                        else flow
+                        for flow in self.scenario.flows
+                    )
+                }
+            )
+        translated = translate_policy(target_scenario, action)
         self.subscribers.update_policy(
             action.target.supi,
             translated.plmn_id,
@@ -120,6 +148,16 @@ class ActionExecutor:
         )
         self.docker.restart(translated.ue_container)
         self.readiness.wait(lambda: self.readiness.pdu(ue))
+        rebind = None
+        if policy_before is not None:
+            rebind = rebind_policy(
+                self.pcf,
+                ue.supi,
+                policy_before,
+                self.scenario.runtime.action_timeout_seconds,
+                self.scenario.runtime.readiness_poll_seconds,
+            )
+            refresh_sessions(self.run_dir, self.docker)
         self.docker.restart(translated.traffic_sidecar)
         self.readiness.wait(self.readiness.traffic)
         watchdog = PolicyWatchdog(
@@ -129,6 +167,8 @@ class ActionExecutor:
         snapshot, effect = watchdog.wait(
             action, lambda: self._snapshot(f"PolicyAction:{action.target.flow_id}")
         )
+        if rebind is not None:
+            effect["policy_rebind"] = rebind
         self.flow_allocations.update(
             action.target.flow_id,
             action.parameters.mbr_ul_mbps,

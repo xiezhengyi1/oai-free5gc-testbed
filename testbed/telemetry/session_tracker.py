@@ -64,6 +64,17 @@ def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, obj
     return records
 
 
+def refresh_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, object]]:
+    records = collect_sessions(run_dir, docker)
+    if not all(record["correlation_status"] == "complete" for record in records):
+        raise RuntimeError("session refresh requires complete UE/NGAP correlation")
+    output = run_dir / "session-observations.json"
+    temporary = output.with_suffix(".refresh.tmp")
+    temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(output)
+    return records
+
+
 def main() -> None:
     run_dir = Path(os.environ["RUN_DIR"])
     output = run_dir / "session-observations.json"
