@@ -103,9 +103,18 @@ class DockerAdapter:
     def container_running(self, container: str) -> bool:
         return self.inspect(container)["State"]["Running"] is True
 
-    def container_logs(self, container: str, *, tail: int | str = 5000) -> str:
+    def container_logs(
+        self, container: str, *, tail: int | str = 5000, since: str | None = None
+    ) -> str:
         return self._run(
-            ["docker", "logs", "--tail", str(tail), container],
+            [
+                "docker",
+                "logs",
+                "--tail",
+                str(tail),
+                *(["--since", since] if since else []),
+                container,
+            ],
             timeout_seconds=60,
             merge_stderr=True,
         )

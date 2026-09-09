@@ -18,6 +18,7 @@ from prometheus_client import Counter, Gauge, start_http_server
 
 from testbed.traffic.commands import ping_command, traffic_command
 from testbed.traffic.profiles import TrafficProfile, load_profiles
+from testbed.traffic.ue_policy import publish_route, query_ue_route
 
 LABELS = ("flow_id", "supi", "ue_id", "protocol", "service_instance_id")
 RUNNING = Gauge("testbed_flow_running", "Whether the traffic process is running", LABELS)
@@ -421,6 +422,43 @@ def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
         COMPAT_TRAFFIC_RUNNING.set(0)
 
 
+def _policy_worker(profile: TrafficProfile, stop: threading.Event) -> None:
+    policy_dir = Path(os.environ["OAI_UE_POLICY_DIR"])
+    worker = {"http": _http_worker, "udp": _udp_worker, "tcp": _traffic_worker}[
+        profile.five_tuple.protocol
+    ]
+    current_interface = None
+    local_stop = threading.Event()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = []
+        try:
+            while not stop.is_set():
+                for future in futures:
+                    if future.done():
+                        future.result()
+                        raise RuntimeError(f"flow worker stopped: {profile.flow_id}")
+                route = query_ue_route(profile, policy_dir)
+                interface = route["interface"] if route is not None else None
+                if interface != current_interface:
+                    local_stop.set()
+                    for future in futures:
+                        future.result(timeout=10)
+                    futures = []
+                    current_interface = interface
+                    if route is not None:
+                        effective = profile.model_copy(update={"interface": interface})
+                        local_stop = threading.Event()
+                        futures = [
+                            pool.submit(worker, effective, local_stop),
+                            pool.submit(_ping_worker, effective, local_stop),
+                        ]
+                if route is not None:
+                    publish_route(policy_dir, route)
+                stop.wait(1)
+        finally:
+            local_stop.set()
+
+
 def main() -> None:
     ue_id = os.environ["UE_ID"]
     profiles = load_profiles(Path(os.environ["TRAFFIC_PROFILE_PATH"]), ue_id)
@@ -433,6 +471,9 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=len(profiles) * 2) as executor:
         futures = []
         for profile in profiles:
+            if "OAI_UE_POLICY_DIR" in os.environ:
+                futures.append(executor.submit(_policy_worker, profile, stop))
+                continue
             if profile.five_tuple.protocol == "http":
                 worker = _http_worker
             elif profile.five_tuple.protocol == "udp":

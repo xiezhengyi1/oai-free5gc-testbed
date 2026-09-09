@@ -20,6 +20,7 @@ from testbed.gateway.contracts import (
     SliceResourceAction,
 )
 from testbed.gateway.executor import ActionExecutor
+from testbed.gateway.ue_policy import AMAction, URSPAction
 from testbed.scenario.loader import load_scenario
 from testbed.scenario.schema import StrictModel
 from testbed.state.lock_store import TargetLock
@@ -80,7 +81,10 @@ def _validate_common(
 ) -> None:
     arbiter.authorize(actor, action)
     snapshot = arbiter.validate_snapshot(action.run_id, action.snapshot_id)
-    if isinstance(action, PolicyAction):
+    if isinstance(action, AMAction):
+        if action.target.supi not in {ue.supi for ue in scenario.ues}:
+            raise ValueError("AM policy target is not a declared UE")
+    elif isinstance(action, (PolicyAction, URSPAction)):
         arbiter.validate_policy_target(action, snapshot)
     elif isinstance(action, (SliceLifecycleAction, SliceResourceAction)):
         arbiter.validate_slice_target(action.target.slice_id)
@@ -138,6 +142,13 @@ async def lock_conflict(_request: object, error: FileExistsError):
     return JSONResponse(status_code=409, content={"detail": str(error)})
 
 
+@app.exception_handler(ValueError)
+async def invalid_action(_request: object, error: ValueError):
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(status_code=422, content={"detail": str(error)})
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "run_id": active_run_id}
@@ -178,6 +189,10 @@ def slice_status(slice_id: str, _actor: Annotated[str, Depends(principal)]) -> S
 
 @app.post("/v1/runs/{run_id}/reset", status_code=202)
 def reset(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispatch:
+    if "UE_POLICY_ADMIN_TOKEN" in os.environ:
+        raise HTTPException(
+            status_code=409, detail="NAS profile requires explicit isolated Compose lifecycle"
+        )
     if actor != "project":
         raise HTTPException(status_code=403, detail="reset requires the project principal")
     if run_id != active_run_id:
@@ -195,11 +210,23 @@ def stop(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispa
 
 
 @app.post("/v1/actions/policy", response_model=ActionReceipt)
-def policy(action: PolicyAction, actor: Annotated[str, Depends(principal)]) -> ActionReceipt:
+def policy(
+    action: Annotated[PolicyAction | AMAction | URSPAction, Field(discriminator="action_type")],
+    actor: Annotated[str, Depends(principal)],
+) -> ActionReceipt:
     _validate_common(action, actor)
-    target = f"path:{action.target.supi}:{action.target.flow_id}"
+    target = f"policy:{action.target.supi}"
     with TargetLock(run_dir / "locks", target):
+        if isinstance(action, (AMAction, URSPAction)):
+            return executor.standard_policy(action)
         return executor.policy(action)
+
+
+@app.get("/v1/ue-policies/{supi}")
+def ue_policy(supi: str, _actor: Annotated[str, Depends(principal)]):
+    if supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    return executor.pcf.ue_policy(supi)
 
 
 @app.post("/v1/actions/resource", response_model=ActionReceipt)
