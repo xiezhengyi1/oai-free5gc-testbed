@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import yaml
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -148,8 +149,14 @@ class ActionExecutor:
             translated.qos_flow,
             translated.charging_data,
         )
+        dynamic = (self.run_dir / "ue-policy/dynamic-pdu.json").exists()
+        if dynamic:
+            compose = yaml.safe_load((self.run_dir / "generated/compose.yaml").read_text())
+            tracker = compose["services"]["session-tracker"]["container_name"]
+            self.docker.stop(tracker)
+            self.docker.stop(translated.traffic_sidecar)
         self.docker.restart(translated.ue_container)
-        if (self.run_dir / "ue-policy/dynamic-pdu.json").exists():
+        if dynamic:
             self.readiness.wait(lambda: UeAdapter(self.docker, ue.container).tunnel())
         else:
             self.readiness.wait(lambda: self.readiness.pdu(ue))
@@ -164,6 +171,8 @@ class ActionExecutor:
             )
             refresh_sessions(self.run_dir, self.docker)
         self.docker.restart(translated.traffic_sidecar)
+        if dynamic:
+            self.docker.start(tracker)
         self.readiness.wait(self.readiness.traffic)
         watchdog = PolicyWatchdog(
             self.scenario.runtime.action_timeout_seconds,

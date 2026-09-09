@@ -217,6 +217,8 @@ def policy(
 ) -> ActionReceipt:
     _validate_common(action, actor)
     target = f"policy:{action.target.supi}"
+    if (run_dir / "ue-policy/dynamic-pdu.json").exists():
+        target = "dynamic-policy"
     with TargetLock(run_dir / "locks", target):
         if isinstance(action, (AMAction, URSPAction)):
             return executor.standard_policy(action)
@@ -248,7 +250,8 @@ def update_subscription_authorization(action: AuthorizationAction, actor: Annota
     arbiter.validate_snapshot(action.run_id, action.snapshot_id)
     if action.target.supi not in {ue.supi for ue in scenario.ues}:
         raise HTTPException(status_code=404, detail="unknown SUPI")
-    with TargetLock(run_dir / "locks", f"policy:{action.target.supi}"):
+    target = "dynamic-policy" if (run_dir / "ue-policy/dynamic-pdu.json").exists() else f"policy:{action.target.supi}"
+    with TargetLock(run_dir / "locks", target):
         return executor.standard_policy(action)
 
 

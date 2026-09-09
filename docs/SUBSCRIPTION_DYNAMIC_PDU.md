@@ -1,6 +1,6 @@
 # 订阅授权联动与动态 PDU session
 
-本功能在 `phase2-isolated` 验证；不等同于正式 `s2-live-auto` 已升级。订阅授权是独立的项目管理操作，不是 AM policy 扩权接口。
+本功能先在 `phase2-isolated` 验证，随后迁入 `s2-live-auto`；正式升级记录见 `LIVE_DYNAMIC_PDU_20260909.md`。订阅授权是独立的项目管理操作，不是 AM policy 扩权接口。
 
 ## 实现
 
@@ -30,7 +30,7 @@ UE 的 `.policy.state.json` 记录 Allowed NSSAI、会话 active/pending/error�
 
 部署脚本只接受 `testbed-phase2-isolated` 和全部 `p2-` 容器，备份 compose、SMF 配置、PCF association 与 MongoDB。依赖已构建的动态 UE、控制面和业务镜像。不要在正式环境直接运行。
 
-隔离 SMF 将示例配置的 `urrThreshold: 1000` 调为 67108864 字节，保留 `urrPeriod: 10`。1000 字节阈值在视频业务下产生报告积压，堆栈显示 SMF 持会话锁等待 CHF，导致释放请求超时。调整后保留正常计费报告与 PFCP 确认，没有关闭计费、鉴权或绕过释放。
+早期隔离 SMF 将 `urrThreshold: 1000` 调为 67108864 字节，短时验收通过，但正式多 UE 负载仍复现报告风暴，不能将 64 MiB 调整视为长期修复。正式配置使用 `urrThreshold: 0`、`urrPeriod: 10`：gtp5g 的阈值判断只对非零字节值触发，因而不产生额外 VOLTH 事件，周期用量计量仍存在。CHF、配额控制、鉴权和实际会话释放均未关闭。SMF/UPF/gtp5g 二进制未修改；底层阈值报告问题未从源码修复。
 
 `resume_dynamic_pdu_isolated.py` 仅用于人工修复初始连接后显式继续中断的部署，不是自动兜底。它要求 UE 健康、恰有一个活动初始 PDU，随后下发策略并恢复业务。
 
@@ -38,9 +38,9 @@ UE 的 `.policy.state.json` 记录 Allowed NSSAI、会话 active/pending/error�
 
 ## 当前边界
 
-- 已验证一个隔离 UE、IPv4、两个已部署的 DNN/S-NSSAI。新增“授权”仅限已有网络和 UE 场景目录，不负责创建新切片、UPF 或 DNN 网络。
+- 已验证隔离 UE 以及正式 6 UE / 11 PDU 的 IPv4 环境；正式 `ue-5` 做过可逆撤权／重新授权。新增“授权”仅限已有网络和 UE 场景目录，不负责创建新切片、UPF 或 DNN 网络。
 - 初始连接会话必须保留；授权变更采用受控重注册，会中断该 UE 业务，不是无损热更新。
-- 授权变更期间暂停运行级会话采集器；多 UE 并发授权变更尚未验收，不应直接用于并发管理。
+- 授权变更期间暂停运行级会话采集器；动态配置下的策略写操作按运行串行化，同时写入返回 409。SM 重注册也停启采集器及目标业务。不是多 UE 并发写入实现。
 - 动态建立与复用已验证；完整 T3580 重试、多候选 RSD 失败切换、任意网络发起释放后的重建、IPv6/多接入不是本次验收范围。
 - App-ID/FQDN 匹配、真实无线重选没有包含在本次功能中。
 - 本功能不允许 AM policy 任意扩大订阅权限。
