@@ -9,16 +9,17 @@ class PrometheusAdapter:
     def __init__(self, base_url: str, timeout_seconds: float = 10) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        self.client = httpx.Client(timeout=timeout_seconds)
 
     def ready(self) -> None:
-        response = httpx.get(f"{self.base_url}/-/ready", timeout=self.timeout_seconds)
+        response = self.client.get(f"{self.base_url}/-/ready")
         response.raise_for_status()
 
     def instant_query(self, query: str, timestamp: float | None = None) -> list[dict[str, Any]]:
         parameters: dict[str, Any] = {"query": query}
         if timestamp is not None:
             parameters["time"] = timestamp
-        response = httpx.get(
+        response = self.client.get(
             f"{self.base_url}/api/v1/query", params=parameters, timeout=self.timeout_seconds
         )
         response.raise_for_status()
@@ -30,7 +31,7 @@ class PrometheusAdapter:
     def range_query(
         self, query: str, start: float, end: float, step: float
     ) -> list[dict[str, Any]]:
-        response = httpx.get(
+        response = self.client.get(
             f"{self.base_url}/api/v1/query_range",
             params={"query": query, "start": start, "end": end, "step": step},
             timeout=self.timeout_seconds,
