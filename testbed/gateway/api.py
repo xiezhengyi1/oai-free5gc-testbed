@@ -21,6 +21,7 @@ from testbed.gateway.contracts import (
 )
 from testbed.gateway.executor import ActionExecutor
 from testbed.gateway.ue_policy import AMAction, URSPAction
+from testbed.gateway.subscription_authorization import AuthorizationAction, authorization_digest, FIELDS
 from testbed.scenario.loader import load_scenario
 from testbed.scenario.schema import StrictModel
 from testbed.state.lock_store import TargetLock
@@ -227,6 +228,28 @@ def ue_policy(supi: str, _actor: Annotated[str, Depends(principal)]):
     if supi not in {ue.supi for ue in scenario.ues}:
         raise HTTPException(status_code=404, detail="unknown SUPI")
     return executor.pcf.ue_policy(supi)
+
+
+@app.get("/v1/subscription-authorizations/{supi}")
+def subscription_authorization(supi: str, actor: Annotated[str, Depends(principal)]):
+    if actor != "project":
+        raise HTTPException(status_code=403, detail="subscription provisioning requires the project principal")
+    if supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    subscriber = executor.subscribers.get(supi, scenario.plmn.mcc + scenario.plmn.mnc)
+    return {"supi": supi, "digest": authorization_digest(subscriber),
+            "subscription": {field: subscriber[field] for field in FIELDS}}
+
+
+@app.post("/v1/actions/subscription-authorization", response_model=ActionReceipt)
+def update_subscription_authorization(action: AuthorizationAction, actor: Annotated[str, Depends(principal)]):
+    if actor != "project":
+        raise HTTPException(status_code=403, detail="subscription provisioning requires the project principal")
+    arbiter.validate_snapshot(action.run_id, action.snapshot_id)
+    if action.target.supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    with TargetLock(run_dir / "locks", f"policy:{action.target.supi}"):
+        return executor.standard_policy(action)
 
 
 @app.post("/v1/actions/resource", response_model=ActionReceipt)

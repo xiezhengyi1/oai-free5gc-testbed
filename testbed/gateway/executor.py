@@ -12,6 +12,7 @@ import httpx
 from testbed.adapters.docker_adapter import DockerAdapter
 from testbed.adapters.free5gc.pcf_adapter import PcfAdapter
 from testbed.adapters.free5gc.subscriber_adapter import SubscriberAdapter
+from testbed.adapters.oai.ue_adapter import UeAdapter
 from testbed.gateway.contracts import (
     ActionReceipt,
     Dispatch,
@@ -22,6 +23,7 @@ from testbed.gateway.contracts import (
     SliceResourceAction,
 )
 from testbed.gateway.policy_rebind import rebind_policy
+from testbed.gateway.subscription_authorization import AuthorizationAction, apply_authorization
 from testbed.gateway.policy_translator import translate_policy
 from testbed.gateway.policy_watchdog import PolicyWatchdog
 from testbed.gateway.postcondition_verifier import verify_resources, verify_restart
@@ -147,7 +149,10 @@ class ActionExecutor:
             translated.charging_data,
         )
         self.docker.restart(translated.ue_container)
-        self.readiness.wait(lambda: self.readiness.pdu(ue))
+        if (self.run_dir / "ue-policy/dynamic-pdu.json").exists():
+            self.readiness.wait(lambda: UeAdapter(self.docker, ue.container).tunnel())
+        else:
+            self.readiness.wait(lambda: self.readiness.pdu(ue))
         rebind = None
         if policy_before is not None:
             rebind = rebind_policy(
@@ -202,6 +207,8 @@ class ActionExecutor:
     def _apply_standard_policy(
         self, action: AMAction | URSPAction, accepted_at: datetime
     ) -> ActionReceipt:
+        if isinstance(action, AuthorizationAction):
+            return apply_authorization(self, action, accepted_at)
         plmn = f"{self.scenario.plmn.mcc}{self.scenario.plmn.mnc}"
         subscriber = self.subscribers.get(action.target.supi, plmn)
         if isinstance(action, URSPAction):

@@ -15,13 +15,11 @@ def query_ue_route(profile: TrafficProfile, policy_dir: Path) -> dict | None:
         client.settimeout(3)
         client.connect(str(path))
         client.sendall(
-            (
-                f"{profile.five_tuple.destination_ip} {protocol} "
-                f"{profile.five_tuple.destination_port}\n"
-            ).encode()
+            (f"{profile.five_tuple.destination_ip} {protocol} "
+             f"{profile.five_tuple.destination_port}\n").encode()
         )
         response = client.makefile("r").readline().split()
-    if response[0] in {"NO_ROUTE", "PENDING"}:
+    if response[0] in {"NO_ROUTE", "PENDING", "FAILED"}:
         return None
     if len(response) != 6 or response[0] != "ROUTE":
         raise RuntimeError(f"UE policy query failed: {response}")

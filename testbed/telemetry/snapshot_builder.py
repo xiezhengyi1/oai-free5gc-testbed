@@ -243,13 +243,14 @@ class SnapshotBuilder:
             route_file = self.run_dir / "ue-policy" / ue.id / f"{flow.id}.route.json"
             if "UE_POLICY_ADMIN_TOKEN" in os.environ and route_file.exists():
                 policy_route = json.loads(route_file.read_text(encoding="utf-8"))
-                pdu = next(
-                    row
+                pdu = next((row
                     for row in sessions
                     if row["supi"] == ue.supi
-                    and row["pdu_session_id"] == policy_route["pdu_session_id"]
-                )
-                flow = flow.model_copy(update={"session_id": pdu["session_id"]})
+                    and row["pdu_session_id"] == policy_route["pdu_session_id"]), None)
+                if pdu is None:
+                    policy_route = None
+                else:
+                    flow = flow.model_copy(update={"session_id": pdu["session_id"]})
             telemetry, sample_count = self._flow_telemetry(
                 window,
                 flow.id,
