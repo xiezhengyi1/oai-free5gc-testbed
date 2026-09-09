@@ -16,14 +16,14 @@
     "free5gc/upf:v4.1.0": "sha256:2ea1d80253b541972dfb4430989080fb4f93fe6784b1fe6034227cf1a8525587",
     "free5gc/webui:v4.1.0": "sha256:eec2d77d05fed9b20b51648d5853ec35c4af585be215df099540db84913f3f9c",
     "mongo:4.4": "sha256:4be76f674fc4b27859816811b8baa3c51830eb1dbf4ca81a51e26b79edd662ef",
-    "oaisoftwarealliance/oai-gnb:2026.w35": "sha256:422e525bc6037f7af88985118ead712d01aa2d3474ee849de5b6335206e8fa3e",
-    "oaisoftwarealliance/oai-nr-ue:2026.w35": "sha256:e67c9c69984875e7602ffd1e4235894427a92a5ce3c9c0c064a3184a476c481a",
+    "oaisoftwarealliance/oai-gnb:2026.w35": "sha256:7919336b7b6751a574249f445c7a7e2fc3c77e7e7f64881921aa1349968f5af2",
+    "oaisoftwarealliance/oai-nr-ue:2026.w35": "sha256:a6c96f25c17b4ecc5bfaeaab1fbf26eebfde73713aa144236ea11c5de70d8705",
     "prom/prometheus:v3.12.0": "sha256:69f5241418838263316593f7274a304b095c40bcf22e57272865da91bd60a8ac",
     "gcr.io/cadvisor/cadvisor:v0.57.0": "sha256:e75bdb03b74b0b6995f208f166fead2e6e555dde73e44200113bb26f41b1981d",
     "grafana/grafana:13.1.0": "sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63",
-    "oai-free5gc-testbed/control:0.1.0": "sha256:237f504bef8570b1bc4145c65d19adb5b7d29bf9e600f9b6380d3e6c664e70b5",
-    "oai-free5gc-testbed/traffic-sidecar:0.1.0": "sha256:7ea6293d4e3fd0e2f64020b15cabd0b95d5afdcc7a7f89ee199aba18c491f6ba",
-    "oai-free5gc-testbed/app:0.1.0": "sha256:4d030fd25f6d29e3c41912bc5afa62dc2a3f8f58d08ef258c6193bd6beb5be92",
-    "oai-free5gc-testbed/link-emulator:0.1.0": "sha256:5f7cf94994f3f993b22c278b42adc7bf0addb31dd2838cba1f6f076e3f780701"
+    "oai-free5gc-testbed/control:0.1.0": "sha256:2097b9ebed8168599a0a433fc9e768a8510ab3fc3b6d223649c1be545c3ba10b",
+    "oai-free5gc-testbed/traffic-sidecar:0.1.0": "sha256:87a38d071edd2a2fff05a86b4137d90cc21a4a3d62c0234e87e396bbc5d616cc",
+    "oai-free5gc-testbed/app:0.1.0": "sha256:6a406d5cb42e4c19ddb66a7359cdb8eca8dbcbbe39e47997917a598cdc5ca9a0",
+    "oai-free5gc-testbed/link-emulator:0.1.0": "sha256:4a36936a20adbbe35f434c8848e38a5fecf58b10595d58114fb985d77cd2a31e"
   }
 }

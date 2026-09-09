@@ -65,7 +65,7 @@ def _api_keys() -> dict[str, str]:
     return parsed
 
 
-def principal(x_api_key: Annotated[str, Header(alias="X-API-Key")]) -> str:
+def principal(x_api_key: Annotated[str, Header()]) -> str:
     matches = [name for name, key in _api_keys().items() if key == x_api_key]
     if len(matches) != 1:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid API key")

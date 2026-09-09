@@ -18,7 +18,12 @@ from testbed.telemetry.ran_exporter import (
     ran_records_ready,
 )
 from testbed.telemetry.snapshot_builder import _maximum_observed, _prb_utilization
-from testbed.telemetry.snapshot_writer import PostgresGraphWriter, SnapshotStore, graph_summary
+from testbed.telemetry.snapshot_writer import (
+    PostgresGraphWriter,
+    SnapshotStore,
+    graph_delta,
+    graph_summary,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -326,3 +331,31 @@ def test_graph_summary_preserves_agent_flow_contract() -> None:
     assert {"ue", "app", "flow", "slice"} <= types
     assert summary["testbed_snapshot"]["snapshot_id"] == "snapshot-1"
     assert any(metric["metric_name"] == "session.qfi" for metric in summary["metrics"])
+
+
+def test_graph_delta_only_contains_changes() -> None:
+    now = datetime.now(UTC)
+    previous = graph_summary(
+        UnifiedSnapshot(
+            snapshot_id="snapshot-1",
+            run_id="run-1",
+            observed_from=now,
+            observed_to=now,
+            topology={},
+            slice_states=(),
+            sessions=(),
+            flows=(),
+            ran_nodes=(),
+            core_nodes=(),
+            containers=(),
+            mec_sites=(),
+            mobility=(),
+            active_actions=(),
+            trigger_event="Periodic",
+        )
+    )
+    current = {**previous, "snapshot_id": "snapshot-2"}
+    delta = graph_delta(current, previous)
+    assert delta["mode"] == "delta"
+    assert delta["upsert"] == {"nodes": [], "edges": [], "metrics": []}
+    assert delta["delete"] == {"node_keys": [], "edge_keys": [], "metric_keys": []}
