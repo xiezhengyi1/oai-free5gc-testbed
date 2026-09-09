@@ -179,6 +179,7 @@ def test_launcher_bootstraps_dynamic_pdu_before_full_readiness(
     assert launcher.docker.run_calls == [
         ("action-gateway", ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"])
     ]
+    assert launcher.docker.up_calls.count(["traffic-sidecar-ue-1", "traffic-sidecar-ue-2"]) == 1
 
 
 def test_launcher_reset_clears_dynamic_policy_runtime(tmp_path: Path) -> None:

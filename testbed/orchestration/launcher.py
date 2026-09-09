@@ -109,12 +109,14 @@ class Launcher:
                     "action-gateway",
                     ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"],
                 )
+                self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
                 for ue in self.scenario.ues:
                     tunnels[ue.id] = self.readiness.wait(lambda ue=ue: self.readiness.pdu(ue))
             on_ready(RunPhase.PDU_READY, tunnels)
 
             expected_phase = RunPhase.TRAFFIC_READY
-            self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
+            if not dynamic_pdu:
+                self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
             on_ready(RunPhase.TRAFFIC_READY, self.readiness.wait(self.readiness.traffic))
             self.slice_manager.reconcile_initial()
 
