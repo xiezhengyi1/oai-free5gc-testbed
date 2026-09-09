@@ -60,6 +60,14 @@ class DockerAdapter:
             raise ValueError("compose_up requires at least one explicit service")
         self._run(self._compose_command("up", "-d", "--no-build", *services), timeout_seconds=300)
 
+    def compose_run(self, service: str, command: list[str]) -> str:
+        return self._run(
+            self._compose_command(
+                "run", "--rm", "--no-deps", "--entrypoint", command[0], service, *command[1:]
+            ),
+            timeout_seconds=300,
+        )
+
     def compose_create(self, services: list[str]) -> None:
         if not services:
             raise ValueError("compose_create requires at least one explicit service")

@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 class FakeDocker:
     def __init__(self) -> None:
         self.up_calls: list[list[str]] = []
+        self.run_calls: list[tuple[str, list[str]]] = []
+        self.down_calls: list[bool] = []
         self.stopped = False
 
     def compose_config(self) -> None:
@@ -21,6 +23,12 @@ class FakeDocker:
 
     def compose_up(self, services: list[str]) -> None:
         self.up_calls.append(services)
+
+    def compose_run(self, service: str, command: list[str]) -> None:
+        self.run_calls.append((service, command))
+
+    def compose_down(self, *, remove_volumes: bool) -> None:
+        self.down_calls.append(remove_volumes)
 
     def compose_stop(self) -> None:
         self.stopped = True
@@ -52,6 +60,10 @@ class FakeReadiness:
         self.ue_events.append(("pdu", ue.id))
         return [{"ue_id": ue.id}]
 
+    def initial_pdu(self, ue: Any) -> list[dict[str, str]]:
+        self.ue_events.append(("initial_pdu", ue.id))
+        return [{"ue_id": ue.id}]
+
     def traffic(self) -> dict[str, object]:
         return {}
 
@@ -77,6 +89,10 @@ class FakeStore:
     def recover(self, evidence: dict[str, Any]) -> SimpleNamespace:
         self.recoveries.append(evidence)
         return SimpleNamespace(phase=RunPhase.RUNNING)
+
+    def reset(self) -> SimpleNamespace:
+        self.phase = RunPhase.CREATED
+        return SimpleNamespace(phase=RunPhase.CREATED)
 
     def stop(self, evidence: dict[str, Any]) -> SimpleNamespace:
         self.stops.append(evidence)
@@ -126,6 +142,62 @@ def test_launcher_brings_multi_ue_pdu_sessions_up_sequentially(
     assert ["oai-nrue-2"] in launcher.docker.up_calls
     assert ["oai-nrue-1", "oai-nrue-2"] not in launcher.docker.up_calls
     assert launcher.slice_manager.reconciled is True
+
+
+def test_launcher_bootstraps_dynamic_pdu_before_full_readiness(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    launcher = object.__new__(Launcher)
+    launcher.run_dir = tmp_path
+    launcher.compose_file = tmp_path / "compose.yaml"
+    launcher.compose_env_file = tmp_path / ".env"
+    launcher.scenario = load_scenario(
+        ROOT / "scenarios/advanced/s6_multi_gnb_multi_upf_multi_ue.yaml"
+    )
+    launcher.docker = FakeDocker()
+    launcher.readiness = FakeReadiness()
+    launcher.store = FakeStore()
+    launcher.slice_manager = FakeSliceManager()
+    marker = tmp_path / "ue-policy" / "dynamic-pdu.json"
+    marker.parent.mkdir()
+    marker.write_text("{}")
+    monkeypatch.setattr(
+        "testbed.orchestration.launcher.provision_subscribers",
+        lambda *_args: [ue.supi for ue in launcher.scenario.ues],
+    )
+
+    launcher.start()
+
+    assert launcher.readiness.ue_events == [
+        ("registered", "ue-1"),
+        ("initial_pdu", "ue-1"),
+        ("registered", "ue-2"),
+        ("initial_pdu", "ue-2"),
+        ("pdu", "ue-1"),
+        ("pdu", "ue-2"),
+    ]
+    assert launcher.docker.run_calls == [
+        ("action-gateway", ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"])
+    ]
+
+
+def test_launcher_reset_clears_dynamic_policy_runtime(tmp_path: Path) -> None:
+    launcher = object.__new__(Launcher)
+    launcher.run_dir = tmp_path
+    launcher.docker = FakeDocker()
+    launcher.store = FakeStore(RunPhase.RUNNING)
+    marker = tmp_path / "ue-policy" / "dynamic-pdu.json"
+    marker.parent.mkdir()
+    marker.write_text("{}")
+    launcher.start = lambda: SimpleNamespace(phase=RunPhase.RUNNING)
+
+    state = launcher.reset()
+
+    assert state.phase == RunPhase.RUNNING
+    assert launcher.docker.down_calls == [True]
+    assert launcher.docker.run_calls == [
+        ("action-gateway", ["python", "-m", "testbed.orchestration.ue_policy_reset"])
+    ]
 
 
 def test_launcher_resumes_running_run_and_records_recovery(

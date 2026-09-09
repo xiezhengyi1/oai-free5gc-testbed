@@ -96,6 +96,9 @@ class Readiness:
             adapter.tunnel(session_interface(index)) for index, _ in enumerate(ue.sessions, start=1)
         ]
 
+    def initial_pdu(self, ue: UeSpec) -> list[dict[str, Any]]:
+        return [UeAdapter(self.docker, ue.container).tunnel()]
+
     def pdu_for_slice(self, ue: UeSpec, slice_id: str) -> list[dict[str, Any]]:
         adapter = UeAdapter(self.docker, ue.container)
         return [

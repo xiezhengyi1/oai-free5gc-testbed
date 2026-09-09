@@ -47,6 +47,7 @@ class Launcher:
         self,
         on_ready: Callable[[RunPhase, dict[str, Any]], None],
     ) -> None:
+        dynamic_pdu = (self.run_dir / "ue-policy" / "dynamic-pdu.json").exists()
         core_services = [
             "mongodb",
             "free5gc-nrf",
@@ -99,8 +100,17 @@ class Launcher:
                 registered_supis.append(registration["supi"])
 
                 expected_phase = RunPhase.PDU_READY
-                tunnels[ue.id] = self.readiness.wait(lambda ue=ue: self.readiness.pdu(ue))
+                probe = self.readiness.initial_pdu if dynamic_pdu else self.readiness.pdu
+                tunnels[ue.id] = self.readiness.wait(lambda ue=ue: probe(ue))
             on_ready(RunPhase.UE_REGISTERED, {"registered_supis": registered_supis})
+
+            if dynamic_pdu:
+                self.docker.compose_run(
+                    "action-gateway",
+                    ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"],
+                )
+                for ue in self.scenario.ues:
+                    tunnels[ue.id] = self.readiness.wait(lambda ue=ue: self.readiness.pdu(ue))
             on_ready(RunPhase.PDU_READY, tunnels)
 
             expected_phase = RunPhase.TRAFFIC_READY
@@ -177,5 +187,10 @@ class Launcher:
 
     def reset(self) -> RunState:
         self.docker.compose_down(remove_volumes=True)
+        if (self.run_dir / "ue-policy" / "dynamic-pdu.json").exists():
+            self.docker.compose_run(
+                "action-gateway",
+                ["python", "-m", "testbed.orchestration.ue_policy_reset"],
+            )
         self.store.reset()
         return self.start()
