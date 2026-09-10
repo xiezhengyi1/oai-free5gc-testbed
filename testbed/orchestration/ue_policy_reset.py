@@ -19,6 +19,7 @@ def reset_policy_runtime(root: Path) -> None:
             artifact.unlink()
         for route in directory.glob("*.route.json"):
             route.unlink()
+    (root / "ue-policy" / "dynamic-pdu.json").unlink()
 
 
 if __name__ == "__main__":

@@ -25,10 +25,10 @@ def test_reset_policy_runtime_clears_only_live_policy_artifacts(
     ]
     for artifact in artifacts:
         artifact.write_text("state")
-    preserved = tmp_path / "ue-policy" / "dynamic-pdu.json"
-    preserved.write_text("{}")
+    dynamic_marker = tmp_path / "ue-policy" / "dynamic-pdu.json"
+    dynamic_marker.write_text("{}")
 
     reset_policy_runtime(tmp_path)
 
     assert not any(artifact.exists() for artifact in artifacts)
-    assert preserved.exists()
+    assert not dynamic_marker.exists()
