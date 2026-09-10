@@ -67,6 +67,9 @@ class FakeReadiness:
     def traffic(self) -> dict[str, object]:
         return {}
 
+    def telemetry_sources(self) -> dict[str, object]:
+        return {}
+
     def telemetry(self) -> dict[str, object]:
         return {}
 
@@ -142,6 +145,8 @@ def test_launcher_brings_multi_ue_pdu_sessions_up_sequentially(
     assert ["oai-nrue-2"] in launcher.docker.up_calls
     assert ["oai-nrue-1", "oai-nrue-2"] not in launcher.docker.up_calls
     assert launcher.slice_manager.reconciled is True
+    assert ["prometheus", "cadvisor", "grafana", "ran-exporter", "session-tracker"] in launcher.docker.up_calls
+    assert launcher.docker.up_calls.index(["snapshot-builder", "action-gateway"]) > launcher.docker.up_calls.index(["prometheus", "cadvisor", "grafana", "ran-exporter", "session-tracker"])
 
 
 def test_launcher_bootstraps_dynamic_pdu_before_full_readiness(

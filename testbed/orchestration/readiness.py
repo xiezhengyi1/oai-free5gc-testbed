@@ -137,6 +137,20 @@ class Readiness:
             )
         return evidence
 
+    def telemetry_sources(self) -> dict[str, Any]:
+        prometheus = PrometheusAdapter("http://127.0.0.1:29090")
+        prometheus.ready()
+        up = prometheus.instant_query("up")
+        expected_targets = 4 + len(self.scenario.ues)
+        if len(up) != expected_targets:
+            raise RuntimeError(
+                f"expected {expected_targets} Prometheus targets, found {len(up)}"
+            )
+        down = [item["metric"] for item in up if float(item["value"][1]) != 1.0]
+        if down:
+            raise RuntimeError(f"Prometheus targets are down: {down}")
+        return {"targets": len(up)}
+
     def telemetry(self) -> dict[str, Any]:
         prometheus = PrometheusAdapter("http://127.0.0.1:29090")
         prometheus.ready()

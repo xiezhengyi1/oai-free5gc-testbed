@@ -121,17 +121,16 @@ class Launcher:
             self.slice_manager.reconcile_initial()
 
             expected_phase = RunPhase.TELEMETRY_READY
-            self.docker.compose_up(
-                [
-                    "prometheus",
-                    "cadvisor",
-                    "grafana",
-                    "ran-exporter",
-                    "session-tracker",
-                    "snapshot-builder",
-                    "action-gateway",
-                ]
-            )
+            telemetry_sources = [
+                "prometheus",
+                "cadvisor",
+                "grafana",
+                "ran-exporter",
+                "session-tracker",
+            ]
+            self.docker.compose_up(telemetry_sources)
+            self.readiness.wait(self.readiness.telemetry_sources)
+            self.docker.compose_up(["snapshot-builder", "action-gateway"])
             on_ready(
                 RunPhase.TELEMETRY_READY, self.readiness.wait(self.readiness.telemetry)
             )
