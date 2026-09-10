@@ -189,12 +189,42 @@ def test_launcher_bootstraps_dynamic_pdu_before_full_readiness(
     assert launcher.docker.up_calls.count(["traffic-sidecar-ue-1", "traffic-sidecar-ue-2"]) == 1
 
 
-def test_launcher_reset_clears_dynamic_policy_runtime(tmp_path: Path) -> None:
+def test_launcher_bootstraps_a_static_ue_policy_profile(tmp_path: Path, monkeypatch: Any) -> None:
+    launcher = object.__new__(Launcher)
+    launcher.run_dir = tmp_path
+    launcher.compose_file = tmp_path / "compose.yaml"
+    launcher.compose_env_file = tmp_path / ".env"
+    launcher.scenario = load_scenario(
+        ROOT / "scenarios/advanced/s6_multi_gnb_multi_upf_multi_ue.yaml"
+    )
+    launcher.docker = FakeDocker()
+    launcher.readiness = FakeReadiness()
+    launcher.store = FakeStore()
+    launcher.slice_manager = FakeSliceManager()
+    marker = tmp_path / "ue-policy" / "profile.json"
+    marker.parent.mkdir()
+    marker.write_text("{}")
+    monkeypatch.setattr(
+        "testbed.orchestration.launcher.provision_subscribers",
+        lambda *_args: [ue.supi for ue in launcher.scenario.ues],
+    )
+
+    launcher.start()
+
+    assert launcher.docker.run_calls == [
+        ("action-gateway", ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"])
+    ]
+
+
+@pytest.mark.parametrize("marker_name", ["dynamic-pdu.json", "profile.json"])
+def test_launcher_reset_clears_policy_runtime(
+    tmp_path: Path, marker_name: str
+) -> None:
     launcher = object.__new__(Launcher)
     launcher.run_dir = tmp_path
     launcher.docker = FakeDocker()
     launcher.store = FakeStore(RunPhase.RUNNING)
-    marker = tmp_path / "ue-policy" / "dynamic-pdu.json"
+    marker = tmp_path / "ue-policy" / marker_name
     marker.parent.mkdir()
     marker.write_text("{}")
     launcher.start = lambda: SimpleNamespace(phase=RunPhase.RUNNING)

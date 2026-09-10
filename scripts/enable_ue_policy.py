@@ -36,6 +36,7 @@ def enable(run_dir: Path) -> None:
     for ue in scenario["ues"]:
         directory = policy_dir / ue["id"]
         directory.mkdir(parents=True, exist_ok=True)
+        directory.chmod(0o777)
         services[ue["container"]]["image"] = "oaisoftwarealliance/oai-nr-ue:2026.w35-uepolicy"
         for name in (ue["container"], ue["traffic_sidecar"]):
             services[name]["environment"]["OAI_UE_POLICY_DIR"] = "/ue-policy"
