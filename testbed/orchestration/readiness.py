@@ -140,7 +140,9 @@ class Readiness:
     def telemetry_sources(self) -> dict[str, Any]:
         prometheus = PrometheusAdapter("http://127.0.0.1:29090")
         prometheus.ready()
-        up = prometheus.instant_query("up")
+        up = prometheus.instant_query(
+            'up{instance!="snapshot-builder:9104",instance!="action-gateway:9105"}'
+        )
         expected_targets = 4 + len(self.scenario.ues)
         if len(up) != expected_targets:
             raise RuntimeError(
