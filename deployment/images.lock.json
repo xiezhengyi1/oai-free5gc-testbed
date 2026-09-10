@@ -21,9 +21,9 @@
     "prom/prometheus:v3.12.0": "sha256:69f5241418838263316593f7274a304b095c40bcf22e57272865da91bd60a8ac",
     "gcr.io/cadvisor/cadvisor:v0.57.0": "sha256:e75bdb03b74b0b6995f208f166fead2e6e555dde73e44200113bb26f41b1981d",
     "grafana/grafana:13.1.0": "sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63",
-    "oai-free5gc-testbed/control:0.1.0": "sha256:2097b9ebed8168599a0a433fc9e768a8510ab3fc3b6d223649c1be545c3ba10b",
-    "oai-free5gc-testbed/traffic-sidecar:0.1.0": "sha256:87a38d071edd2a2fff05a86b4137d90cc21a4a3d62c0234e87e396bbc5d616cc",
-    "oai-free5gc-testbed/app:0.1.0": "sha256:6a406d5cb42e4c19ddb66a7359cdb8eca8dbcbbe39e47997917a598cdc5ca9a0",
-    "oai-free5gc-testbed/link-emulator:0.1.0": "sha256:4a36936a20adbbe35f434c8848e38a5fecf58b10595d58114fb985d77cd2a31e"
+    "oai-free5gc-testbed/control:0.1.0": "sha256:74f0d91f4e8d3b260efdbba02706d6679a56928a4e573e49f603dfacf41e60e3",
+    "oai-free5gc-testbed/traffic-sidecar:0.1.0": "sha256:5831183d79f1ef28f62237fecd5565a95818d4fc035b3a54bcbcda8796d62338",
+    "oai-free5gc-testbed/app:0.1.0": "sha256:018200a6acb4748dd094facf9ecd3a4fb37b5193dc2401836ba9309b2e8b66d1",
+    "oai-free5gc-testbed/link-emulator:0.1.0": "sha256:88d5a0afeb4c7fb74c36a0564e1e74aeb96f70a64ecd018f7a0a7834fb7ce191"
   }
 }

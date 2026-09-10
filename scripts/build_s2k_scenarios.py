@@ -267,6 +267,40 @@ def _clone_ues_and_flows(
     return ues, flows
 
 
+def _ensure_slice_flow_coverage(
+    payload: dict,
+    ues: list[dict],
+    flows: list[dict],
+    rate_scale: float,
+) -> None:
+    session_slices = {
+        (ue["id"], session["id"]): session["slice_id"]
+        for ue in ues
+        for session in ue["sessions"]
+    }
+    covered = {
+        session_slices[(flow["ue_id"], flow["session_id"])] for flow in flows
+    }
+    required = {slice_item["id"] for slice_item in payload["slices"]}
+    for slice_id in sorted(required - covered):
+        ue = next(
+            ue
+            for ue in ues
+            if any(session["slice_id"] == slice_id for session in ue["sessions"])
+        )
+        session = next(
+            session for session in ue["sessions"] if session["slice_id"] == slice_id
+        )
+        source_flow = next(
+            flow for flow in payload["flows"] if flow["session_id"] == session["id"]
+        )
+        flow = deepcopy(source_flow)
+        flow["id"] = f'{ue["id"]}-{source_flow["id"]}'
+        flow["ue_id"] = ue["id"]
+        _scale_bandwidth(flow, rate_scale)
+        flows.append(flow)
+
+
 def _resize_slice_capacities(payload: dict, spec: ScenarioSpec) -> None:
     session_slices = {
         (ue["id"], session["id"]): session["slice_id"]
@@ -336,6 +370,7 @@ def _build_payload(spec: ScenarioSpec) -> dict:
     gnbs = _clone_gnbs(payload, spec)
     payload["ran"]["gnbs"] = gnbs
     ues, flows = _clone_ues_and_flows(payload, spec, gnbs, scenario_number)
+    _ensure_slice_flow_coverage(payload, ues, flows, spec.rate_scale)
     payload["ues"] = ues
     payload["flows"] = flows
 

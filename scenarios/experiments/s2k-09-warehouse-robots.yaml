@@ -606,6 +606,16 @@ services:
   resources:
     cpus: 0.5
     memory_mb: 512
+- id: iot-sensor-app
+  container: iot-sensor-app
+  service_id: iot-sensor
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.102
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
 - id: ar-gaming-app
   container: ar-gaming-app
   service_id: ar-gaming
@@ -1310,6 +1320,27 @@ flows:
   allocation:
     allocated_bandwidth_ul_mbps: 3.42
     allocated_bandwidth_dl_mbps: 2.7
+- id: ue-2-iot-sensor-telemetry-1
+  ue_id: ue-2
+  session_id: iot-sensor-session
+  service_instance_id: iot-sensor-app
+  protocol: tcp
+  src_port: 42003
+  dst_port: 5201
+  rate_mbps: 0.18
+  packet_size_bytes: 125
+  sla:
+    latency_ms: 120
+    jitter_ms: 30
+    loss_rate: 0.02
+    bandwidth_ul_mbps: 0.18
+    bandwidth_dl_mbps: 0.045
+    guaranteed_bandwidth_ul_mbps: 0.108
+    guaranteed_bandwidth_dl_mbps: 0.027
+    priority: 8
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.18
+    allocated_bandwidth_dl_mbps: 0.045
 mobility: []
 resources:
   containers:
@@ -1434,6 +1465,9 @@ resources:
       cpus: 0.5
       memory_mb: 512
     factory-robot-app:
+      cpus: 0.5
+      memory_mb: 512
+    iot-sensor-app:
       cpus: 0.5
       memory_mb: 512
     ar-gaming-app:

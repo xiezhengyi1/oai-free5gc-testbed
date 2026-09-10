@@ -1861,6 +1861,27 @@ flows:
   allocation:
     allocated_bandwidth_ul_mbps: 0.1
     allocated_bandwidth_dl_mbps: 0.05
+- id: ue-2-cloud-render-stream-1
+  ue_id: ue-2
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 25.0
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.5
+    bandwidth_dl_mbps: 25.0
+    guaranteed_bandwidth_ul_mbps: 0.3
+    guaranteed_bandwidth_dl_mbps: 20.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.5
+    allocated_bandwidth_dl_mbps: 25.0
 mobility: []
 resources:
   containers:

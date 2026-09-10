@@ -4,6 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
 from testbed.orchestration.launcher import Launcher
 from testbed.scenario.loader import load_scenario
 from testbed.state.models import RunPhase
@@ -206,8 +208,9 @@ def test_launcher_reset_clears_dynamic_policy_runtime(tmp_path: Path) -> None:
     ]
 
 
-def test_launcher_resumes_running_run_and_records_recovery(
-    tmp_path: Path, monkeypatch: Any
+@pytest.mark.parametrize("phase", [RunPhase.RUNNING, RunPhase.STOPPED])
+def test_launcher_resumes_run_and_records_recovery(
+    tmp_path: Path, monkeypatch: Any, phase: RunPhase
 ) -> None:
     launcher = object.__new__(Launcher)
     launcher.run_dir = tmp_path
@@ -218,7 +221,7 @@ def test_launcher_resumes_running_run_and_records_recovery(
     )
     launcher.docker = FakeDocker()
     launcher.readiness = FakeReadiness()
-    launcher.store = FakeStore(RunPhase.RUNNING)
+    launcher.store = FakeStore(phase)
     launcher.slice_manager = FakeSliceManager()
     monkeypatch.setattr(
         "testbed.orchestration.launcher.provision_subscribers",
@@ -230,7 +233,7 @@ def test_launcher_resumes_running_run_and_records_recovery(
     assert state.phase == RunPhase.RUNNING
     assert launcher.store.advances == []
     assert launcher.store.recoveries[0]["ready"] is True
-    assert launcher.store.recoveries[0]["recovered_from"] == RunPhase.RUNNING
+    assert launcher.store.recoveries[0]["recovered_from"] == phase
     assert RunPhase.TELEMETRY_READY.value in launcher.store.recoveries[0]["recovered"]
     assert launcher.readiness.ue_events == [
         ("registered", "ue-1"),

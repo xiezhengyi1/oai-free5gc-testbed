@@ -54,6 +54,8 @@ services:
     environment:
       RUN_ID: {{ run_id }}
       RUN_DIR: /run
+      NO_PROXY: "*"
+      no_proxy: "*"
       MULTIAGENTS_DATABASE_URL: ${MULTIAGENTS_DATABASE_URL:?MULTIAGENTS_DATABASE_URL is required}
     volumes: ["../:/run"]
     extra_hosts: ["host.docker.internal:host-gateway"]
@@ -68,6 +70,8 @@ services:
     environment:
       RUN_ID: {{ run_id }}
       RUN_DIR: /run
+      NO_PROXY: "*"
+      no_proxy: "*"
       ACTION_GATEWAY_API_KEYS: ${ACTION_GATEWAY_API_KEYS:?ACTION_GATEWAY_API_KEYS is required}
       MULTIAGENTS_DATABASE_URL: ${MULTIAGENTS_DATABASE_URL:?MULTIAGENTS_DATABASE_URL is required}
     volumes:

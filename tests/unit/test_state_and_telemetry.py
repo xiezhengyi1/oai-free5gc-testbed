@@ -101,6 +101,17 @@ def test_running_state_can_record_an_in_place_recovery(tmp_path: Path) -> None:
     assert state.evidence == {"ready": True, "reason": "host_restart"}
 
 
+def test_stopped_state_can_be_recovered(tmp_path: Path) -> None:
+    store = RunStore(tmp_path)
+    store.initialize()
+    store.stop({"compose_stopped": True})
+
+    state = store.recover({"ready": True, "reason": "operator_resume"})
+
+    assert state.phase == RunPhase.RUNNING
+    assert state.evidence == {"ready": True, "reason": "operator_resume"}
+
+
 def test_failed_recovery_can_be_retried_without_resetting_the_run(tmp_path: Path) -> None:
     store = RunStore(tmp_path)
     store.initialize()

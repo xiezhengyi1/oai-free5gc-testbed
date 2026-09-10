@@ -31,6 +31,17 @@ def test_build_s2k_scenarios_are_valid_compilable_and_topologically_distinct(tmp
     assert max(spec.gnb_count for spec in SPECS) >= 10
     assert max(spec.ue_count for spec in SPECS) >= 100
     assert all(item.topology["nodes"] and item.topology["edges"] for item in compiled)
+    for scenario in scenarios:
+        session_slices = {
+            (ue["id"], session["id"]): session["slice_id"]
+            for ue in scenario["ues"]
+            for session in ue["sessions"]
+        }
+        flow_slices = {
+            session_slices[(flow["ue_id"], flow["session_id"])]
+            for flow in scenario["flows"]
+        }
+        assert flow_slices == {slice_item["id"] for slice_item in scenario["slices"]}
 
     network_digests = {
         _digest(

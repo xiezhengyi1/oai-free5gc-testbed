@@ -157,8 +157,8 @@ class Launcher:
 
     def resume(self) -> RunState:
         current_phase = self.store.current().phase
-        if current_phase not in (RunPhase.RUNNING, RunPhase.FAILED):
-            raise ValueError("resume requires the run to be in RUNNING or FAILED phase")
+        if current_phase not in (RunPhase.RUNNING, RunPhase.FAILED, RunPhase.STOPPED):
+            raise ValueError("resume requires the run to be in RUNNING, FAILED, or STOPPED phase")
         recovered: dict[str, Any] = {}
 
         def observe(phase: RunPhase, evidence: dict[str, Any]) -> None:
