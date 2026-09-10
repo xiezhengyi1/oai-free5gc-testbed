@@ -509,8 +509,13 @@ def _builder() -> SnapshotBuilder:
 @app.get("/health")
 def health() -> dict[str, str]:
     _builder()
-    if periodic_task is None or periodic_task.done():
+    if periodic_task is None:
         raise HTTPException(status_code=503, detail="periodic snapshot task is not running")
+    if periodic_task.done():
+        error = periodic_task.exception()
+        raise HTTPException(
+            status_code=503, detail=f"periodic snapshot task failed: {type(error).__name__}: {error}"
+        )
     return {"status": "ok", "run_id": _builder().run_id}
 
 
