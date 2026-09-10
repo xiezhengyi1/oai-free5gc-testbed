@@ -1,0 +1,7215 @@
+schema_version: '1.0'
+scenario_id: s2k-06-stadium-event-broadband
+sources:
+  oai: /home/yinyuexi/xiezhengyi/openairinterface5g
+  free5gc_compose: /home/yinyuexi/xiezhengyi/free5gc-compose-v4.1.0-testbed
+versions:
+  oai: 2026.w35
+  free5gc_compose: v4.1.0
+  gtp5g: v0.9.5
+networks:
+  sbi-net:
+    cidr: 172.30.0.0/24
+    bridge_name: tb-sbi
+  n2-net:
+    cidr: 172.31.0.0/24
+    bridge_name: tb-n2
+  n3-net:
+    cidr: 172.32.0.0/24
+    bridge_name: tb-n3
+  n4-net:
+    cidr: 172.33.0.0/24
+    bridge_name: tb-n4
+  edge-n6-net:
+    cidr: 172.34.0.0/24
+    bridge_name: tb-edge-n6
+  cloud-n6-net:
+    cidr: 172.35.0.0/24
+    bridge_name: tb-cloud-n6
+  cloud-app-net:
+    cidr: 172.38.0.0/24
+    bridge_name: tb-cloud-app
+  monitoring-net:
+    cidr: 172.36.0.0/24
+    bridge_name: tb-monitor
+  control-net:
+    cidr: 172.37.0.0/24
+    bridge_name: tb-control
+plmn:
+  mcc: '208'
+  mnc: '93'
+  tac: 1
+slices:
+- id: slice-1
+  sst: 1
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 190.4
+    total_bandwidth_dl_mbps: 1275.75
+    guaranteed_bandwidth_ul_mbps: 142.8
+    guaranteed_bandwidth_dl_mbps: 1275.75
+- id: slice-2
+  sst: 2
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 115.6
+    total_bandwidth_dl_mbps: 1275.75
+    guaranteed_bandwidth_ul_mbps: 74.8
+    guaranteed_bandwidth_dl_mbps: 1275.75
+- id: slice-3
+  sst: 3
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 68.0
+    total_bandwidth_dl_mbps: 803.7225
+    guaranteed_bandwidth_ul_mbps: 40.8
+    guaranteed_bandwidth_dl_mbps: 803.7225
+sites:
+- id: edge-a
+  type: edge
+core:
+  amf:
+    sbi_ip: 172.30.0.3
+    n2_ip: 172.31.0.10
+  smf:
+    sbi_ip: 172.30.0.4
+    n4_ip: 172.33.0.10
+  upfs:
+  - id: slice-1-upf
+    container: free5gc-upf-slice-1
+    site_id: edge-a
+    n3_ip: 172.32.0.30
+    n4_ip: 172.33.0.30
+    n6_ip: 172.34.0.30
+    dnn: embb
+    ue_pool: 10.60.0.0/24
+  - id: slice-2-upf
+    container: free5gc-upf-slice-2
+    site_id: edge-a
+    n3_ip: 172.32.0.31
+    n4_ip: 172.33.0.31
+    n6_ip: 172.34.0.31
+    dnn: urllc
+    ue_pool: 10.61.0.0/24
+  - id: slice-3-upf
+    container: free5gc-upf-slice-3
+    site_id: edge-a
+    n3_ip: 172.32.0.32
+    n4_ip: 172.33.0.32
+    n6_ip: 172.34.0.32
+    dnn: mmtc
+    ue_pool: 10.62.0.0/24
+ran:
+  mode: rfsim
+  band: 78
+  numerology: 1
+  bandwidth_rb: 106
+  frequency_hz: 3619200000
+  gnbs:
+  - id: gnb-1
+    container: oai-gnb-1
+    site_id: edge-a
+    n2_ip: 172.31.0.50
+    n3_ip: 172.32.0.50
+    cells:
+    - id: cell-1
+      pci: 1
+      position:
+        x: 320.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-2
+    container: oai-gnb-2
+    site_id: edge-a
+    n2_ip: 172.31.0.51
+    n3_ip: 172.32.0.51
+    cells:
+    - id: cell-2
+      pci: 2
+      position:
+        x: 277.1281292110204
+        y: 159.99999999999997
+        z: 10.0
+  - id: gnb-3
+    container: oai-gnb-3
+    site_id: edge-a
+    n2_ip: 172.31.0.52
+    n3_ip: 172.32.0.52
+    cells:
+    - id: cell-3
+      pci: 3
+      position:
+        x: 160.00000000000003
+        y: 277.12812921102034
+        z: 10.0
+  - id: gnb-4
+    container: oai-gnb-4
+    site_id: edge-a
+    n2_ip: 172.31.0.53
+    n3_ip: 172.32.0.53
+    cells:
+    - id: cell-4
+      pci: 4
+      position:
+        x: 1.9594348786357652e-14
+        y: 320.0
+        z: 10.0
+  - id: gnb-5
+    container: oai-gnb-5
+    site_id: edge-a
+    n2_ip: 172.31.0.54
+    n3_ip: 172.32.0.54
+    cells:
+    - id: cell-5
+      pci: 5
+      position:
+        x: -159.99999999999994
+        y: 277.1281292110204
+        z: 10.0
+  - id: gnb-6
+    container: oai-gnb-6
+    site_id: edge-a
+    n2_ip: 172.31.0.55
+    n3_ip: 172.32.0.55
+    cells:
+    - id: cell-6
+      pci: 6
+      position:
+        x: -277.1281292110204
+        y: 159.99999999999997
+        z: 10.0
+  - id: gnb-7
+    container: oai-gnb-7
+    site_id: edge-a
+    n2_ip: 172.31.0.56
+    n3_ip: 172.32.0.56
+    cells:
+    - id: cell-7
+      pci: 7
+      position:
+        x: -320.0
+        y: 3.9188697572715304e-14
+        z: 10.0
+  - id: gnb-8
+    container: oai-gnb-8
+    site_id: edge-a
+    n2_ip: 172.31.0.57
+    n3_ip: 172.32.0.57
+    cells:
+    - id: cell-8
+      pci: 8
+      position:
+        x: -277.12812921102045
+        y: -159.99999999999991
+        z: 10.0
+  - id: gnb-9
+    container: oai-gnb-9
+    site_id: edge-a
+    n2_ip: 172.31.0.58
+    n3_ip: 172.32.0.58
+    cells:
+    - id: cell-9
+      pci: 9
+      position:
+        x: -160.00000000000014
+        y: -277.1281292110203
+        z: 10.0
+  - id: gnb-10
+    container: oai-gnb-10
+    site_id: edge-a
+    n2_ip: 172.31.0.59
+    n3_ip: 172.32.0.59
+    cells:
+    - id: cell-10
+      pci: 10
+      position:
+        x: -5.878304635907295e-14
+        y: -320.0
+        z: 10.0
+  - id: gnb-11
+    container: oai-gnb-11
+    site_id: edge-a
+    n2_ip: 172.31.0.60
+    n3_ip: 172.32.0.60
+    cells:
+    - id: cell-11
+      pci: 11
+      position:
+        x: 160.00000000000003
+        y: -277.12812921102034
+        z: 10.0
+  - id: gnb-12
+    container: oai-gnb-12
+    site_id: edge-a
+    n2_ip: 172.31.0.61
+    n3_ip: 172.32.0.61
+    cells:
+    - id: cell-12
+      pci: 12
+      position:
+        x: 277.1281292110203
+        y: -160.00000000000014
+        z: 10.0
+ues:
+- id: ue-1
+  container: oai-nrue-1
+  traffic_sidecar: traffic-sidecar-ue-1
+  supi: imsi-208930000006001
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-2
+  container: oai-nrue-2
+  traffic_sidecar: traffic-sidecar-ue-2
+  supi: imsi-208930000006002
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-3
+  container: oai-nrue-3
+  traffic_sidecar: traffic-sidecar-ue-3
+  supi: imsi-208930000006003
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-4
+  container: oai-nrue-4
+  traffic_sidecar: traffic-sidecar-ue-4
+  supi: imsi-208930000006004
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-5
+  container: oai-nrue-5
+  traffic_sidecar: traffic-sidecar-ue-5
+  supi: imsi-208930000006005
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-6
+  container: oai-nrue-6
+  traffic_sidecar: traffic-sidecar-ue-6
+  supi: imsi-208930000006006
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-7
+  container: oai-nrue-7
+  traffic_sidecar: traffic-sidecar-ue-7
+  supi: imsi-208930000006007
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-8
+  container: oai-nrue-8
+  traffic_sidecar: traffic-sidecar-ue-8
+  supi: imsi-208930000006008
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-9
+  container: oai-nrue-9
+  traffic_sidecar: traffic-sidecar-ue-9
+  supi: imsi-208930000006009
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-10
+  container: oai-nrue-10
+  traffic_sidecar: traffic-sidecar-ue-10
+  supi: imsi-208930000006010
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-11
+  container: oai-nrue-11
+  traffic_sidecar: traffic-sidecar-ue-11
+  supi: imsi-208930000006011
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-12
+  container: oai-nrue-12
+  traffic_sidecar: traffic-sidecar-ue-12
+  supi: imsi-208930000006012
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-13
+  container: oai-nrue-13
+  traffic_sidecar: traffic-sidecar-ue-13
+  supi: imsi-208930000006013
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-14
+  container: oai-nrue-14
+  traffic_sidecar: traffic-sidecar-ue-14
+  supi: imsi-208930000006014
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-15
+  container: oai-nrue-15
+  traffic_sidecar: traffic-sidecar-ue-15
+  supi: imsi-208930000006015
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-16
+  container: oai-nrue-16
+  traffic_sidecar: traffic-sidecar-ue-16
+  supi: imsi-208930000006016
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-17
+  container: oai-nrue-17
+  traffic_sidecar: traffic-sidecar-ue-17
+  supi: imsi-208930000006017
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-18
+  container: oai-nrue-18
+  traffic_sidecar: traffic-sidecar-ue-18
+  supi: imsi-208930000006018
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-19
+  container: oai-nrue-19
+  traffic_sidecar: traffic-sidecar-ue-19
+  supi: imsi-208930000006019
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-20
+  container: oai-nrue-20
+  traffic_sidecar: traffic-sidecar-ue-20
+  supi: imsi-208930000006020
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-21
+  container: oai-nrue-21
+  traffic_sidecar: traffic-sidecar-ue-21
+  supi: imsi-208930000006021
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-22
+  container: oai-nrue-22
+  traffic_sidecar: traffic-sidecar-ue-22
+  supi: imsi-208930000006022
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-23
+  container: oai-nrue-23
+  traffic_sidecar: traffic-sidecar-ue-23
+  supi: imsi-208930000006023
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-24
+  container: oai-nrue-24
+  traffic_sidecar: traffic-sidecar-ue-24
+  supi: imsi-208930000006024
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-25
+  container: oai-nrue-25
+  traffic_sidecar: traffic-sidecar-ue-25
+  supi: imsi-208930000006025
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-26
+  container: oai-nrue-26
+  traffic_sidecar: traffic-sidecar-ue-26
+  supi: imsi-208930000006026
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-27
+  container: oai-nrue-27
+  traffic_sidecar: traffic-sidecar-ue-27
+  supi: imsi-208930000006027
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-28
+  container: oai-nrue-28
+  traffic_sidecar: traffic-sidecar-ue-28
+  supi: imsi-208930000006028
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-29
+  container: oai-nrue-29
+  traffic_sidecar: traffic-sidecar-ue-29
+  supi: imsi-208930000006029
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-30
+  container: oai-nrue-30
+  traffic_sidecar: traffic-sidecar-ue-30
+  supi: imsi-208930000006030
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-31
+  container: oai-nrue-31
+  traffic_sidecar: traffic-sidecar-ue-31
+  supi: imsi-208930000006031
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-32
+  container: oai-nrue-32
+  traffic_sidecar: traffic-sidecar-ue-32
+  supi: imsi-208930000006032
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-33
+  container: oai-nrue-33
+  traffic_sidecar: traffic-sidecar-ue-33
+  supi: imsi-208930000006033
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-34
+  container: oai-nrue-34
+  traffic_sidecar: traffic-sidecar-ue-34
+  supi: imsi-208930000006034
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-35
+  container: oai-nrue-35
+  traffic_sidecar: traffic-sidecar-ue-35
+  supi: imsi-208930000006035
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-36
+  container: oai-nrue-36
+  traffic_sidecar: traffic-sidecar-ue-36
+  supi: imsi-208930000006036
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-37
+  container: oai-nrue-37
+  traffic_sidecar: traffic-sidecar-ue-37
+  supi: imsi-208930000006037
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-38
+  container: oai-nrue-38
+  traffic_sidecar: traffic-sidecar-ue-38
+  supi: imsi-208930000006038
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-39
+  container: oai-nrue-39
+  traffic_sidecar: traffic-sidecar-ue-39
+  supi: imsi-208930000006039
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-40
+  container: oai-nrue-40
+  traffic_sidecar: traffic-sidecar-ue-40
+  supi: imsi-208930000006040
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-41
+  container: oai-nrue-41
+  traffic_sidecar: traffic-sidecar-ue-41
+  supi: imsi-208930000006041
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-42
+  container: oai-nrue-42
+  traffic_sidecar: traffic-sidecar-ue-42
+  supi: imsi-208930000006042
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-43
+  container: oai-nrue-43
+  traffic_sidecar: traffic-sidecar-ue-43
+  supi: imsi-208930000006043
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-44
+  container: oai-nrue-44
+  traffic_sidecar: traffic-sidecar-ue-44
+  supi: imsi-208930000006044
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-45
+  container: oai-nrue-45
+  traffic_sidecar: traffic-sidecar-ue-45
+  supi: imsi-208930000006045
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-46
+  container: oai-nrue-46
+  traffic_sidecar: traffic-sidecar-ue-46
+  supi: imsi-208930000006046
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-47
+  container: oai-nrue-47
+  traffic_sidecar: traffic-sidecar-ue-47
+  supi: imsi-208930000006047
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-48
+  container: oai-nrue-48
+  traffic_sidecar: traffic-sidecar-ue-48
+  supi: imsi-208930000006048
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-49
+  container: oai-nrue-49
+  traffic_sidecar: traffic-sidecar-ue-49
+  supi: imsi-208930000006049
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-50
+  container: oai-nrue-50
+  traffic_sidecar: traffic-sidecar-ue-50
+  supi: imsi-208930000006050
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-51
+  container: oai-nrue-51
+  traffic_sidecar: traffic-sidecar-ue-51
+  supi: imsi-208930000006051
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-52
+  container: oai-nrue-52
+  traffic_sidecar: traffic-sidecar-ue-52
+  supi: imsi-208930000006052
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-53
+  container: oai-nrue-53
+  traffic_sidecar: traffic-sidecar-ue-53
+  supi: imsi-208930000006053
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-54
+  container: oai-nrue-54
+  traffic_sidecar: traffic-sidecar-ue-54
+  supi: imsi-208930000006054
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-55
+  container: oai-nrue-55
+  traffic_sidecar: traffic-sidecar-ue-55
+  supi: imsi-208930000006055
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-56
+  container: oai-nrue-56
+  traffic_sidecar: traffic-sidecar-ue-56
+  supi: imsi-208930000006056
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-57
+  container: oai-nrue-57
+  traffic_sidecar: traffic-sidecar-ue-57
+  supi: imsi-208930000006057
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-58
+  container: oai-nrue-58
+  traffic_sidecar: traffic-sidecar-ue-58
+  supi: imsi-208930000006058
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-59
+  container: oai-nrue-59
+  traffic_sidecar: traffic-sidecar-ue-59
+  supi: imsi-208930000006059
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-60
+  container: oai-nrue-60
+  traffic_sidecar: traffic-sidecar-ue-60
+  supi: imsi-208930000006060
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-61
+  container: oai-nrue-61
+  traffic_sidecar: traffic-sidecar-ue-61
+  supi: imsi-208930000006061
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-62
+  container: oai-nrue-62
+  traffic_sidecar: traffic-sidecar-ue-62
+  supi: imsi-208930000006062
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-63
+  container: oai-nrue-63
+  traffic_sidecar: traffic-sidecar-ue-63
+  supi: imsi-208930000006063
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-64
+  container: oai-nrue-64
+  traffic_sidecar: traffic-sidecar-ue-64
+  supi: imsi-208930000006064
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-65
+  container: oai-nrue-65
+  traffic_sidecar: traffic-sidecar-ue-65
+  supi: imsi-208930000006065
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-66
+  container: oai-nrue-66
+  traffic_sidecar: traffic-sidecar-ue-66
+  supi: imsi-208930000006066
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-67
+  container: oai-nrue-67
+  traffic_sidecar: traffic-sidecar-ue-67
+  supi: imsi-208930000006067
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-68
+  container: oai-nrue-68
+  traffic_sidecar: traffic-sidecar-ue-68
+  supi: imsi-208930000006068
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-69
+  container: oai-nrue-69
+  traffic_sidecar: traffic-sidecar-ue-69
+  supi: imsi-208930000006069
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-70
+  container: oai-nrue-70
+  traffic_sidecar: traffic-sidecar-ue-70
+  supi: imsi-208930000006070
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-71
+  container: oai-nrue-71
+  traffic_sidecar: traffic-sidecar-ue-71
+  supi: imsi-208930000006071
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-72
+  container: oai-nrue-72
+  traffic_sidecar: traffic-sidecar-ue-72
+  supi: imsi-208930000006072
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-73
+  container: oai-nrue-73
+  traffic_sidecar: traffic-sidecar-ue-73
+  supi: imsi-208930000006073
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-74
+  container: oai-nrue-74
+  traffic_sidecar: traffic-sidecar-ue-74
+  supi: imsi-208930000006074
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-75
+  container: oai-nrue-75
+  traffic_sidecar: traffic-sidecar-ue-75
+  supi: imsi-208930000006075
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-76
+  container: oai-nrue-76
+  traffic_sidecar: traffic-sidecar-ue-76
+  supi: imsi-208930000006076
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-77
+  container: oai-nrue-77
+  traffic_sidecar: traffic-sidecar-ue-77
+  supi: imsi-208930000006077
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-78
+  container: oai-nrue-78
+  traffic_sidecar: traffic-sidecar-ue-78
+  supi: imsi-208930000006078
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-79
+  container: oai-nrue-79
+  traffic_sidecar: traffic-sidecar-ue-79
+  supi: imsi-208930000006079
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-80
+  container: oai-nrue-80
+  traffic_sidecar: traffic-sidecar-ue-80
+  supi: imsi-208930000006080
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-81
+  container: oai-nrue-81
+  traffic_sidecar: traffic-sidecar-ue-81
+  supi: imsi-208930000006081
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-82
+  container: oai-nrue-82
+  traffic_sidecar: traffic-sidecar-ue-82
+  supi: imsi-208930000006082
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-83
+  container: oai-nrue-83
+  traffic_sidecar: traffic-sidecar-ue-83
+  supi: imsi-208930000006083
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-84
+  container: oai-nrue-84
+  traffic_sidecar: traffic-sidecar-ue-84
+  supi: imsi-208930000006084
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-85
+  container: oai-nrue-85
+  traffic_sidecar: traffic-sidecar-ue-85
+  supi: imsi-208930000006085
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-86
+  container: oai-nrue-86
+  traffic_sidecar: traffic-sidecar-ue-86
+  supi: imsi-208930000006086
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-87
+  container: oai-nrue-87
+  traffic_sidecar: traffic-sidecar-ue-87
+  supi: imsi-208930000006087
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-88
+  container: oai-nrue-88
+  traffic_sidecar: traffic-sidecar-ue-88
+  supi: imsi-208930000006088
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-89
+  container: oai-nrue-89
+  traffic_sidecar: traffic-sidecar-ue-89
+  supi: imsi-208930000006089
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-90
+  container: oai-nrue-90
+  traffic_sidecar: traffic-sidecar-ue-90
+  supi: imsi-208930000006090
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-91
+  container: oai-nrue-91
+  traffic_sidecar: traffic-sidecar-ue-91
+  supi: imsi-208930000006091
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-92
+  container: oai-nrue-92
+  traffic_sidecar: traffic-sidecar-ue-92
+  supi: imsi-208930000006092
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-93
+  container: oai-nrue-93
+  traffic_sidecar: traffic-sidecar-ue-93
+  supi: imsi-208930000006093
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-94
+  container: oai-nrue-94
+  traffic_sidecar: traffic-sidecar-ue-94
+  supi: imsi-208930000006094
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-95
+  container: oai-nrue-95
+  traffic_sidecar: traffic-sidecar-ue-95
+  supi: imsi-208930000006095
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-96
+  container: oai-nrue-96
+  traffic_sidecar: traffic-sidecar-ue-96
+  supi: imsi-208930000006096
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-97
+  container: oai-nrue-97
+  traffic_sidecar: traffic-sidecar-ue-97
+  supi: imsi-208930000006097
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-98
+  container: oai-nrue-98
+  traffic_sidecar: traffic-sidecar-ue-98
+  supi: imsi-208930000006098
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-99
+  container: oai-nrue-99
+  traffic_sidecar: traffic-sidecar-ue-99
+  supi: imsi-208930000006099
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-100
+  container: oai-nrue-100
+  traffic_sidecar: traffic-sidecar-ue-100
+  supi: imsi-208930000006100
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-101
+  container: oai-nrue-101
+  traffic_sidecar: traffic-sidecar-ue-101
+  supi: imsi-208930000006101
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-102
+  container: oai-nrue-102
+  traffic_sidecar: traffic-sidecar-ue-102
+  supi: imsi-208930000006102
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-103
+  container: oai-nrue-103
+  traffic_sidecar: traffic-sidecar-ue-103
+  supi: imsi-208930000006103
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-104
+  container: oai-nrue-104
+  traffic_sidecar: traffic-sidecar-ue-104
+  supi: imsi-208930000006104
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-105
+  container: oai-nrue-105
+  traffic_sidecar: traffic-sidecar-ue-105
+  supi: imsi-208930000006105
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-106
+  container: oai-nrue-106
+  traffic_sidecar: traffic-sidecar-ue-106
+  supi: imsi-208930000006106
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-107
+  container: oai-nrue-107
+  traffic_sidecar: traffic-sidecar-ue-107
+  supi: imsi-208930000006107
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-108
+  container: oai-nrue-108
+  traffic_sidecar: traffic-sidecar-ue-108
+  supi: imsi-208930000006108
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-109
+  container: oai-nrue-109
+  traffic_sidecar: traffic-sidecar-ue-109
+  supi: imsi-208930000006109
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-110
+  container: oai-nrue-110
+  traffic_sidecar: traffic-sidecar-ue-110
+  supi: imsi-208930000006110
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-111
+  container: oai-nrue-111
+  traffic_sidecar: traffic-sidecar-ue-111
+  supi: imsi-208930000006111
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-112
+  container: oai-nrue-112
+  traffic_sidecar: traffic-sidecar-ue-112
+  supi: imsi-208930000006112
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-113
+  container: oai-nrue-113
+  traffic_sidecar: traffic-sidecar-ue-113
+  supi: imsi-208930000006113
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-114
+  container: oai-nrue-114
+  traffic_sidecar: traffic-sidecar-ue-114
+  supi: imsi-208930000006114
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-115
+  container: oai-nrue-115
+  traffic_sidecar: traffic-sidecar-ue-115
+  supi: imsi-208930000006115
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-116
+  container: oai-nrue-116
+  traffic_sidecar: traffic-sidecar-ue-116
+  supi: imsi-208930000006116
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-117
+  container: oai-nrue-117
+  traffic_sidecar: traffic-sidecar-ue-117
+  supi: imsi-208930000006117
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-118
+  container: oai-nrue-118
+  traffic_sidecar: traffic-sidecar-ue-118
+  supi: imsi-208930000006118
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-119
+  container: oai-nrue-119
+  traffic_sidecar: traffic-sidecar-ue-119
+  supi: imsi-208930000006119
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-120
+  container: oai-nrue-120
+  traffic_sidecar: traffic-sidecar-ue-120
+  supi: imsi-208930000006120
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-121
+  container: oai-nrue-121
+  traffic_sidecar: traffic-sidecar-ue-121
+  supi: imsi-208930000006121
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-122
+  container: oai-nrue-122
+  traffic_sidecar: traffic-sidecar-ue-122
+  supi: imsi-208930000006122
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-123
+  container: oai-nrue-123
+  traffic_sidecar: traffic-sidecar-ue-123
+  supi: imsi-208930000006123
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-124
+  container: oai-nrue-124
+  traffic_sidecar: traffic-sidecar-ue-124
+  supi: imsi-208930000006124
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-125
+  container: oai-nrue-125
+  traffic_sidecar: traffic-sidecar-ue-125
+  supi: imsi-208930000006125
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-126
+  container: oai-nrue-126
+  traffic_sidecar: traffic-sidecar-ue-126
+  supi: imsi-208930000006126
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-127
+  container: oai-nrue-127
+  traffic_sidecar: traffic-sidecar-ue-127
+  supi: imsi-208930000006127
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-128
+  container: oai-nrue-128
+  traffic_sidecar: traffic-sidecar-ue-128
+  supi: imsi-208930000006128
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-129
+  container: oai-nrue-129
+  traffic_sidecar: traffic-sidecar-ue-129
+  supi: imsi-208930000006129
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-130
+  container: oai-nrue-130
+  traffic_sidecar: traffic-sidecar-ue-130
+  supi: imsi-208930000006130
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-131
+  container: oai-nrue-131
+  traffic_sidecar: traffic-sidecar-ue-131
+  supi: imsi-208930000006131
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-132
+  container: oai-nrue-132
+  traffic_sidecar: traffic-sidecar-ue-132
+  supi: imsi-208930000006132
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-133
+  container: oai-nrue-133
+  traffic_sidecar: traffic-sidecar-ue-133
+  supi: imsi-208930000006133
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-134
+  container: oai-nrue-134
+  traffic_sidecar: traffic-sidecar-ue-134
+  supi: imsi-208930000006134
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-135
+  container: oai-nrue-135
+  traffic_sidecar: traffic-sidecar-ue-135
+  supi: imsi-208930000006135
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-136
+  container: oai-nrue-136
+  traffic_sidecar: traffic-sidecar-ue-136
+  supi: imsi-208930000006136
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-137
+  container: oai-nrue-137
+  traffic_sidecar: traffic-sidecar-ue-137
+  supi: imsi-208930000006137
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-138
+  container: oai-nrue-138
+  traffic_sidecar: traffic-sidecar-ue-138
+  supi: imsi-208930000006138
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-139
+  container: oai-nrue-139
+  traffic_sidecar: traffic-sidecar-ue-139
+  supi: imsi-208930000006139
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-140
+  container: oai-nrue-140
+  traffic_sidecar: traffic-sidecar-ue-140
+  supi: imsi-208930000006140
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-141
+  container: oai-nrue-141
+  traffic_sidecar: traffic-sidecar-ue-141
+  supi: imsi-208930000006141
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-142
+  container: oai-nrue-142
+  traffic_sidecar: traffic-sidecar-ue-142
+  supi: imsi-208930000006142
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-143
+  container: oai-nrue-143
+  traffic_sidecar: traffic-sidecar-ue-143
+  supi: imsi-208930000006143
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-144
+  container: oai-nrue-144
+  traffic_sidecar: traffic-sidecar-ue-144
+  supi: imsi-208930000006144
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-145
+  container: oai-nrue-145
+  traffic_sidecar: traffic-sidecar-ue-145
+  supi: imsi-208930000006145
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-146
+  container: oai-nrue-146
+  traffic_sidecar: traffic-sidecar-ue-146
+  supi: imsi-208930000006146
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-147
+  container: oai-nrue-147
+  traffic_sidecar: traffic-sidecar-ue-147
+  supi: imsi-208930000006147
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-148
+  container: oai-nrue-148
+  traffic_sidecar: traffic-sidecar-ue-148
+  supi: imsi-208930000006148
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-149
+  container: oai-nrue-149
+  traffic_sidecar: traffic-sidecar-ue-149
+  supi: imsi-208930000006149
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-150
+  container: oai-nrue-150
+  traffic_sidecar: traffic-sidecar-ue-150
+  supi: imsi-208930000006150
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-151
+  container: oai-nrue-151
+  traffic_sidecar: traffic-sidecar-ue-151
+  supi: imsi-208930000006151
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-152
+  container: oai-nrue-152
+  traffic_sidecar: traffic-sidecar-ue-152
+  supi: imsi-208930000006152
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-153
+  container: oai-nrue-153
+  traffic_sidecar: traffic-sidecar-ue-153
+  supi: imsi-208930000006153
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-154
+  container: oai-nrue-154
+  traffic_sidecar: traffic-sidecar-ue-154
+  supi: imsi-208930000006154
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-155
+  container: oai-nrue-155
+  traffic_sidecar: traffic-sidecar-ue-155
+  supi: imsi-208930000006155
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-156
+  container: oai-nrue-156
+  traffic_sidecar: traffic-sidecar-ue-156
+  supi: imsi-208930000006156
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-157
+  container: oai-nrue-157
+  traffic_sidecar: traffic-sidecar-ue-157
+  supi: imsi-208930000006157
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-158
+  container: oai-nrue-158
+  traffic_sidecar: traffic-sidecar-ue-158
+  supi: imsi-208930000006158
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-159
+  container: oai-nrue-159
+  traffic_sidecar: traffic-sidecar-ue-159
+  supi: imsi-208930000006159
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-160
+  container: oai-nrue-160
+  traffic_sidecar: traffic-sidecar-ue-160
+  supi: imsi-208930000006160
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-161
+  container: oai-nrue-161
+  traffic_sidecar: traffic-sidecar-ue-161
+  supi: imsi-208930000006161
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-162
+  container: oai-nrue-162
+  traffic_sidecar: traffic-sidecar-ue-162
+  supi: imsi-208930000006162
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-163
+  container: oai-nrue-163
+  traffic_sidecar: traffic-sidecar-ue-163
+  supi: imsi-208930000006163
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-164
+  container: oai-nrue-164
+  traffic_sidecar: traffic-sidecar-ue-164
+  supi: imsi-208930000006164
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-165
+  container: oai-nrue-165
+  traffic_sidecar: traffic-sidecar-ue-165
+  supi: imsi-208930000006165
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-166
+  container: oai-nrue-166
+  traffic_sidecar: traffic-sidecar-ue-166
+  supi: imsi-208930000006166
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-167
+  container: oai-nrue-167
+  traffic_sidecar: traffic-sidecar-ue-167
+  supi: imsi-208930000006167
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-168
+  container: oai-nrue-168
+  traffic_sidecar: traffic-sidecar-ue-168
+  supi: imsi-208930000006168
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-169
+  container: oai-nrue-169
+  traffic_sidecar: traffic-sidecar-ue-169
+  supi: imsi-208930000006169
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-170
+  container: oai-nrue-170
+  traffic_sidecar: traffic-sidecar-ue-170
+  supi: imsi-208930000006170
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-171
+  container: oai-nrue-171
+  traffic_sidecar: traffic-sidecar-ue-171
+  supi: imsi-208930000006171
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-172
+  container: oai-nrue-172
+  traffic_sidecar: traffic-sidecar-ue-172
+  supi: imsi-208930000006172
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-173
+  container: oai-nrue-173
+  traffic_sidecar: traffic-sidecar-ue-173
+  supi: imsi-208930000006173
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-174
+  container: oai-nrue-174
+  traffic_sidecar: traffic-sidecar-ue-174
+  supi: imsi-208930000006174
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-175
+  container: oai-nrue-175
+  traffic_sidecar: traffic-sidecar-ue-175
+  supi: imsi-208930000006175
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-176
+  container: oai-nrue-176
+  traffic_sidecar: traffic-sidecar-ue-176
+  supi: imsi-208930000006176
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-177
+  container: oai-nrue-177
+  traffic_sidecar: traffic-sidecar-ue-177
+  supi: imsi-208930000006177
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-9
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-178
+  container: oai-nrue-178
+  traffic_sidecar: traffic-sidecar-ue-178
+  supi: imsi-208930000006178
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-10
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-179
+  container: oai-nrue-179
+  traffic_sidecar: traffic-sidecar-ue-179
+  supi: imsi-208930000006179
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-11
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-180
+  container: oai-nrue-180
+  traffic_sidecar: traffic-sidecar-ue-180
+  supi: imsi-208930000006180
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-12
+  sessions:
+  - id: cloud-render-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: cloud-render-telemetry-session
+    dnn: embb
+    slice_id: slice-1
+services:
+- id: ar-gaming-app
+  container: ar-gaming-app
+  service_id: ar-gaming
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.103
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: web-browse-app
+  container: web-browse-app
+  service_id: web-browse
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.105
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: video-4k-app
+  container: video-4k-app
+  service_id: video-4k
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.107
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: cloud-render-app
+  container: cloud-render-app
+  service_id: cloud-render
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.108
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+links: []
+flows:
+- id: ue-1-ar-gaming-video-2
+  ue_id: ue-1
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-2-web-browse-session-1
+  ue_id: ue-2
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-3-video-4k-stream-1
+  ue_id: ue-3
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-4-cloud-render-stream-1
+  ue_id: ue-4
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-5-ar-gaming-video-2
+  ue_id: ue-5
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-6-web-browse-session-1
+  ue_id: ue-6
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-7-video-4k-stream-1
+  ue_id: ue-7
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-8-cloud-render-stream-1
+  ue_id: ue-8
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-9-ar-gaming-video-2
+  ue_id: ue-9
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-10-web-browse-session-1
+  ue_id: ue-10
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-11-video-4k-stream-1
+  ue_id: ue-11
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-12-cloud-render-stream-1
+  ue_id: ue-12
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-13-ar-gaming-video-2
+  ue_id: ue-13
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-14-web-browse-session-1
+  ue_id: ue-14
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-15-video-4k-stream-1
+  ue_id: ue-15
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-16-cloud-render-stream-1
+  ue_id: ue-16
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-17-ar-gaming-video-2
+  ue_id: ue-17
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-18-web-browse-session-1
+  ue_id: ue-18
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-19-video-4k-stream-1
+  ue_id: ue-19
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-20-cloud-render-stream-1
+  ue_id: ue-20
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-21-ar-gaming-video-2
+  ue_id: ue-21
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-22-web-browse-session-1
+  ue_id: ue-22
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-23-video-4k-stream-1
+  ue_id: ue-23
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-24-cloud-render-stream-1
+  ue_id: ue-24
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-25-ar-gaming-video-2
+  ue_id: ue-25
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-26-web-browse-session-1
+  ue_id: ue-26
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-27-video-4k-stream-1
+  ue_id: ue-27
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-28-cloud-render-stream-1
+  ue_id: ue-28
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-29-ar-gaming-video-2
+  ue_id: ue-29
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-30-web-browse-session-1
+  ue_id: ue-30
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-31-video-4k-stream-1
+  ue_id: ue-31
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-32-cloud-render-stream-1
+  ue_id: ue-32
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-33-ar-gaming-video-2
+  ue_id: ue-33
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-34-web-browse-session-1
+  ue_id: ue-34
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-35-video-4k-stream-1
+  ue_id: ue-35
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-36-cloud-render-stream-1
+  ue_id: ue-36
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-37-ar-gaming-video-2
+  ue_id: ue-37
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-38-web-browse-session-1
+  ue_id: ue-38
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-39-video-4k-stream-1
+  ue_id: ue-39
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-40-cloud-render-stream-1
+  ue_id: ue-40
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-41-ar-gaming-video-2
+  ue_id: ue-41
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-42-web-browse-session-1
+  ue_id: ue-42
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-43-video-4k-stream-1
+  ue_id: ue-43
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-44-cloud-render-stream-1
+  ue_id: ue-44
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-45-ar-gaming-video-2
+  ue_id: ue-45
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-46-web-browse-session-1
+  ue_id: ue-46
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-47-video-4k-stream-1
+  ue_id: ue-47
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-48-cloud-render-stream-1
+  ue_id: ue-48
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-49-ar-gaming-video-2
+  ue_id: ue-49
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-50-web-browse-session-1
+  ue_id: ue-50
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-51-video-4k-stream-1
+  ue_id: ue-51
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-52-cloud-render-stream-1
+  ue_id: ue-52
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-53-ar-gaming-video-2
+  ue_id: ue-53
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-54-web-browse-session-1
+  ue_id: ue-54
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-55-video-4k-stream-1
+  ue_id: ue-55
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-56-cloud-render-stream-1
+  ue_id: ue-56
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-57-ar-gaming-video-2
+  ue_id: ue-57
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-58-web-browse-session-1
+  ue_id: ue-58
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-59-video-4k-stream-1
+  ue_id: ue-59
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-60-cloud-render-stream-1
+  ue_id: ue-60
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-61-ar-gaming-video-2
+  ue_id: ue-61
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-62-web-browse-session-1
+  ue_id: ue-62
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-63-video-4k-stream-1
+  ue_id: ue-63
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-64-cloud-render-stream-1
+  ue_id: ue-64
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-65-ar-gaming-video-2
+  ue_id: ue-65
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-66-web-browse-session-1
+  ue_id: ue-66
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-67-video-4k-stream-1
+  ue_id: ue-67
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-68-cloud-render-stream-1
+  ue_id: ue-68
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-69-ar-gaming-video-2
+  ue_id: ue-69
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-70-web-browse-session-1
+  ue_id: ue-70
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-71-video-4k-stream-1
+  ue_id: ue-71
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-72-cloud-render-stream-1
+  ue_id: ue-72
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-73-ar-gaming-video-2
+  ue_id: ue-73
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-74-web-browse-session-1
+  ue_id: ue-74
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-75-video-4k-stream-1
+  ue_id: ue-75
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-76-cloud-render-stream-1
+  ue_id: ue-76
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-77-ar-gaming-video-2
+  ue_id: ue-77
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-78-web-browse-session-1
+  ue_id: ue-78
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-79-video-4k-stream-1
+  ue_id: ue-79
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-80-cloud-render-stream-1
+  ue_id: ue-80
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-81-ar-gaming-video-2
+  ue_id: ue-81
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-82-web-browse-session-1
+  ue_id: ue-82
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-83-video-4k-stream-1
+  ue_id: ue-83
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-84-cloud-render-stream-1
+  ue_id: ue-84
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-85-ar-gaming-video-2
+  ue_id: ue-85
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-86-web-browse-session-1
+  ue_id: ue-86
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-87-video-4k-stream-1
+  ue_id: ue-87
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-88-cloud-render-stream-1
+  ue_id: ue-88
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-89-ar-gaming-video-2
+  ue_id: ue-89
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-90-web-browse-session-1
+  ue_id: ue-90
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-91-video-4k-stream-1
+  ue_id: ue-91
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-92-cloud-render-stream-1
+  ue_id: ue-92
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-93-ar-gaming-video-2
+  ue_id: ue-93
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-94-web-browse-session-1
+  ue_id: ue-94
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-95-video-4k-stream-1
+  ue_id: ue-95
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-96-cloud-render-stream-1
+  ue_id: ue-96
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-97-ar-gaming-video-2
+  ue_id: ue-97
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-98-web-browse-session-1
+  ue_id: ue-98
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-99-video-4k-stream-1
+  ue_id: ue-99
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-100-cloud-render-stream-1
+  ue_id: ue-100
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-101-ar-gaming-video-2
+  ue_id: ue-101
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-102-web-browse-session-1
+  ue_id: ue-102
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-103-video-4k-stream-1
+  ue_id: ue-103
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-104-cloud-render-stream-1
+  ue_id: ue-104
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-105-ar-gaming-video-2
+  ue_id: ue-105
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-106-web-browse-session-1
+  ue_id: ue-106
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-107-video-4k-stream-1
+  ue_id: ue-107
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-108-cloud-render-stream-1
+  ue_id: ue-108
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-109-ar-gaming-video-2
+  ue_id: ue-109
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-110-web-browse-session-1
+  ue_id: ue-110
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-111-video-4k-stream-1
+  ue_id: ue-111
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-112-cloud-render-stream-1
+  ue_id: ue-112
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-113-ar-gaming-video-2
+  ue_id: ue-113
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-114-web-browse-session-1
+  ue_id: ue-114
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-115-video-4k-stream-1
+  ue_id: ue-115
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-116-cloud-render-stream-1
+  ue_id: ue-116
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-117-ar-gaming-video-2
+  ue_id: ue-117
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-118-web-browse-session-1
+  ue_id: ue-118
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-119-video-4k-stream-1
+  ue_id: ue-119
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-120-cloud-render-stream-1
+  ue_id: ue-120
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-121-ar-gaming-video-2
+  ue_id: ue-121
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-122-web-browse-session-1
+  ue_id: ue-122
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-123-video-4k-stream-1
+  ue_id: ue-123
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-124-cloud-render-stream-1
+  ue_id: ue-124
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-125-ar-gaming-video-2
+  ue_id: ue-125
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-126-web-browse-session-1
+  ue_id: ue-126
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-127-video-4k-stream-1
+  ue_id: ue-127
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-128-cloud-render-stream-1
+  ue_id: ue-128
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-129-ar-gaming-video-2
+  ue_id: ue-129
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-130-web-browse-session-1
+  ue_id: ue-130
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-131-video-4k-stream-1
+  ue_id: ue-131
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-132-cloud-render-stream-1
+  ue_id: ue-132
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-133-ar-gaming-video-2
+  ue_id: ue-133
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-134-web-browse-session-1
+  ue_id: ue-134
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-135-video-4k-stream-1
+  ue_id: ue-135
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-136-cloud-render-stream-1
+  ue_id: ue-136
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-137-ar-gaming-video-2
+  ue_id: ue-137
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-138-web-browse-session-1
+  ue_id: ue-138
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-139-video-4k-stream-1
+  ue_id: ue-139
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-140-cloud-render-stream-1
+  ue_id: ue-140
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-141-ar-gaming-video-2
+  ue_id: ue-141
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-142-web-browse-session-1
+  ue_id: ue-142
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-143-video-4k-stream-1
+  ue_id: ue-143
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-144-cloud-render-stream-1
+  ue_id: ue-144
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-145-ar-gaming-video-2
+  ue_id: ue-145
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-146-web-browse-session-1
+  ue_id: ue-146
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-147-video-4k-stream-1
+  ue_id: ue-147
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-148-cloud-render-stream-1
+  ue_id: ue-148
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-149-ar-gaming-video-2
+  ue_id: ue-149
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-150-web-browse-session-1
+  ue_id: ue-150
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-151-video-4k-stream-1
+  ue_id: ue-151
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-152-cloud-render-stream-1
+  ue_id: ue-152
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-153-ar-gaming-video-2
+  ue_id: ue-153
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-154-web-browse-session-1
+  ue_id: ue-154
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-155-video-4k-stream-1
+  ue_id: ue-155
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-156-cloud-render-stream-1
+  ue_id: ue-156
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-157-ar-gaming-video-2
+  ue_id: ue-157
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-158-web-browse-session-1
+  ue_id: ue-158
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-159-video-4k-stream-1
+  ue_id: ue-159
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-160-cloud-render-stream-1
+  ue_id: ue-160
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-161-ar-gaming-video-2
+  ue_id: ue-161
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-162-web-browse-session-1
+  ue_id: ue-162
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-163-video-4k-stream-1
+  ue_id: ue-163
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-164-cloud-render-stream-1
+  ue_id: ue-164
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-165-ar-gaming-video-2
+  ue_id: ue-165
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-166-web-browse-session-1
+  ue_id: ue-166
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-167-video-4k-stream-1
+  ue_id: ue-167
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-168-cloud-render-stream-1
+  ue_id: ue-168
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-169-ar-gaming-video-2
+  ue_id: ue-169
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-170-web-browse-session-1
+  ue_id: ue-170
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-171-video-4k-stream-1
+  ue_id: ue-171
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-172-cloud-render-stream-1
+  ue_id: ue-172
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-173-ar-gaming-video-2
+  ue_id: ue-173
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-174-web-browse-session-1
+  ue_id: ue-174
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-175-video-4k-stream-1
+  ue_id: ue-175
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-176-cloud-render-stream-1
+  ue_id: ue-176
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-177-ar-gaming-video-2
+  ue_id: ue-177
+  session_id: ar-gaming-video-session
+  service_instance_id: ar-gaming-app
+  protocol: http
+  src_port: 43002
+  dst_port: 8080
+  rate_mbps: 20.25
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 15
+    jitter_ms: 4
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 20.25
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 16.2
+    priority: 3
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 20.25
+- id: ue-178-web-browse-session-1
+  ue_id: ue-178
+  session_id: web-browse-session
+  service_instance_id: web-browse-app
+  protocol: http
+  src_port: 44003
+  dst_port: 8080
+  rate_mbps: 1.35
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 90
+    jitter_ms: 35
+    loss_rate: 0.03
+    bandwidth_ul_mbps: 0.135
+    bandwidth_dl_mbps: 1.35
+    guaranteed_bandwidth_ul_mbps: 0.0675
+    guaranteed_bandwidth_dl_mbps: 0.81
+    priority: 10
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.135
+    allocated_bandwidth_dl_mbps: 1.35
+- id: ue-179-video-4k-stream-1
+  ue_id: ue-179
+  session_id: video-4k-stream-session
+  service_instance_id: video-4k-app
+  protocol: http
+  src_port: 45001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 35
+    jitter_ms: 12
+    loss_rate: 0.003
+    bandwidth_ul_mbps: 0.27
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.135
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 5
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.27
+    allocated_bandwidth_dl_mbps: 33.75
+- id: ue-180-cloud-render-stream-1
+  ue_id: ue-180
+  session_id: cloud-render-session
+  service_instance_id: cloud-render-app
+  protocol: http
+  src_port: 46001
+  dst_port: 8080
+  rate_mbps: 33.75
+  packet_size_bytes: 1250
+  sla:
+    latency_ms: 12
+    jitter_ms: 6
+    loss_rate: 0.002
+    bandwidth_ul_mbps: 0.675
+    bandwidth_dl_mbps: 33.75
+    guaranteed_bandwidth_ul_mbps: 0.405
+    guaranteed_bandwidth_dl_mbps: 27.0
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.675
+    allocated_bandwidth_dl_mbps: 33.75
+mobility: []
+resources:
+  containers:
+    free5gc-upf-slice-1:
+      cpus: 1.0
+      memory_mb: 1024
+    free5gc-upf-slice-2:
+      cpus: 1.0
+      memory_mb: 1024
+    free5gc-upf-slice-3:
+      cpus: 1.0
+      memory_mb: 1024
+    oai-gnb-1:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-2:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-3:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-4:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-5:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-6:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-7:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-8:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-9:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-10:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-11:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-12:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-nrue-1:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-2:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-3:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-4:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-5:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-6:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-7:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-8:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-9:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-10:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-11:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-12:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-13:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-14:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-15:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-16:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-17:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-18:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-19:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-20:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-21:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-22:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-23:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-24:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-25:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-26:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-27:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-28:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-29:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-30:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-31:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-32:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-33:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-34:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-35:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-36:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-37:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-38:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-39:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-40:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-41:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-42:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-43:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-44:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-45:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-46:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-47:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-48:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-49:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-50:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-51:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-52:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-53:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-54:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-55:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-56:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-57:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-58:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-59:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-60:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-61:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-62:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-63:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-64:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-65:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-66:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-67:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-68:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-69:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-70:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-71:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-72:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-73:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-74:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-75:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-76:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-77:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-78:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-79:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-80:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-81:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-82:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-83:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-84:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-85:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-86:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-87:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-88:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-89:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-90:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-91:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-92:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-93:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-94:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-95:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-96:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-97:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-98:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-99:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-100:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-101:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-102:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-103:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-104:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-105:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-106:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-107:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-108:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-109:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-110:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-111:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-112:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-113:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-114:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-115:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-116:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-117:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-118:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-119:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-120:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-121:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-122:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-123:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-124:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-125:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-126:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-127:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-128:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-129:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-130:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-131:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-132:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-133:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-134:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-135:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-136:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-137:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-138:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-139:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-140:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-141:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-142:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-143:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-144:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-145:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-146:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-147:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-148:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-149:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-150:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-151:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-152:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-153:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-154:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-155:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-156:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-157:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-158:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-159:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-160:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-161:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-162:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-163:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-164:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-165:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-166:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-167:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-168:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-169:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-170:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-171:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-172:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-173:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-174:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-175:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-176:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-177:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-178:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-179:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-180:
+      cpus: 1.0
+      memory_mb: 4096
+    ar-gaming-app:
+      cpus: 0.5
+      memory_mb: 512
+    web-browse-app:
+      cpus: 0.5
+      memory_mb: 512
+    video-4k-app:
+      cpus: 0.5
+      memory_mb: 512
+    cloud-render-app:
+      cpus: 0.5
+      memory_mb: 512
+observability:
+  scrape_interval_seconds: 10
+  snapshot_interval_seconds: 15
+  snapshot_window_seconds: 30
+  prometheus: true
+  cadvisor: true
+  grafana: true
+  traffic_exporter: true
+  ran_exporter: true
+runtime:
+  startup_timeout_seconds: 600
+  readiness_poll_seconds: 2
+  action_timeout_seconds: 90
+integrations:
+  multiagents_database_url_env: MULTIAGENTS_DATABASE_URL
+  action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS

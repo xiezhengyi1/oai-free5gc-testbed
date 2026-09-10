@@ -1,0 +1,1845 @@
+schema_version: '1.0'
+scenario_id: s2k-11-highway-mobility
+sources:
+  oai: /home/yinyuexi/xiezhengyi/openairinterface5g
+  free5gc_compose: /home/yinyuexi/xiezhengyi/free5gc-compose-v4.1.0-testbed
+versions:
+  oai: 2026.w35
+  free5gc_compose: v4.1.0
+  gtp5g: v0.9.5
+networks:
+  sbi-net:
+    cidr: 172.30.0.0/24
+    bridge_name: tb-sbi
+  n2-net:
+    cidr: 172.31.0.0/24
+    bridge_name: tb-n2
+  n3-net:
+    cidr: 172.32.0.0/24
+    bridge_name: tb-n3
+  n4-net:
+    cidr: 172.33.0.0/24
+    bridge_name: tb-n4
+  edge-n6-net:
+    cidr: 172.34.0.0/24
+    bridge_name: tb-edge-n6
+  cloud-n6-net:
+    cidr: 172.35.0.0/24
+    bridge_name: tb-cloud-n6
+  cloud-app-net:
+    cidr: 172.38.0.0/24
+    bridge_name: tb-cloud-app
+  monitoring-net:
+    cidr: 172.36.0.0/24
+    bridge_name: tb-monitor
+  control-net:
+    cidr: 172.37.0.0/24
+    bridge_name: tb-control
+plmn:
+  mcc: '208'
+  mnc: '93'
+  tac: 1
+slices:
+- id: slice-1
+  sst: 1
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 164.2667
+    total_bandwidth_dl_mbps: 328.5333
+    guaranteed_bandwidth_ul_mbps: 123.2
+    guaranteed_bandwidth_dl_mbps: 264.0
+- id: slice-2
+  sst: 2
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 99.7333
+    total_bandwidth_dl_mbps: 228.8
+    guaranteed_bandwidth_ul_mbps: 64.5333
+    guaranteed_bandwidth_dl_mbps: 176.0
+- id: slice-3
+  sst: 3
+  sd: '000001'
+  initial_state: running
+  capacity:
+    total_bandwidth_ul_mbps: 58.6667
+    total_bandwidth_dl_mbps: 158.4
+    guaranteed_bandwidth_ul_mbps: 35.2
+    guaranteed_bandwidth_dl_mbps: 108.5333
+sites:
+- id: edge-a
+  type: edge
+core:
+  amf:
+    sbi_ip: 172.30.0.3
+    n2_ip: 172.31.0.10
+  smf:
+    sbi_ip: 172.30.0.4
+    n4_ip: 172.33.0.10
+  upfs:
+  - id: slice-1-upf
+    container: free5gc-upf-slice-1
+    site_id: edge-a
+    n3_ip: 172.32.0.30
+    n4_ip: 172.33.0.30
+    n6_ip: 172.34.0.30
+    dnn: embb
+    ue_pool: 10.60.0.0/24
+  - id: slice-2-upf
+    container: free5gc-upf-slice-2
+    site_id: edge-a
+    n3_ip: 172.32.0.31
+    n4_ip: 172.33.0.31
+    n6_ip: 172.34.0.31
+    dnn: urllc
+    ue_pool: 10.61.0.0/24
+  - id: slice-3-upf
+    container: free5gc-upf-slice-3
+    site_id: edge-a
+    n3_ip: 172.32.0.32
+    n4_ip: 172.33.0.32
+    n6_ip: 172.34.0.32
+    dnn: mmtc
+    ue_pool: 10.62.0.0/24
+ran:
+  mode: rfsim
+  band: 78
+  numerology: 1
+  bandwidth_rb: 106
+  frequency_hz: 3619200000
+  gnbs:
+  - id: gnb-1
+    container: oai-gnb-1
+    site_id: edge-a
+    n2_ip: 172.31.0.50
+    n3_ip: 172.32.0.50
+    cells:
+    - id: cell-1
+      pci: 1
+      position:
+        x: 0.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-2
+    container: oai-gnb-2
+    site_id: edge-a
+    n2_ip: 172.31.0.51
+    n3_ip: 172.32.0.51
+    cells:
+    - id: cell-2
+      pci: 2
+      position:
+        x: 520.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-3
+    container: oai-gnb-3
+    site_id: edge-a
+    n2_ip: 172.31.0.52
+    n3_ip: 172.32.0.52
+    cells:
+    - id: cell-3
+      pci: 3
+      position:
+        x: 1040.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-4
+    container: oai-gnb-4
+    site_id: edge-a
+    n2_ip: 172.31.0.53
+    n3_ip: 172.32.0.53
+    cells:
+    - id: cell-4
+      pci: 4
+      position:
+        x: 1560.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-5
+    container: oai-gnb-5
+    site_id: edge-a
+    n2_ip: 172.31.0.54
+    n3_ip: 172.32.0.54
+    cells:
+    - id: cell-5
+      pci: 5
+      position:
+        x: 2080.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-6
+    container: oai-gnb-6
+    site_id: edge-a
+    n2_ip: 172.31.0.55
+    n3_ip: 172.32.0.55
+    cells:
+    - id: cell-6
+      pci: 6
+      position:
+        x: 2600.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-7
+    container: oai-gnb-7
+    site_id: edge-a
+    n2_ip: 172.31.0.56
+    n3_ip: 172.32.0.56
+    cells:
+    - id: cell-7
+      pci: 7
+      position:
+        x: 3120.0
+        y: 0.0
+        z: 10.0
+  - id: gnb-8
+    container: oai-gnb-8
+    site_id: edge-a
+    n2_ip: 172.31.0.57
+    n3_ip: 172.32.0.57
+    cells:
+    - id: cell-8
+      pci: 8
+      position:
+        x: 3640.0
+        y: 0.0
+        z: 10.0
+ues:
+- id: ue-1
+  container: oai-nrue-1
+  traffic_sidecar: traffic-sidecar-ue-1
+  supi: imsi-208930000011001
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-2
+  container: oai-nrue-2
+  traffic_sidecar: traffic-sidecar-ue-2
+  supi: imsi-208930000011002
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-3
+  container: oai-nrue-3
+  traffic_sidecar: traffic-sidecar-ue-3
+  supi: imsi-208930000011003
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-4
+  container: oai-nrue-4
+  traffic_sidecar: traffic-sidecar-ue-4
+  supi: imsi-208930000011004
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-5
+  container: oai-nrue-5
+  traffic_sidecar: traffic-sidecar-ue-5
+  supi: imsi-208930000011005
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-6
+  container: oai-nrue-6
+  traffic_sidecar: traffic-sidecar-ue-6
+  supi: imsi-208930000011006
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-7
+  container: oai-nrue-7
+  traffic_sidecar: traffic-sidecar-ue-7
+  supi: imsi-208930000011007
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-8
+  container: oai-nrue-8
+  traffic_sidecar: traffic-sidecar-ue-8
+  supi: imsi-208930000011008
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-9
+  container: oai-nrue-9
+  traffic_sidecar: traffic-sidecar-ue-9
+  supi: imsi-208930000011009
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-10
+  container: oai-nrue-10
+  traffic_sidecar: traffic-sidecar-ue-10
+  supi: imsi-208930000011010
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-11
+  container: oai-nrue-11
+  traffic_sidecar: traffic-sidecar-ue-11
+  supi: imsi-208930000011011
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-12
+  container: oai-nrue-12
+  traffic_sidecar: traffic-sidecar-ue-12
+  supi: imsi-208930000011012
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-13
+  container: oai-nrue-13
+  traffic_sidecar: traffic-sidecar-ue-13
+  supi: imsi-208930000011013
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-14
+  container: oai-nrue-14
+  traffic_sidecar: traffic-sidecar-ue-14
+  supi: imsi-208930000011014
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-15
+  container: oai-nrue-15
+  traffic_sidecar: traffic-sidecar-ue-15
+  supi: imsi-208930000011015
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-16
+  container: oai-nrue-16
+  traffic_sidecar: traffic-sidecar-ue-16
+  supi: imsi-208930000011016
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-17
+  container: oai-nrue-17
+  traffic_sidecar: traffic-sidecar-ue-17
+  supi: imsi-208930000011017
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-18
+  container: oai-nrue-18
+  traffic_sidecar: traffic-sidecar-ue-18
+  supi: imsi-208930000011018
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-19
+  container: oai-nrue-19
+  traffic_sidecar: traffic-sidecar-ue-19
+  supi: imsi-208930000011019
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-20
+  container: oai-nrue-20
+  traffic_sidecar: traffic-sidecar-ue-20
+  supi: imsi-208930000011020
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-21
+  container: oai-nrue-21
+  traffic_sidecar: traffic-sidecar-ue-21
+  supi: imsi-208930000011021
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-22
+  container: oai-nrue-22
+  traffic_sidecar: traffic-sidecar-ue-22
+  supi: imsi-208930000011022
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-23
+  container: oai-nrue-23
+  traffic_sidecar: traffic-sidecar-ue-23
+  supi: imsi-208930000011023
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-24
+  container: oai-nrue-24
+  traffic_sidecar: traffic-sidecar-ue-24
+  supi: imsi-208930000011024
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-25
+  container: oai-nrue-25
+  traffic_sidecar: traffic-sidecar-ue-25
+  supi: imsi-208930000011025
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-26
+  container: oai-nrue-26
+  traffic_sidecar: traffic-sidecar-ue-26
+  supi: imsi-208930000011026
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-27
+  container: oai-nrue-27
+  traffic_sidecar: traffic-sidecar-ue-27
+  supi: imsi-208930000011027
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-28
+  container: oai-nrue-28
+  traffic_sidecar: traffic-sidecar-ue-28
+  supi: imsi-208930000011028
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-29
+  container: oai-nrue-29
+  traffic_sidecar: traffic-sidecar-ue-29
+  supi: imsi-208930000011029
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-30
+  container: oai-nrue-30
+  traffic_sidecar: traffic-sidecar-ue-30
+  supi: imsi-208930000011030
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-31
+  container: oai-nrue-31
+  traffic_sidecar: traffic-sidecar-ue-31
+  supi: imsi-208930000011031
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-32
+  container: oai-nrue-32
+  traffic_sidecar: traffic-sidecar-ue-32
+  supi: imsi-208930000011032
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-33
+  container: oai-nrue-33
+  traffic_sidecar: traffic-sidecar-ue-33
+  supi: imsi-208930000011033
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-1
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-34
+  container: oai-nrue-34
+  traffic_sidecar: traffic-sidecar-ue-34
+  supi: imsi-208930000011034
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-2
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-35
+  container: oai-nrue-35
+  traffic_sidecar: traffic-sidecar-ue-35
+  supi: imsi-208930000011035
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-3
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+- id: ue-36
+  container: oai-nrue-36
+  traffic_sidecar: traffic-sidecar-ue-36
+  supi: imsi-208930000011036
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-4
+  sessions:
+  - id: remote-drive-session
+    dnn: embb
+    slice_id: slice-1
+- id: ue-37
+  container: oai-nrue-37
+  traffic_sidecar: traffic-sidecar-ue-37
+  supi: imsi-208930000011037
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-5
+  sessions:
+  - id: factory-robot-session
+    dnn: embb
+    slice_id: slice-1
+  - id: iot-sensor-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-38
+  container: oai-nrue-38
+  traffic_sidecar: traffic-sidecar-ue-38
+  supi: imsi-208930000011038
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-6
+  sessions:
+  - id: ar-gaming-control-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: ar-gaming-video-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-39
+  container: oai-nrue-39
+  traffic_sidecar: traffic-sidecar-ue-39
+  supi: imsi-208930000011039
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-7
+  sessions:
+  - id: telemedicine-session
+    dnn: urllc
+    slice_id: slice-2
+  - id: web-browse-session
+    dnn: mmtc
+    slice_id: slice-3
+- id: ue-40
+  container: oai-nrue-40
+  traffic_sidecar: traffic-sidecar-ue-40
+  supi: imsi-208930000011040
+  key: 8baf473f2f8fd09487cccbd7097c6862
+  opc: 8e27b6af0e692e750f32667a3b14605d
+  serving_gnb: gnb-8
+  sessions:
+  - id: video-4k-stream-session
+    dnn: embb
+    slice_id: slice-1
+  - id: video-4k-control-session
+    dnn: urllc
+    slice_id: slice-2
+services:
+- id: remote-drive-app
+  container: remote-drive-app
+  service_id: remote-drive
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.100
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: factory-robot-app
+  container: factory-robot-app
+  service_id: factory-robot
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.101
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: ar-gaming-app
+  container: ar-gaming-app
+  service_id: ar-gaming
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.103
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: telemedicine-app
+  container: telemedicine-app
+  service_id: telemedicine
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.104
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+- id: video-4k-app
+  container: video-4k-app
+  service_id: video-4k
+  site_id: edge-a
+  network: edge-n6-net
+  ip: 172.34.0.107
+  port: 8080
+  resources:
+    cpus: 0.5
+    memory_mb: 512
+links: []
+flows:
+- id: ue-1-remote-drive-video-1
+  ue_id: ue-1
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-2-factory-robot-video-1
+  ue_id: ue-2
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-3-ar-gaming-control-1
+  ue_id: ue-3
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-4-telemedicine-video-1
+  ue_id: ue-4
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-5-video-4k-control-2
+  ue_id: ue-5
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-6-remote-drive-video-1
+  ue_id: ue-6
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-7-factory-robot-video-1
+  ue_id: ue-7
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-8-ar-gaming-control-1
+  ue_id: ue-8
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-9-telemedicine-video-1
+  ue_id: ue-9
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-10-video-4k-control-2
+  ue_id: ue-10
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-11-remote-drive-video-1
+  ue_id: ue-11
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-12-factory-robot-video-1
+  ue_id: ue-12
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-13-ar-gaming-control-1
+  ue_id: ue-13
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-14-telemedicine-video-1
+  ue_id: ue-14
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-15-video-4k-control-2
+  ue_id: ue-15
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-16-remote-drive-video-1
+  ue_id: ue-16
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-17-factory-robot-video-1
+  ue_id: ue-17
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-18-ar-gaming-control-1
+  ue_id: ue-18
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-19-telemedicine-video-1
+  ue_id: ue-19
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-20-video-4k-control-2
+  ue_id: ue-20
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-21-remote-drive-video-1
+  ue_id: ue-21
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-22-factory-robot-video-1
+  ue_id: ue-22
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-23-ar-gaming-control-1
+  ue_id: ue-23
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-24-telemedicine-video-1
+  ue_id: ue-24
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-25-video-4k-control-2
+  ue_id: ue-25
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-26-remote-drive-video-1
+  ue_id: ue-26
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-27-factory-robot-video-1
+  ue_id: ue-27
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-28-ar-gaming-control-1
+  ue_id: ue-28
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-29-telemedicine-video-1
+  ue_id: ue-29
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-30-video-4k-control-2
+  ue_id: ue-30
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-31-remote-drive-video-1
+  ue_id: ue-31
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-32-factory-robot-video-1
+  ue_id: ue-32
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-33-ar-gaming-control-1
+  ue_id: ue-33
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-34-telemedicine-video-1
+  ue_id: ue-34
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-35-video-4k-control-2
+  ue_id: ue-35
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+- id: ue-36-remote-drive-video-1
+  ue_id: ue-36
+  session_id: remote-drive-session
+  service_instance_id: remote-drive-app
+  protocol: udp
+  src_port: 41001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 12
+    jitter_ms: 2
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-37-factory-robot-video-1
+  ue_id: ue-37
+  session_id: factory-robot-session
+  service_instance_id: factory-robot-app
+  protocol: udp
+  src_port: 42001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 10
+    jitter_ms: 1.5
+    loss_rate: 0.0005
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-38-ar-gaming-control-1
+  ue_id: ue-38
+  session_id: ar-gaming-control-session
+  service_instance_id: ar-gaming-app
+  protocol: udp
+  src_port: 43001
+  dst_port: 5202
+  rate_mbps: 0.25
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 8
+    jitter_ms: 2
+    loss_rate: 0.0008
+    bandwidth_ul_mbps: 0.15
+    bandwidth_dl_mbps: 0.25
+    guaranteed_bandwidth_ul_mbps: 0.1
+    guaranteed_bandwidth_dl_mbps: 0.18
+    priority: 2
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.15
+    allocated_bandwidth_dl_mbps: 0.25
+- id: ue-39-telemedicine-video-1
+  ue_id: ue-39
+  session_id: telemedicine-session
+  service_instance_id: telemedicine-app
+  protocol: udp
+  src_port: 44001
+  dst_port: 5202
+  rate_mbps: 3.8
+  packet_size_bytes: 1000
+  sla:
+    latency_ms: 15
+    jitter_ms: 2
+    loss_rate: 0.0006
+    bandwidth_ul_mbps: 3.8
+    bandwidth_dl_mbps: 3.0
+    guaranteed_bandwidth_ul_mbps: 3.0
+    guaranteed_bandwidth_dl_mbps: 2.4
+    priority: 1
+  allocation:
+    allocated_bandwidth_ul_mbps: 3.8
+    allocated_bandwidth_dl_mbps: 3.0
+- id: ue-40-video-4k-control-2
+  ue_id: ue-40
+  session_id: video-4k-control-session
+  service_instance_id: video-4k-app
+  protocol: udp
+  src_port: 45002
+  dst_port: 5202
+  rate_mbps: 0.2
+  packet_size_bytes: 250
+  sla:
+    latency_ms: 25
+    jitter_ms: 6
+    loss_rate: 0.0015
+    bandwidth_ul_mbps: 0.1
+    bandwidth_dl_mbps: 0.2
+    guaranteed_bandwidth_ul_mbps: 0.05
+    guaranteed_bandwidth_dl_mbps: 0.1
+    priority: 4
+  allocation:
+    allocated_bandwidth_ul_mbps: 0.1
+    allocated_bandwidth_dl_mbps: 0.2
+mobility:
+- at_seconds: 45
+  ue_id: ue-1
+  target_gnb: gnb-2
+  position:
+    x: 540.0
+    y: 10.0
+    z: 1.5
+- at_seconds: 60
+  ue_id: ue-2
+  target_gnb: gnb-3
+  position:
+    x: 1060.0
+    y: 10.0
+    z: 1.5
+- at_seconds: 75
+  ue_id: ue-3
+  target_gnb: gnb-4
+  position:
+    x: 1580.0
+    y: 10.0
+    z: 1.5
+resources:
+  containers:
+    free5gc-upf-slice-1:
+      cpus: 1.0
+      memory_mb: 1024
+    free5gc-upf-slice-2:
+      cpus: 1.0
+      memory_mb: 1024
+    free5gc-upf-slice-3:
+      cpus: 1.0
+      memory_mb: 1024
+    oai-gnb-1:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-2:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-3:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-4:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-5:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-6:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-7:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-gnb-8:
+      cpus: 2.0
+      memory_mb: 8192
+    oai-nrue-1:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-2:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-3:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-4:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-5:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-6:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-7:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-8:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-9:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-10:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-11:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-12:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-13:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-14:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-15:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-16:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-17:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-18:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-19:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-20:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-21:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-22:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-23:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-24:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-25:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-26:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-27:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-28:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-29:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-30:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-31:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-32:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-33:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-34:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-35:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-36:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-37:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-38:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-39:
+      cpus: 1.0
+      memory_mb: 4096
+    oai-nrue-40:
+      cpus: 1.0
+      memory_mb: 4096
+    remote-drive-app:
+      cpus: 0.5
+      memory_mb: 512
+    factory-robot-app:
+      cpus: 0.5
+      memory_mb: 512
+    ar-gaming-app:
+      cpus: 0.5
+      memory_mb: 512
+    telemedicine-app:
+      cpus: 0.5
+      memory_mb: 512
+    video-4k-app:
+      cpus: 0.5
+      memory_mb: 512
+observability:
+  scrape_interval_seconds: 10
+  snapshot_interval_seconds: 15
+  snapshot_window_seconds: 30
+  prometheus: true
+  cadvisor: true
+  grafana: true
+  traffic_exporter: true
+  ran_exporter: true
+runtime:
+  startup_timeout_seconds: 600
+  readiness_poll_seconds: 2
+  action_timeout_seconds: 90
+integrations:
+  multiagents_database_url_env: MULTIAGENTS_DATABASE_URL
+  action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS
