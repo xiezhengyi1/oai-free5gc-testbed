@@ -47,6 +47,8 @@ class Launcher:
         self,
         on_ready: Callable[[RunPhase, dict[str, Any]], None],
     ) -> None:
+        dynamic_pdu = (self.run_dir / "ue-policy" / "dynamic-pdu.json").exists()
+        policy_profile = (self.run_dir / "ue-policy" / "profile.json").exists()
         core_services = [
             "mongodb",
             "free5gc-nrf",
@@ -99,27 +101,42 @@ class Launcher:
                 registered_supis.append(registration["supi"])
 
                 expected_phase = RunPhase.PDU_READY
-                tunnels[ue.id] = self.readiness.wait(lambda ue=ue: self.readiness.pdu(ue))
+                probe = self.readiness.initial_pdu if dynamic_pdu else self.readiness.pdu
+                tunnels[ue.id] = self.readiness.wait(lambda ue=ue: probe(ue))
             on_ready(RunPhase.UE_REGISTERED, {"registered_supis": registered_supis})
+
+            if dynamic_pdu:
+                self.docker.compose_run(
+                    "action-gateway",
+                    ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"],
+                )
+                self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
+                for ue in self.scenario.ues:
+                    tunnels[ue.id] = self.readiness.wait(lambda ue=ue: self.readiness.pdu(ue))
+            elif policy_profile:
+                self.docker.compose_run(
+                    "action-gateway",
+                    ["python", "-m", "testbed.orchestration.ue_policy_bootstrap"],
+                )
             on_ready(RunPhase.PDU_READY, tunnels)
 
             expected_phase = RunPhase.TRAFFIC_READY
-            self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
+            if not dynamic_pdu:
+                self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
             on_ready(RunPhase.TRAFFIC_READY, self.readiness.wait(self.readiness.traffic))
             self.slice_manager.reconcile_initial()
 
             expected_phase = RunPhase.TELEMETRY_READY
-            self.docker.compose_up(
-                [
-                    "prometheus",
-                    "cadvisor",
-                    "grafana",
-                    "ran-exporter",
-                    "session-tracker",
-                    "snapshot-builder",
-                    "action-gateway",
-                ]
-            )
+            telemetry_sources = [
+                "prometheus",
+                "cadvisor",
+                "grafana",
+                "ran-exporter",
+                "session-tracker",
+            ]
+            self.docker.compose_up(telemetry_sources)
+            self.readiness.wait(self.readiness.telemetry_sources)
+            self.docker.compose_up(["snapshot-builder", "action-gateway"])
             on_ready(
                 RunPhase.TELEMETRY_READY, self.readiness.wait(self.readiness.telemetry)
             )
@@ -146,8 +163,8 @@ class Launcher:
 
     def resume(self) -> RunState:
         current_phase = self.store.current().phase
-        if current_phase not in (RunPhase.RUNNING, RunPhase.FAILED):
-            raise ValueError("resume requires the run to be in RUNNING or FAILED phase")
+        if current_phase not in (RunPhase.RUNNING, RunPhase.FAILED, RunPhase.STOPPED):
+            raise ValueError("resume requires the run to be in RUNNING, FAILED, or STOPPED phase")
         recovered: dict[str, Any] = {}
 
         def observe(phase: RunPhase, evidence: dict[str, Any]) -> None:
@@ -177,5 +194,15 @@ class Launcher:
 
     def reset(self) -> RunState:
         self.docker.compose_down(remove_volumes=True)
+        if any(
+            (
+                self.run_dir / "ue-policy" / marker
+            ).exists()
+            for marker in ("dynamic-pdu.json", "profile.json")
+        ):
+            self.docker.compose_run(
+                "action-gateway",
+                ["python", "-m", "testbed.orchestration.ue_policy_reset"],
+            )
         self.store.reset()
         return self.start()

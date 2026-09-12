@@ -96,6 +96,9 @@ class Readiness:
             adapter.tunnel(session_interface(index)) for index, _ in enumerate(ue.sessions, start=1)
         ]
 
+    def initial_pdu(self, ue: UeSpec) -> list[dict[str, Any]]:
+        return [UeAdapter(self.docker, ue.container).tunnel()]
+
     def pdu_for_slice(self, ue: UeSpec, slice_id: str) -> list[dict[str, Any]]:
         adapter = UeAdapter(self.docker, ue.container)
         return [
@@ -133,6 +136,22 @@ class Readiness:
                 service.ip, session_interface(session_index)
             )
         return evidence
+
+    def telemetry_sources(self) -> dict[str, Any]:
+        prometheus = PrometheusAdapter("http://127.0.0.1:29090")
+        prometheus.ready()
+        up = prometheus.instant_query(
+            'up{instance!="snapshot-builder:9104",instance!="action-gateway:9105"}'
+        )
+        expected_targets = 4 + len(self.scenario.ues)
+        if len(up) != expected_targets:
+            raise RuntimeError(
+                f"expected {expected_targets} Prometheus targets, found {len(up)}"
+            )
+        down = [item["metric"] for item in up if float(item["value"][1]) != 1.0]
+        if down:
+            raise RuntimeError(f"Prometheus targets are down: {down}")
+        return {"targets": len(up)}
 
     def telemetry(self) -> dict[str, Any]:
         prometheus = PrometheusAdapter("http://127.0.0.1:29090")

@@ -23,6 +23,8 @@ SESSION_COMPLETE = Gauge(
 def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, object]]:
     compiled = json.loads((run_dir / "compiled-scenario.json").read_text(encoding="utf-8"))
     scenario = compiled["scenario"]
+    dynamic = (run_dir / "ue-policy/dynamic-pdu.json").exists()
+    slices = {item["id"]: item for item in scenario["slices"]}
     gnb_logs = {
         gnb["id"]: docker.container_logs(gnb["container"], tail="all")
         for gnb in scenario["ran"]["gnbs"]
@@ -35,7 +37,14 @@ def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, obj
         cu_ue_id = int(ran_record["cu_ue_id"])
         interfaces = json.loads(docker.exec(ue["container"], ["ip", "-j", "addr", "show"]))
         interface_by_name = {item["ifname"]: item for item in interfaces}
-        for index, session in enumerate(ue["sessions"], start=1):
+        selected = list(enumerate(ue["sessions"], start=1))
+        if dynamic:
+            state = json.loads((run_dir / "ue-policy" / ue["id"] / f"{ue['supi'].removeprefix('imsi-')}.policy.state.json").read_text())
+            selected = [(pdu["id"], next(session for session in ue["sessions"]
+                        if session["dnn"] == pdu["dnn"] and slices[session["slice_id"]]["sst"] == pdu["sst"]
+                        and slices[session["slice_id"]]["sd"] == pdu["sd"]))
+                        for pdu in state["sessions"] if pdu["active"]]
+        for index, session in selected:
             record = parse_session_fields(
                 gnb_logs[ue["serving_gnb"]],
                 ue["supi"],
@@ -64,6 +73,17 @@ def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, obj
     return records
 
 
+def refresh_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, object]]:
+    records = collect_sessions(run_dir, docker)
+    if not all(record["correlation_status"] == "complete" for record in records):
+        raise RuntimeError("session refresh requires complete UE/NGAP correlation")
+    output = run_dir / "session-observations.json"
+    temporary = output.with_suffix(".refresh.tmp")
+    temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(output)
+    return records
+
+
 def main() -> None:
     run_dir = Path(os.environ["RUN_DIR"])
     output = run_dir / "session-observations.json"
@@ -77,7 +97,7 @@ def main() -> None:
         temporary = output.with_suffix(".json.tmp")
         temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
         temporary.replace(output)
-        if all(record["correlation_status"] == "complete" for record in records):
+        if not (run_dir / "ue-policy/dynamic-pdu.json").exists() and all(record["correlation_status"] == "complete" for record in records):
             stop.wait()
         stop.wait(1)
 

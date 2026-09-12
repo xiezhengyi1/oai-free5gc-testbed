@@ -61,6 +61,10 @@ def test_compose_fragments_render_to_one_valid_model(tmp_path: Path) -> None:
     assert compose["services"]["snapshot-builder"]["extra_hosts"] == [
         "host.docker.internal:host-gateway"
     ]
+    assert compose["services"]["snapshot-builder"]["environment"]["NO_PROXY"] == "*"
+    assert compose["services"]["snapshot-builder"]["environment"]["no_proxy"] == "*"
+    assert compose["services"]["action-gateway"]["environment"]["NO_PROXY"] == "*"
+    assert compose["services"]["action-gateway"]["environment"]["no_proxy"] == "*"
     assert compose["services"]["prometheus"]["ports"] == ["29090:9090"]
     assert compose["services"]["action-gateway"]["environment"]["RUN_ID"] == "render-001"
     render_traffic_profiles(scenario, generated / "traffic-profiles.json")

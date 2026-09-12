@@ -79,8 +79,10 @@ class RunStore:
 
     def recover(self, evidence: dict[str, Any]) -> RunState:
         current = self.current()
-        if current.phase not in (RunPhase.RUNNING, RunPhase.FAILED):
-            raise ValueError(f"recover requires RUNNING or FAILED phase, observed {current.phase}")
+        if current.phase not in (RunPhase.RUNNING, RunPhase.FAILED, RunPhase.STOPPED):
+            raise ValueError(
+                f"recover requires RUNNING, FAILED, or STOPPED phase, observed {current.phase}"
+            )
         return self._write(
             RunState(
                 run_id=current.run_id,

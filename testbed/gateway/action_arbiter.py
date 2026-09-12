@@ -10,6 +10,7 @@ from testbed.gateway.contracts import (
     SliceLifecycleAction,
     SliceResourceAction,
 )
+from testbed.gateway.ue_policy import AMAction, URSPAction
 from testbed.scenario.schema import Scenario
 from testbed.telemetry.models import UnifiedSnapshot
 from testbed.telemetry.snapshot_writer import SnapshotStore
@@ -23,7 +24,7 @@ class ActionArbiter:
         self.snapshots = SnapshotStore(self.run_dir)
 
     def authorize(self, principal: str, action: object) -> None:
-        if isinstance(action, PolicyAction) and principal != "multiagents":
+        if isinstance(action, (PolicyAction, AMAction, URSPAction)) and principal != "multiagents":
             raise PermissionError("PolicyAction requires the multiagents principal")
         if (
             isinstance(
