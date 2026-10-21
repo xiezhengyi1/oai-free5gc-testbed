@@ -1,0 +1,28 @@
+{
+  "host": "ibn3090",
+  "source_commit": "56ffb40e275ba584a3032b926203c4ec03890497",
+  "source_diff_sha256": "4e01df0f17b26d6f48b2ad64f7201fd70df42364526744311a4d818b7d3305f4",
+  "build_flags": {
+    "AVX512": false,
+    "AVX2": true,
+    "compiler": "gcc-12"
+  },
+  "base_image_manifest_digests": {
+    "oaisoftwarealliance/oai-gnb:2026.w35-uepolicy": "sha256:a825a0b98fe48049a6ed3a1eba533a0185e95c8ee19ba62a784a11dbd3c19fcf",
+    "oaisoftwarealliance/oai-nr-ue:2026.w35-uepolicy": "sha256:7b38e04e9903b1192539e1c1e4bc316ec42d896339eccb67027cd429d17e748e"
+  },
+  "binaries_sha256": {
+    "nr-softmodem": "54268892770d78a9e5cb46784c895efa7ccaa44131852eed3ea8465e50893860",
+    "nr-uesoftmodem": "482b7bb27fdac7ad4506a6c82358c968d541a82d712e154f5b6fd15ee141ed86",
+    "libparams_libconfig.so": "a5ecd48ae9a931afa7f260ccb2218e62b189a0a21df7ea691b18bff468f2a333",
+    "libdfts.so": "e8626a345e83a3d5d381728852f6fb096cba6b35358f04301f66f660e14b0a08",
+    "libcoding.so": "c24a6470c28c26c1d0c7babbf18990b951ad6de070aa6abb95e283fbc1dd1267",
+    "libldpc.so": "9cee031258c42e2fab061fd22d4aa206f369d6ca9866345fefffb7282b5ed3c7",
+    "libldpc_orig.so": "270db08b4661207688586f27f809cdc1ace46988590caeb4a6fe471a6316a26d",
+    "librfsimulator.so": "19f93ed6489d0f506f84ddd1e082e93825f889dd14ab7a43dc73deb865b1c4e4"
+  },
+  "images": {
+    "oai-free5gc-testbed/oai-gnb:20261008-avx2": "sha256:d7209241ac0083ed17c19ea49057c57c6ce388b968cbb88fc8c39f7205316718",
+    "oai-free5gc-testbed/oai-nr-ue:20261008-avx2": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92"
+  }
+}

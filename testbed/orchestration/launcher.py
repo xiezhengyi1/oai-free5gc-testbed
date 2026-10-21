@@ -49,9 +49,7 @@ class Launcher:
     ) -> None:
         dynamic_pdu = (self.run_dir / "ue-policy" / "dynamic-pdu.json").exists()
         policy_profile = (self.run_dir / "ue-policy" / "profile.json").exists()
-        core_services = [
-            "mongodb",
-            "free5gc-nrf",
+        registered_core_services = [
             "free5gc-ausf",
             "free5gc-nssf",
             "free5gc-pcf",
@@ -59,17 +57,32 @@ class Launcher:
             "free5gc-udr",
             "free5gc-nef",
             "free5gc-amf",
-            *(item.container for item in self.scenario.core.upfs),
-            "free5gc-smf",
-            "free5gc-webui",
-            "free5gc-chf",
         ]
         application_services = [item.container for item in self.scenario.services]
         application_services.extend(item.container for item in self.scenario.links)
         expected_phase = RunPhase.CORE_READY
         try:
             self.docker.compose_config()
-            self.docker.compose_up(core_services)
+            self.docker.compose_up(["mongodb"])
+            self.readiness.wait(self.readiness.mongodb)
+            self.docker.compose_up(["free5gc-nrf"])
+            self.readiness.wait(self.readiness.nrf)
+            for service in registered_core_services:
+                self.docker.compose_up([service])
+                self.readiness.wait(lambda service=service: self.readiness.nf_registered(service))
+            self.docker.compose_up([item.container for item in self.scenario.core.upfs])
+            self.docker.compose_up(["free5gc-smf"])
+            self.readiness.wait(
+                lambda: self.readiness.nf_registered("free5gc-smf")
+            )
+            self.docker.compose_up(["free5gc-webui"])
+            self.readiness.wait(
+                lambda: self.readiness.nf_registered("free5gc-webui")
+            )
+            self.docker.compose_up(["free5gc-chf"])
+            self.readiness.wait(
+                lambda: self.readiness.nf_registered("free5gc-chf")
+            )
             on_ready(RunPhase.CORE_READY, self.readiness.wait(self.readiness.core))
 
             expected_phase = RunPhase.PFCP_READY
@@ -123,10 +136,6 @@ class Launcher:
             expected_phase = RunPhase.TRAFFIC_READY
             if not dynamic_pdu:
                 self.docker.compose_up([item.traffic_sidecar for item in self.scenario.ues])
-            on_ready(RunPhase.TRAFFIC_READY, self.readiness.wait(self.readiness.traffic))
-            self.slice_manager.reconcile_initial()
-
-            expected_phase = RunPhase.TELEMETRY_READY
             telemetry_sources = [
                 "prometheus",
                 "cadvisor",
@@ -135,6 +144,10 @@ class Launcher:
                 "session-tracker",
             ]
             self.docker.compose_up(telemetry_sources)
+            on_ready(RunPhase.TRAFFIC_READY, self.readiness.wait(self.readiness.traffic))
+            self.slice_manager.reconcile_initial()
+
+            expected_phase = RunPhase.TELEMETRY_READY
             self.readiness.wait(self.readiness.telemetry_sources)
             self.docker.compose_up(["snapshot-builder", "action-gateway"])
             on_ready(

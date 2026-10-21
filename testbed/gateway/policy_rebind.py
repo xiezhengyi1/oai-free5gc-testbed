@@ -9,6 +9,19 @@ def rebind_policy(pcf, supi: str, previous: dict, timeout: float, poll: float) -
     while time.monotonic() < deadline:
         current = pcf.ue_policy(supi)
         records = current["ue_policy_associations"]
+        if (
+            len(records) == 1
+            and records[0]["id"] == old["id"]
+            and records[0]["status"] == "complete"
+        ):
+            association = records[0]
+            am = current["am_policy_associations"][0]
+            return {
+                "ue_association_id": association["id"],
+                "ursp_status": association["status"],
+                "am_association_id": am["id"],
+                "rfsp": am["rfsp"],
+            }
         if len(records) == 1 and records[0]["id"] != old["id"]:
             association = records[0]
             break

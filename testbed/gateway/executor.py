@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import os
 import time
-import yaml
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -13,7 +11,6 @@ import httpx
 from testbed.adapters.docker_adapter import DockerAdapter
 from testbed.adapters.free5gc.pcf_adapter import PcfAdapter
 from testbed.adapters.free5gc.subscriber_adapter import SubscriberAdapter
-from testbed.adapters.oai.ue_adapter import UeAdapter
 from testbed.gateway.contracts import (
     ActionReceipt,
     Dispatch,
@@ -23,14 +20,13 @@ from testbed.gateway.contracts import (
     SliceLifecycleAction,
     SliceResourceAction,
 )
-from testbed.gateway.policy_rebind import rebind_policy
-from testbed.gateway.subscription_authorization import AuthorizationAction, apply_authorization
 from testbed.gateway.policy_translator import translate_policy
 from testbed.gateway.policy_watchdog import PolicyWatchdog
 from testbed.gateway.postcondition_verifier import verify_resources, verify_restart
 from testbed.gateway.receipt_store import ReceiptStore
 from testbed.gateway.resource_translator import translate_resource
 from testbed.gateway.slice_manager import SliceManager
+from testbed.gateway.subscription_authorization import AuthorizationAction, apply_authorization
 from testbed.gateway.ue_policy import AMAction, URSPAction, expected_rule, validate_subscription
 from testbed.orchestration.readiness import Readiness
 from testbed.scenario.ids import stable_digest
@@ -39,7 +35,7 @@ from testbed.state.action_store import ActionStore
 from testbed.state.flow_allocation_store import FlowAllocationStore
 from testbed.state.slice_store import SliceStore
 from testbed.telemetry.models import UnifiedSnapshot
-from testbed.telemetry.session_tracker import refresh_sessions
+from testbed.telemetry.snapshot_writer import SnapshotStore
 
 
 class ActionExecutor:
@@ -53,7 +49,7 @@ class ActionExecutor:
         gateway = self.docker.inspect(os.environ.get("ACTION_GATEWAY_CONTAINER", "action-gateway"))
         run_mount = next(item for item in gateway["Mounts"] if item["Destination"] == "/run")
         self.docker.compose_project_directory = Path(run_mount["Source"]) / "generated"
-        self.readiness = Readiness(self.docker, scenario)
+        self.readiness = Readiness(self.docker, scenario, "http://prometheus:9090")
         self.subscribers = SubscriberAdapter(
             "http://free5gc-webui:5000", scenario.runtime.action_timeout_seconds
         )
@@ -115,74 +111,63 @@ class ActionExecutor:
     def policy(self, action: PolicyAction) -> ActionReceipt:
         accepted_at = datetime.now(UTC)
         self.actions.append_action(action.model_dump(mode="json"))
-        ue = next(item for item in self.scenario.ues if item.supi == action.target.supi)
-        policy_before = None
-        target_scenario = self.scenario
-        if "UE_POLICY_ADMIN_TOKEN" in os.environ:
-            policy_before = self.pcf.ue_policy(ue.supi)
-            records = policy_before["ue_policy_associations"]
-            if len(records) != 1 or records[0]["status"] != "complete":
-                raise ValueError("SM re-registration requires a completed URSP to preserve")
-            route = json.loads(
-                (
-                    self.run_dir / "ue-policy" / ue.id / f"{action.target.flow_id}.route.json"
-                ).read_text()
+        try:
+            return self._apply_policy(action, accepted_at)
+        except (ValueError, RuntimeError, TimeoutError, httpx.HTTPError) as error:
+            rejected = isinstance(error, ValueError) or (
+                isinstance(error, httpx.HTTPStatusError)
+                and 400 <= error.response.status_code < 500
             )
-            if (accepted_at - datetime.fromisoformat(route["observed_at"])).total_seconds() > 5:
-                raise ValueError("SM target has no fresh UE-selected PDU route")
-            session = ue.sessions[route["pdu_session_id"] - 1]
-            target_scenario = self.scenario.model_copy(
-                update={
-                    "flows": tuple(
-                        flow.model_copy(update={"session_id": session.id})
-                        if flow.id == action.target.flow_id
-                        else flow
-                        for flow in self.scenario.flows
-                    )
-                }
+            return self.receipts.write(
+                ActionReceipt(
+                    action_id=self._action_id(action, accepted_at),
+                    run_id=action.run_id,
+                    snapshot_before=action.snapshot_id,
+                    status="rejected" if rejected else "failed",
+                    dispatch=Dispatch(accepted_at=accepted_at, completed_at=datetime.now(UTC)),
+                    observed_effect={"error": str(error), "verified": False},
+                    snapshot_after=None,
+                )
             )
-        translated = translate_policy(target_scenario, action)
-        self.subscribers.update_policy(
-            action.target.supi,
-            translated.plmn_id,
-            translated.flow_rule,
-            translated.qos_flow,
-            translated.charging_data,
+
+    def _apply_policy(self, action: PolicyAction, accepted_at: datetime) -> ActionReceipt:
+        deadline = time.monotonic() + self.scenario.runtime.action_timeout_seconds
+        snapshot = SnapshotStore(self.run_dir).get(action.snapshot_id)
+        flow = next(
+            item
+            for item in snapshot.flows
+            if item["flow_id"] == action.target.flow_id
+            and item["supi"] == action.target.supi
         )
-        dynamic = (self.run_dir / "ue-policy/dynamic-pdu.json").exists()
-        if dynamic:
-            compose = yaml.safe_load((self.run_dir / "generated/compose.yaml").read_text())
-            tracker = compose["services"]["session-tracker"]["container_name"]
-            self.docker.stop(tracker)
-            self.docker.stop(translated.traffic_sidecar)
-        self.docker.restart(translated.ue_container)
-        if dynamic:
-            self.readiness.wait(lambda: UeAdapter(self.docker, ue.container).tunnel())
-        else:
-            self.readiness.wait(lambda: self.readiness.pdu(ue))
-        rebind = None
-        if policy_before is not None:
-            rebind = rebind_policy(
-                self.pcf,
-                ue.supi,
-                policy_before,
-                self.scenario.runtime.action_timeout_seconds,
-                self.scenario.runtime.readiness_poll_seconds,
-            )
-            refresh_sessions(self.run_dir, self.docker)
-        self.docker.restart(translated.traffic_sidecar)
-        if dynamic:
-            self.docker.start(tracker)
-        self.readiness.wait(self.readiness.traffic)
+        session = flow["session"]
+        policy_uri = session["sm_policy_uri"]
+        if not policy_uri:
+            raise ValueError("target flow has no live SM policy association")
+        translated = translate_policy(self.scenario, action)
+        delivery = self.pcf.apply_sm_policy(
+            action.target.supi,
+            {
+                "associationId": policy_uri.rstrip("/").rsplit("/", 1)[-1],
+                "dnn": session["dnn"],
+                "snssai": session["snssai"],
+                "qosRef": translated.flow_rule["qosRef"],
+                "precedence": translated.flow_rule["precedence"],
+                "filter": translated.flow_rule["filter"],
+                "5qi": translated.qos_flow["5qi"],
+                "maxbrUl": translated.qos_flow["mbrUL"],
+                "maxbrDl": translated.qos_flow["mbrDL"],
+                "gbrUl": translated.qos_flow["gbrUL"],
+                "gbrDl": translated.qos_flow["gbrDL"],
+            },
+        )
         watchdog = PolicyWatchdog(
-            self.scenario.runtime.action_timeout_seconds,
+            max(0.0, deadline - time.monotonic()),
             self.scenario.runtime.readiness_poll_seconds,
         )
         snapshot, effect = watchdog.wait(
             action, lambda: self._snapshot(f"PolicyAction:{action.target.flow_id}")
         )
-        if rebind is not None:
-            effect["policy_rebind"] = rebind
+        effect["policy_delivery"] = delivery
         self.flow_allocations.update(
             action.target.flow_id,
             action.parameters.mbr_ul_mbps,
@@ -306,8 +291,8 @@ class ActionExecutor:
                     and route["observed_at"] > accepted_at.isoformat()
                     and not flow["data_quality"]["stale"]
                     and flow["data_quality"]["correlation_status"] == "complete"
-                    and flow["telemetry"]["throughput_dl"] is not None
-                    and flow["telemetry"]["throughput_dl"] > 0
+                    and flow["telemetry"]["throughput_ul"] is not None
+                    and flow["telemetry"]["throughput_ul"] > 0
                 ):
                     effect.update(
                         {

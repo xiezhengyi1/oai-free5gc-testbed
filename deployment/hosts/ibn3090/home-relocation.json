@@ -1,0 +1,140 @@
+{
+  "verified_at": "2026-10-08T12:06:03.721863+00:00",
+  "workspace": "/home/xzy/testbed",
+  "physical_directory": true,
+  "same_filesystem_as_home": true,
+  "old_workspace_removed": true,
+  "temporary_old_copy_removed": true,
+  "asn1c": "/home/xzy/testbed/runtime/asn1c",
+  "original_files_verified": 536,
+  "running_services": 46,
+  "project_bind_mounts": [
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/current-state.json",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/amfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/ausfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/cert",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/chfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/nefcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/nrfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/nssfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/pcfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/smfcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/udmcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/udrcfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/uerouting.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upf-iptables-slice-1-upf.sh",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upf-iptables-slice-2-upf.sh",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upf-iptables-slice-3-upf.sh",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upfcfg-slice-1-upf.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upfcfg-slice-2-upf.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/upfcfg-slice-3-upf.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/free5gc-config/webuicfg.yaml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/gnb-1.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/gnb-2.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/gnb-3.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-1.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-2.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-3.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-4.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-5.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/oai-config/ue-6.conf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/prometheus.yml",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/generated/traffic-profiles.json",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/pcf",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-1",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-2",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-3",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-4",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-5",
+    "/home/xzy/testbed/oai-free5gc-testbed/artifacts/runs/ibn3090-s2-20261008/ue-policy/ue-6",
+    "/home/xzy/testbed/oai-free5gc-testbed/deployment/grafana/dashboards",
+    "/home/xzy/testbed/oai-free5gc-testbed/deployment/grafana/provisioning"
+  ],
+  "am_cases_passed": 7,
+  "am_evidence": "/home/xzy/testbed/experiments/am-rfsp-20261008/run/evidence/20261008T115814Z-suite",
+  "cross_host_read": {
+    "verified": true,
+    "run_id": "ibn3090-s2-20261008",
+    "snapshot_id": "snapshot-265624e17d4e7a206762",
+    "age_seconds": 2.863011,
+    "flows": 11,
+    "ues": 6,
+    "gnbs": 3,
+    "slices": 3,
+    "sessions": 11,
+    "subscribers_read": 6,
+    "stage": "restored",
+    "traffic": [
+      {
+        "flow_id": "remote-drive-video-1",
+        "packets_received": 41385.0,
+        "throughput_ul": 3.7956417147649506,
+        "throughput_dl": 3.7963503377997174
+      },
+      {
+        "flow_id": "factory-robot-video-1",
+        "packets_received": 41507.0,
+        "throughput_ul": 3.8009560338958512,
+        "throughput_dl": 3.804592411594317
+      },
+      {
+        "flow_id": "iot-sensor-telemetry-1",
+        "packets_received": 436.0,
+        "throughput_ul": 0.1914294963735745,
+        "throughput_dl": 0.0
+      },
+      {
+        "flow_id": "ar-gaming-control-1",
+        "packets_received": 10932.0,
+        "throughput_ul": 0.25047855188957713,
+        "throughput_dl": 0.2515686776340496
+      },
+      {
+        "flow_id": "ar-gaming-video-2",
+        "packets_received": 1245.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.14259716478444404
+      },
+      {
+        "flow_id": "telemedicine-video-1",
+        "packets_received": 41467.0,
+        "throughput_ul": 3.8034326945443584,
+        "throughput_dl": 3.804163065758337
+      },
+      {
+        "flow_id": "web-browse-session-1",
+        "packets_received": 1238.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.1390955181422312
+      },
+      {
+        "flow_id": "video-4k-stream-1",
+        "packets_received": 1186.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.1389085868420634
+      },
+      {
+        "flow_id": "video-4k-control-2",
+        "packets_received": 8644.0,
+        "throughput_ul": 0.20005602112272908,
+        "throughput_dl": 0.2002369146036113
+      },
+      {
+        "flow_id": "cloud-render-stream-1",
+        "packets_received": 1114.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.1319983305045679
+      },
+      {
+        "flow_id": "cloud-render-telemetry-2",
+        "packets_received": 432.0,
+        "throughput_ul": 0.09762545192086981,
+        "throughput_dl": 0.0
+      }
+    ],
+    "sla_verified": false
+  },
+  "run_state": "RUNNING",
+  "am_fixture_state": "stopped"
+}

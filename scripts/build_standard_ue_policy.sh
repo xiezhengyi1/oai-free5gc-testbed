@@ -9,11 +9,15 @@ go test ./nasMessage
 cd "$base/ue-policy-work/pcf"
 go test ./internal/uepolicy ./internal/sbi/...
 CGO_ENABLED=0 go build -o ../pcf-bin ./cmd/main.go
+cd "$base/ue-policy-work/smf"
+go test ./internal/context ./internal/sbi/processor
+CGO_ENABLED=0 go build -o ../smf-bin ./cmd/main.go
 cd "$base/ue-policy-work/amf"
 go test ./internal/gmm ./internal/sbi/...
 CGO_ENABLED=0 go build -o ../amf-bin ./cmd/main.go
 cd "$base/ue-policy-work"
 docker build -f "$base/oai-free5gc-testbed/deployment/docker/pcf-policy.Dockerfile" -t free5gc/pcf:v4.1.0-uepolicy .
+docker build -f "$base/oai-free5gc-testbed/deployment/docker/smf-policy.Dockerfile" -t free5gc/smf:v4.1.0-uepolicy .
 docker build -f "$base/oai-free5gc-testbed/deployment/docker/amf-policy.Dockerfile" -t free5gc/amf:v4.1.0-uepolicy .
 cd "$base/openairinterface5g-build"
 cmake --build cmake_targets/ue-policy-build --target nr-uesoftmodem nr-softmodem rfsimulator -j 8

@@ -58,7 +58,7 @@ cd /home/yinyuexi/xiezhengyi/oai-free5gc-testbed
 bash scripts/build_standard_ue_policy.sh /home/yinyuexi/xiezhengyi
 ```
 
-脚本只构建，不自动替换运行容器。OAI 使用 GCC 12.4、`/opt/asn1c/bin/asn1c`、独立目录 `cmake_targets/ue-policy-build`，配置参数为 `-GNinja -DOAI_SIMU=ON -DOAI_RF_EMULATOR=ON -DNAS_BUILT_IN_UE=ON -DE2_AGENT=OFF -DENABLE_TESTS=OFF`；复用 `.cpm` 依赖缓存。具体 C/C++ 编译器位于根目录的 `gcc-12.4/bin/`。PCF/AMF 使用 `ue-policy-work/go/bin/go`（1.24.2）。
+脚本只构建，不自动替换运行容器。OAI 使用 GCC 12.4、`/home/xzy/testbed/runtime/asn1c/bin/asn1c`、独立目录 `cmake_targets/ue-policy-build`，配置参数为 `-GNinja -DOAI_SIMU=ON -DOAI_RF_EMULATOR=ON -DNAS_BUILT_IN_UE=ON -DE2_AGENT=OFF -DENABLE_TESTS=OFF`；复用 `.cpm` 依赖缓存。具体 C/C++ 编译器位于根目录的 `gcc-12.4/bin/`。PCF/AMF 使用 `ue-policy-work/go/bin/go`（1.24.2）。
 
 现有隔离 run 的复验：
 

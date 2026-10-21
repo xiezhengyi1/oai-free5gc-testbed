@@ -1,0 +1,13 @@
+[Unit]
+Description=Forward testbed container database traffic through the Windows SSH relay
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=xzy
+ExecStart=/usr/bin/socat TCP4-LISTEN:15433,bind=172.17.0.1,reuseaddr,fork TCP4:127.0.0.1:15432
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

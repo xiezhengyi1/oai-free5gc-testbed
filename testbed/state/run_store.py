@@ -19,6 +19,10 @@ PHASE_ORDER = (
 )
 
 
+def baseline_epoch(run_id: str, reset_generation: int) -> str:
+    return f"{run_id}:{reset_generation}"
+
+
 class RunStore:
     def __init__(self, run_dir: Path) -> None:
         self.run_dir = run_dir.resolve(strict=True)
@@ -32,6 +36,10 @@ class RunStore:
 
     def current(self) -> RunState:
         return RunState.model_validate_json(self.current_path.read_text(encoding="utf-8"))
+
+    def current_baseline_epoch(self) -> str:
+        state = self.current()
+        return baseline_epoch(state.run_id, state.reset_generation)
 
     def advance(self, phase: RunPhase, evidence: dict[str, Any]) -> RunState:
         current = self.current()

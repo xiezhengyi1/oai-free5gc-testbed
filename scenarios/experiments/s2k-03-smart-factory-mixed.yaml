@@ -1494,13 +1494,13 @@ resources:
   containers:
     free5gc-upf-slice-1:
       cpus: 1.0
-      memory_mb: 1024
+      memory_mb: 8192
     free5gc-upf-slice-2:
       cpus: 1.0
-      memory_mb: 1024
+      memory_mb: 8192
     free5gc-upf-slice-3:
       cpus: 1.0
-      memory_mb: 1024
+      memory_mb: 8192
     oai-gnb-1:
       cpus: 2.0
       memory_mb: 8192

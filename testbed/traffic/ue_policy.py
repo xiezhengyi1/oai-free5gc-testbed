@@ -5,10 +5,15 @@ import socket
 from datetime import UTC, datetime
 from pathlib import Path
 
+from testbed.state.models import RunState
+from testbed.state.run_store import baseline_epoch
 from testbed.traffic.profiles import TrafficProfile
 
 
 def query_ue_route(profile: TrafficProfile, policy_dir: Path) -> dict | None:
+    state = RunState.model_validate_json(
+        (policy_dir / "current-state.json").read_text(encoding="utf-8")
+    )
     protocol = {"udp": 17, "tcp": 6, "http": 6}[profile.five_tuple.protocol]
     path = policy_dir / f"{profile.supi.removeprefix('imsi-')}.policy.sock"
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
@@ -32,6 +37,7 @@ def query_ue_route(profile: TrafficProfile, policy_dir: Path) -> dict | None:
         "upsc": int(response[4]),
         "pti": int(response[5]),
         "source": "oai_ue_nas_policy",
+        "baseline_epoch": baseline_epoch(state.run_id, state.reset_generation),
         "observed_at": datetime.now(UTC).isoformat(),
     }
 

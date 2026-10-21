@@ -29,6 +29,7 @@ services:
   {{ ue.container }}:
     image: oaisoftwarealliance/oai-nr-ue:2026.w35
     container_name: {{ ue.container }}
+    pids_limit: 256
     cap_drop: [ALL]
     cap_add: [NET_ADMIN, NET_RAW, SYS_NICE]
     devices: ["/dev/net/tun:/dev/net/tun"]
@@ -37,10 +38,10 @@ services:
     volumes: ["./oai-config/{{ ue.id }}.conf:/opt/oai-nr-ue/etc/nr-ue.conf:ro"]
     deploy:
       resources:
-        limits: {cpus: "{{ scenario.resources.containers[ue.container].cpus }}", memory: "{{ scenario.resources.containers[ue.container].memory_mb }}M"}
+        limits: {cpus: "{{ scenario.resources.containers[ue.container].cpus }}", memory: "{{ scenario.resources.containers[ue.container].memory_mb }}M", pids: 256}
     depends_on: [{{ serving_gnb.container }}]
     healthcheck:
-      test: ["CMD-SHELL", "pgrep nr-uesoftmodem && ip link show oaitun_ue1"]
+      test: ["CMD-SHELL", "pgrep nr-uesoftmodem >/dev/null && test -d /sys/class/net/oaitun_ue1"]
       start_period: 20s
       interval: 5s
       timeout: 3s

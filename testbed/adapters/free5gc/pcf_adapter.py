@@ -31,6 +31,16 @@ class PcfAdapter:
         response.raise_for_status()
         return response.json()
 
+    def apply_sm_policy(self, supi: str, parameters: dict[str, Any]) -> dict[str, Any]:
+        response = httpx.post(
+            f"http://pcf.free5gc.org:8000/testbed-policy/v1/ues/{supi}/sm",
+            headers={"Authorization": f"Bearer {os.environ['UE_POLICY_ADMIN_TOKEN']}"},
+            json=parameters,
+            timeout=self.timeout_seconds,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def read_sm_policy_association(self, policy_uri: str) -> dict[str, Any]:
         if not policy_uri.startswith("http://pcf.free5gc.org:8000/"):
             raise ValueError("policy_uri must target the run-scoped free5GC PCF")

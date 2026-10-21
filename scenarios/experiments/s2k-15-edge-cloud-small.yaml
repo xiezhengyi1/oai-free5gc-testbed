@@ -591,6 +591,7 @@ flows:
     allocated_bandwidth_dl_mbps: 1.0
 mobility: []
 resources:
+  system_cpuset_cpus: "0-9"
   containers:
     free5gc-upf-edge:
       cpus: 2.0

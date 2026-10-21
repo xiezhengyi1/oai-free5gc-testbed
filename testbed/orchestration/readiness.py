@@ -14,12 +14,25 @@ from testbed.scenario.schema import GnbSpec, Scenario, UeSpec
 
 
 class Readiness:
-    def __init__(self, docker: DockerAdapter, scenario: Scenario) -> None:
+    def __init__(
+        self,
+        docker: DockerAdapter,
+        scenario: Scenario,
+        prometheus_url: str = "http://127.0.0.1:29090",
+    ) -> None:
         self.docker = docker
         self.scenario = scenario
+        self.prometheus_url = prometheus_url
 
-    def wait(self, probe: Callable[[], dict[str, Any]]) -> dict[str, Any]:
-        deadline = time.monotonic() + self.scenario.runtime.startup_timeout_seconds
+    def wait(
+        self, probe: Callable[[], dict[str, Any]], timeout_seconds: float | None = None
+    ) -> dict[str, Any]:
+        timeout = (
+            self.scenario.runtime.startup_timeout_seconds
+            if timeout_seconds is None
+            else timeout_seconds
+        )
+        deadline = time.monotonic() + timeout
         while True:
             try:
                 return probe()
@@ -48,6 +61,28 @@ class Readiness:
         if stopped:
             raise RuntimeError(f"core containers are not running: {stopped}")
         return {"containers": containers}
+
+    def mongodb(self) -> dict[str, bool]:
+        output = self.docker.exec(
+            "mongodb", ["mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+        )
+        if output.strip() != "1":
+            raise RuntimeError(f"MongoDB ping returned {output.strip()!r}")
+        return {"ready": True}
+
+    def nrf(self) -> dict[str, bool]:
+        logs = self.docker.container_logs("free5gc-nrf")
+        if "SBI server started" not in logs:
+            raise RuntimeError("NRF SBI server is not ready")
+        return {"ready": True}
+
+    def nf_registered(self, container: str) -> dict[str, bool]:
+        logs = self.docker.container_logs(container)
+        if "register to NRF Error" in logs:
+            raise RuntimeError(f"{container} did not complete its initial NRF registration")
+        if "OAuth2 setting receive from NRF: true" not in logs:
+            raise RuntimeError(f"{container} has no successful OAuth2 NRF registration evidence")
+        return {"oauth2": True}
 
     def pfcp(self) -> dict[str, Any]:
         accepted = self.pfcp_count()
@@ -125,20 +160,22 @@ class Readiness:
         )
 
     def _traffic(self, flow_ids: set[str]) -> dict[str, Any]:
-        services = {item.id: item for item in self.scenario.services}
-        ues = {item.id: item for item in self.scenario.ues}
-        evidence: dict[str, str] = {}
-        for flow in (item for item in self.scenario.flows if item.id in flow_ids):
-            ue = ues[flow.ue_id]
-            session_index = [item.id for item in ue.sessions].index(flow.session_id) + 1
-            service = services[flow.service_instance_id]
-            evidence[flow.id] = UeAdapter(self.docker, ue.container).ping(
-                service.ip, session_interface(session_index)
+        prometheus = PrometheusAdapter(self.prometheus_url)
+        prometheus.ready()
+        running = {
+            row["metric"]["flow_id"]: float(row["value"][1])
+            for row in prometheus.instant_query("testbed_flow_running")
+        }
+        missing = flow_ids - running.keys()
+        stopped = {flow_id for flow_id in flow_ids if running.get(flow_id) != 1.0}
+        if missing or stopped:
+            raise RuntimeError(
+                f"traffic workers are not running: missing={sorted(missing)}, stopped={sorted(stopped)}"
             )
-        return evidence
+        return {flow_id: {"running": True} for flow_id in sorted(flow_ids)}
 
     def telemetry_sources(self) -> dict[str, Any]:
-        prometheus = PrometheusAdapter("http://127.0.0.1:29090")
+        prometheus = PrometheusAdapter(self.prometheus_url)
         prometheus.ready()
         up = prometheus.instant_query(
             'up{instance!="snapshot-builder:9104",instance!="action-gateway:9105"}'
@@ -151,10 +188,21 @@ class Readiness:
         down = [item["metric"] for item in up if float(item["value"][1]) != 1.0]
         if down:
             raise RuntimeError(f"Prometheus targets are down: {down}")
-        return {"targets": len(up)}
+        containers = [
+            *(item.container for item in self.scenario.core.upfs),
+            *(item.container for item in self.scenario.ran.gnbs),
+        ]
+        for name in containers:
+            for query in [
+                f'rate(container_cpu_usage_seconds_total{{name="{name}"}}[1m])',
+                f'container_memory_working_set_bytes{{name="{name}"}}',
+            ]:
+                if not prometheus.instant_query(query):
+                    raise RuntimeError(f"resource metric is not sampled yet: {query}")
+        return {"targets": len(up), "resource_containers": containers}
 
     def telemetry(self) -> dict[str, Any]:
-        prometheus = PrometheusAdapter("http://127.0.0.1:29090")
+        prometheus = PrometheusAdapter(self.prometheus_url)
         prometheus.ready()
         up = prometheus.instant_query("up")
         expected_targets = 6 + len(self.scenario.ues)

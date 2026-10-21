@@ -53,3 +53,33 @@ def test_rebind_reject_is_not_reported_as_success():
     with pytest.raises(RuntimeError, match="URSP rebind failed"):
         rebind_policy(pcf, "imsi-1", previous(), timeout=1, poll=0)
     assert [item[1] for item in pcf.applied] == ["ursp"]
+
+
+class PersistentPCF:
+    def __init__(self):
+        self.applied = []
+
+    def ue_policy(self, _supi):
+        return {
+            "ue_policy_associations": [
+                {"id": "old-ue", "version": 1, "status": "complete"}
+            ],
+            "am_policy_associations": [{"id": "old-am", "rfsp": 64}],
+        }
+
+    def apply_ue_policy(self, *args):
+        self.applied.append(args)
+
+
+def test_rebind_keeps_a_completed_persistent_association():
+    pcf = PersistentPCF()
+
+    result = rebind_policy(pcf, "imsi-1", previous(), timeout=1, poll=0)
+
+    assert result == {
+        "ue_association_id": "old-ue",
+        "ursp_status": "complete",
+        "am_association_id": "old-am",
+        "rfsp": 64,
+    }
+    assert pcf.applied == []

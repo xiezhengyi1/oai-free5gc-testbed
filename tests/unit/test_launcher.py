@@ -47,6 +47,15 @@ class FakeReadiness:
     def core(self) -> dict[str, object]:
         return {"containers": []}
 
+    def mongodb(self) -> dict[str, bool]:
+        return {"ready": True}
+
+    def nrf(self) -> dict[str, bool]:
+        return {"ready": True}
+
+    def nf_registered(self, _container: str) -> dict[str, bool]:
+        return {"oauth2": True}
+
     def pfcp(self) -> dict[str, int]:
         return {"accepted_associations": 2}
 
@@ -147,6 +156,8 @@ def test_launcher_brings_multi_ue_pdu_sessions_up_sequentially(
     assert ["oai-nrue-2"] in launcher.docker.up_calls
     assert ["oai-nrue-1", "oai-nrue-2"] not in launcher.docker.up_calls
     assert launcher.slice_manager.reconciled is True
+    assert launcher.docker.up_calls[:2] == [["mongodb"], ["free5gc-nrf"]]
+    assert launcher.docker.up_calls.index(["free5gc-ausf"]) < launcher.docker.up_calls.index(["free5gc-amf"])
     assert ["prometheus", "cadvisor", "grafana", "ran-exporter", "session-tracker"] in launcher.docker.up_calls
     assert launcher.docker.up_calls.index(["snapshot-builder", "action-gateway"]) > launcher.docker.up_calls.index(["prometheus", "cadvisor", "grafana", "ran-exporter", "session-tracker"])
 

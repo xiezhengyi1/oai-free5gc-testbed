@@ -22,6 +22,8 @@ class PolicyParameters(StrictModel):
 
     @model_validator(mode="after")
     def gbr_not_above_mbr(self) -> PolicyParameters:
+        if self.five_qi not in {1, 2, 3, 4, 65, 66, 67, 71, 72, 73, 74, 75, 76}:
+            raise ValueError("GBR policy action requires a supported GBR 5QI")
         if self.gbr_ul_mbps > self.mbr_ul_mbps:
             raise ValueError("gbr_ul_mbps cannot exceed mbr_ul_mbps")
         if self.gbr_dl_mbps > self.mbr_dl_mbps:

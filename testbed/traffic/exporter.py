@@ -16,7 +16,7 @@ from pathlib import Path
 
 from prometheus_client import Counter, Gauge, start_http_server
 
-from testbed.traffic.commands import ping_command, traffic_command
+from testbed.traffic.commands import ping_command
 from testbed.traffic.profiles import TrafficProfile, load_profiles
 from testbed.traffic.ue_policy import publish_route, query_ue_route
 
@@ -111,12 +111,6 @@ COMPAT_UDP_PARALLEL = Gauge(
 )
 
 PING_PATTERN = re.compile(r"icmp_seq=(\d+).*time=([0-9.]+)\s*ms")
-IPERF_INTERVAL_PATTERN = re.compile(
-    r"\[\s*\d+\]\s+([0-9.]+)-([0-9.]+)\s+sec\s+"
-    r"[0-9.]+\s+\S+Bytes\s+([0-9.]+)\s+Mbits/sec(?:\s+(\d+))?"
-)
-
-
 class BoundHTTPConnection(HTTPConnection):
     def __init__(self, profile: TrafficProfile) -> None:
         super().__init__(
@@ -167,60 +161,52 @@ def _initialize_flow_metrics(profile: TrafficProfile) -> None:
     UDP_RECEIVED.labels(*labels)
 
 
-def _parse_iperf_interval(line: str) -> tuple[float, float, float] | None:
-    match = IPERF_INTERVAL_PATTERN.search(line)
-    if match is None:
-        return None
-    started_at, ended_at, throughput_mbps, retransmits = match.groups()
-    return (
-        float(ended_at) - float(started_at),
-        float(throughput_mbps),
-        float(retransmits or 0),
-    )
-
-
-def _traffic_worker(profile: TrafficProfile, stop: threading.Event) -> None:
+def _tcp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     labels = _labels(profile)
-    process = subprocess.Popen(
-        traffic_command(profile),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        bufsize=1,
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection.settimeout(5)
+    connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    connection.setsockopt(
+        socket.SOL_SOCKET,
+        socket.SO_BINDTODEVICE,
+        profile.interface.encode() + b"\0",
     )
+    connection.bind(("", profile.five_tuple.source_port))
+    connection.connect(
+        (
+            profile.five_tuple.destination_ip,
+            profile.five_tuple.destination_port,
+        )
+    )
+    connection.settimeout(None)
+    payload = b"x" * profile.packet_size_bytes
+    interval = profile.packet_size_bytes * 8 / (profile.rate_mbps * 1_000_000)
+    sent_bytes_window = 0
+    last_report = time.monotonic()
     RUNNING.labels(*labels).set(1)
     COMPAT_TRAFFIC_RUNNING.set(1)
+    COMPAT_TCP_PARALLEL.set(1)
     try:
-        if process.stdout is None:
-            raise RuntimeError("iperf3 stdout pipe was not created")
-        for line in process.stdout:
-            if stop.is_set():
-                break
-            interval = _parse_iperf_interval(line)
-            if interval is not None:
-                duration, throughput_mbps, retransmits = interval
-                bits_per_second = throughput_mbps * 1_000_000
+        while not stop.is_set():
+            started = time.monotonic()
+            connection.sendall(payload)
+            sent_bytes_window += len(payload)
+            COMPAT_TCP_SENT_BYTES.inc(len(payload))
+            now = time.monotonic()
+            elapsed = now - last_report
+            if elapsed >= 1.0:
+                throughput_mbps = sent_bytes_window * 8 / elapsed / 1_000_000
                 THROUGHPUT.labels(*labels).set(throughput_mbps)
                 THROUGHPUT_UL.labels(*labels).set(throughput_mbps)
-                RETRANSMITS.labels(*labels).inc(retransmits)
-                COMPAT_TCP_SENT_BYTES.inc(bits_per_second * duration / 8)
-                COMPAT_TCP_RETRANSMITS.inc(retransmits)
-                COMPAT_TCP_BPS.set(bits_per_second)
-                COMPAT_TCP_INTERVAL_RETRANSMITS.set(retransmits)
-                COMPAT_TCP_PARALLEL.set(1)
+                COMPAT_TCP_BPS.set(throughput_mbps * 1_000_000)
                 COMPAT_TCP_SEQUENCE.inc()
-        if stop.is_set():
-            return
-        return_code = process.wait(timeout=5)
-        if not stop.is_set() and return_code != 0:
-            stderr = process.stderr.read() if process.stderr else ""
-            raise RuntimeError(f"iperf3 failed for {profile.flow_id}: {stderr}")
+                sent_bytes_window = 0
+                last_report = now
+            stop.wait(max(0.0, interval - (now - started)))
     finally:
         RUNNING.labels(*labels).set(0)
         COMPAT_TRAFFIC_RUNNING.set(0)
-        if process.poll() is None:
-            process.terminate()
-            process.wait(timeout=5)
+        connection.close()
 
 
 def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
@@ -424,7 +410,7 @@ def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
 
 def _policy_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     policy_dir = Path(os.environ["OAI_UE_POLICY_DIR"])
-    worker = {"http": _http_worker, "udp": _udp_worker, "tcp": _traffic_worker}[
+    worker = {"http": _http_worker, "udp": _udp_worker, "tcp": _tcp_worker}[
         profile.five_tuple.protocol
     ]
     current_interface = None
@@ -479,7 +465,7 @@ def main() -> None:
             elif profile.five_tuple.protocol == "udp":
                 worker = _udp_worker
             else:
-                worker = _traffic_worker
+                worker = _tcp_worker
             futures.append(executor.submit(worker, profile, stop))
             futures.append(executor.submit(_ping_worker, profile, stop))
         done, _pending = wait(futures, return_when=FIRST_EXCEPTION)

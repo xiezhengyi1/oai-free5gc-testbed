@@ -11,6 +11,11 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.57.0
     container_name: cadvisor
+    command: ["--docker_only=true", "--enable_metrics=cpu,memory", "--store_container_labels=false"]
+    healthcheck:
+      test: ["CMD", "wget", "-Y", "off", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
     privileged: true
     devices: ["/dev/kmsg:/dev/kmsg"]
     volumes:

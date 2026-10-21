@@ -87,6 +87,7 @@ def refresh_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, obj
 def main() -> None:
     run_dir = Path(os.environ["RUN_DIR"])
     output = run_dir / "session-observations.json"
+    live_policy = (run_dir / "ue-policy/profile.json").exists()
     docker = DockerAdapter()
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda _signal, _frame: stop.set())
@@ -97,7 +98,11 @@ def main() -> None:
         temporary = output.with_suffix(".json.tmp")
         temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
         temporary.replace(output)
-        if not (run_dir / "ue-policy/dynamic-pdu.json").exists() and all(record["correlation_status"] == "complete" for record in records):
+        if (
+            not live_policy
+            and not (run_dir / "ue-policy/dynamic-pdu.json").exists()
+            and all(record["correlation_status"] == "complete" for record in records)
+        ):
             stop.wait()
         stop.wait(1)
 

@@ -17,6 +17,7 @@ from testbed.adapters.prometheus_adapter import PrometheusAdapter
 from testbed.scenario.ids import stable_digest
 from testbed.scenario.loader import load_scenario
 from testbed.state.flow_allocation_store import FlowAllocationStore
+from testbed.state.run_store import RunStore
 from testbed.state.slice_store import SlicePhase, SliceStore
 from testbed.telemetry.flow_correlator import correlate_flow
 from testbed.telemetry.models import UnifiedSnapshot
@@ -41,10 +42,68 @@ def _maximum_observed(values: list[float | None]) -> float | None:
 
 
 def _prb_utilization(values: list[float | None], capacity: float) -> float | None:
+    if not values:
+        return 0.0
     observed = [value for value in values if value is not None]
     if len(observed) != len(values):
         return None
-    return sum(observed) / capacity
+    return (sum(observed) / len(observed)) / capacity
+
+
+def _bind_sm_policy_associations(
+    sessions: list[dict[str, Any]],
+    ue_policies: tuple[dict[str, Any], ...],
+) -> list[dict[str, Any]]:
+    associations = {
+        policy["supi"]: policy["sm_policy_associations"] for policy in ue_policies
+    }
+    bound = []
+    for session in sessions:
+        matches = [
+            policy
+            for policy in associations[session["supi"]]
+            if policy["dnn"] == session["dnn"]
+            and policy["snssai"] == session["snssai"]
+            and policy["pdu_session_id"] == session["pdu_session_id"]
+        ]
+        if len(matches) != 1:
+            raise RuntimeError(
+                "SM policy association binding requires exactly one match for "
+                f"{session['supi']} PDU session {session['pdu_session_id']}; "
+                f"found {len(matches)}"
+            )
+        bound.append({**session, "sm_policy_uri": matches[0]["resource_uri"]})
+    return bound
+
+
+def _active_sm_qos(policy: dict[str, Any], qos_ref: int) -> dict[str, Any] | None:
+    rules = [
+        rule
+        for rule in policy.get("pccRules", {}).values()
+        if rule["precedence"] == qos_ref
+    ]
+    if not rules:
+        return None
+    if len(rules) != 1 or len(rules[0]["refQosData"]) != 1:
+        raise ValueError(f"ambiguous PCF QoS decision for reference {qos_ref}")
+    qos_id = rules[0]["refQosData"][0]
+    qos = policy["qosDecs"][qos_id]
+
+    def mbps(name: str) -> float:
+        value, unit = qos[name].split()
+        if unit != "Kbps":
+            raise ValueError(f"unexpected PCF bandwidth unit: {unit}")
+        return float(value) / 1000
+
+    return {
+        "qos_id": qos_id,
+        "five_qi": qos["5qi"],
+        "gbr_ul_mbps": mbps("gbrUl"),
+        "gbr_dl_mbps": mbps("gbrDl"),
+        "mbr_ul_mbps": mbps("maxbrUl"),
+        "mbr_dl_mbps": mbps("maxbrDl"),
+        "source": "pcf_sm_policy_association_readback",
+    }
 
 
 class SnapshotBuilder:
@@ -60,6 +119,7 @@ class SnapshotBuilder:
         self.run_id = run_id
         self.prometheus = PrometheusAdapter(prometheus_url)
         self.store = SnapshotStore(self.run_dir)
+        self.run_store = RunStore(self.run_dir)
         self.flow_allocations = FlowAllocationStore(self.run_dir)
         self.slice_store = SliceStore(self.run_dir)
         self.graph_writer = PostgresGraphWriter(database_url)
@@ -207,6 +267,7 @@ class SnapshotBuilder:
             return self._build(trigger_event)
 
     def _build(self, trigger_event: str) -> UnifiedSnapshot:
+        baseline_epoch = self.run_store.current_baseline_epoch()
         observed_to = datetime.now(UTC)
         observed_from = observed_to - timedelta(
             seconds=self.scenario.observability.snapshot_window_seconds
@@ -215,7 +276,30 @@ class SnapshotBuilder:
             self.prometheus, observed_from.timestamp(), observed_to.timestamp(), 1
         )
         containers = self._containers(window)
-        sessions = self._sessions()
+        slice_snssais = {
+            item.id: f"{item.sst:02d}{item.sd}" for item in self.scenario.slices
+        }
+        sessions = [
+            {**session, "snssai": slice_snssais[session["slice_id"]]}
+            for session in self._sessions()
+        ]
+        ue_policies = (
+            tuple(
+                {"supi": ue.supi, **PcfAdapter().ue_policy(ue.supi)}
+                for ue in self.scenario.ues
+            )
+            if "UE_POLICY_ADMIN_TOKEN" in os.environ
+            else ()
+        )
+        if ue_policies:
+            sessions = _bind_sm_policy_associations(sessions, ue_policies)
+        policies_by_uri = {}
+        if ue_policies:
+            pcf = PcfAdapter()
+            for session in sessions:
+                uri = session["sm_policy_uri"]
+                if uri not in policies_by_uri:
+                    policies_by_uri[uri] = pcf.read_sm_policy_association(uri)["policy"]
         flow_allocations = self.flow_allocations.list()
         lifecycle_states = self.slice_store.list()
         for state in lifecycle_states:
@@ -237,20 +321,29 @@ class SnapshotBuilder:
             for ue in self.scenario.ues
         }
         flows = []
-        for flow in self.scenario.flows:
+        for qos_ref, flow in enumerate(self.scenario.flows, 1):
             ue = ues[flow.ue_id]
             policy_route = None
             route_file = self.run_dir / "ue-policy" / ue.id / f"{flow.id}.route.json"
             if "UE_POLICY_ADMIN_TOKEN" in os.environ and route_file.exists():
                 policy_route = json.loads(route_file.read_text(encoding="utf-8"))
-                pdu = next((row
-                    for row in sessions
-                    if row["supi"] == ue.supi
-                    and row["pdu_session_id"] == policy_route["pdu_session_id"]), None)
-                if pdu is None:
+                if policy_route["baseline_epoch"] != baseline_epoch:
                     policy_route = None
                 else:
-                    flow = flow.model_copy(update={"session_id": pdu["session_id"]})
+                    pdu = next(
+                        (
+                            row
+                            for row in sessions
+                            if row["supi"] == ue.supi
+                            and row["pdu_session_id"]
+                            == policy_route["pdu_session_id"]
+                        ),
+                        None,
+                    )
+                    if pdu is None:
+                        policy_route = None
+                    else:
+                        flow = flow.model_copy(update={"session_id": pdu["session_id"]})
             telemetry, sample_count = self._flow_telemetry(
                 window,
                 flow.id,
@@ -272,12 +365,13 @@ class SnapshotBuilder:
                     sample_count,
                 )
             )
+            if ue_policies:
+                session = flows[-1]["session"]
+                session["active_sm_qos"] = _active_sm_qos(
+                    policies_by_uri[session["sm_policy_uri"]], qos_ref
+                )
             if policy_route is not None:
                 flows[-1]["ue_policy_route"] = policy_route
-                if (
-                    observed_to - datetime.fromisoformat(policy_route["observed_at"])
-                ).total_seconds() > 5:
-                    flows[-1]["data_quality"]["stale"] = True
             elif "UE_POLICY_ADMIN_TOKEN" in os.environ:
                 flows[-1]["data_quality"]["stale"] = True
                 flows[-1]["data_quality"]["correlation_status"] = "incomplete"
@@ -404,17 +498,14 @@ class SnapshotBuilder:
         snapshot = UnifiedSnapshot(
             snapshot_id=snapshot_id,
             run_id=self.run_id,
+            baseline_epoch=baseline_epoch,
             observed_from=observed_from,
             observed_to=observed_to,
             topology=topology,
             slice_states=tuple(slice_states),
             sessions=tuple(sessions),
             flows=tuple(flows),
-            ue_policies=tuple(
-                {"supi": ue.supi, **PcfAdapter().ue_policy(ue.supi)} for ue in self.scenario.ues
-            )
-            if "UE_POLICY_ADMIN_TOKEN" in os.environ
-            else (),
+            ue_policies=ue_policies,
             ran_nodes=tuple(
                 {
                     "id": gnb.id,
@@ -514,7 +605,10 @@ def health() -> dict[str, str]:
     if periodic_task.done():
         error = periodic_task.exception()
         raise HTTPException(
-            status_code=503, detail=f"periodic snapshot task failed: {type(error).__name__}: {error}"
+            status_code=503,
+            detail=(
+                f"periodic snapshot task failed: {type(error).__name__}: {error}"
+            ),
         )
     return {"status": "ok", "run_id": _builder().run_id}
 
