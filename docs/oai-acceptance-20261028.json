@@ -1,0 +1,494 @@
+{
+  "recorded_at": "2026-10-28T09:38:15.750647+00:00",
+  "status": "passed_for_declared_rfsim_scope",
+  "run_id": "oai-acceptance-20261028-4",
+  "phase": "RUNNING",
+  "runtime_revision": "oai-acceptance-20261028-v4",
+  "scenario": {
+    "gnb": 1,
+    "ues": 2,
+    "upfs": 2,
+    "preestablished_pdu_sessions": 4,
+    "flows": 6,
+    "protocols_per_ue": [
+      "udp",
+      "tcp",
+      "http"
+    ]
+  },
+  "native_images": {
+    "gnb": {
+      "candidate_image": "mergedsystem/oai-gnb:recovered-source-20261028",
+      "candidate_image_id": "sha256:c67fe2b1bdd1f738470b3b19976e7d82b5afdaed65a0833feb2783f1891bf246",
+      "base_image_id": "sha256:35c36ceeefc4ac606a634042ee973dca21d3f4419ee61521cb94c4ceaca43bc3",
+      "help_passed": true,
+      "ldd_resolved": true,
+      "changed_files": [
+        "opt/oai-gnb/bin/nr-softmodem",
+        "usr/local/lib/libcoding.so",
+        "usr/local/lib/libdfts.so",
+        "usr/local/lib/libldpc.so",
+        "usr/local/lib/libldpc_orig.so",
+        "usr/local/lib/libparams_libconfig.so",
+        "usr/local/lib/librfsimulator.so",
+        "var/cache/ldconfig/aux-cache"
+      ]
+    },
+    "ue": {
+      "candidate_image": "mergedsystem/oai-nr-ue:recovered-source-20261028",
+      "candidate_image_id": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "base_image_id": "sha256:b74726fe050a99d5cd7939f4bf3229747b948c3b1dcf2cb34535540b0d7a2e0b",
+      "help_passed": true,
+      "ldd_resolved": true,
+      "changed_files": [
+        "opt/oai-nr-ue/bin/nr-uesoftmodem",
+        "usr/local/lib/libcoding.so",
+        "usr/local/lib/libdfts.so",
+        "usr/local/lib/libldpc.so",
+        "usr/local/lib/libldpc_orig.so",
+        "usr/local/lib/libparams_libconfig.so",
+        "usr/local/lib/librfsimulator.so",
+        "var/cache/ldconfig/aux-cache"
+      ]
+    }
+  },
+  "containers": {
+    "oai-gnb-1": {
+      "id": "1a8a4cb2d73ae52484d6bcea7deb861c31beff31dc6f6c68c844955ab4808c0f",
+      "image": "sha256:c67fe2b1bdd1f738470b3b19976e7d82b5afdaed65a0833feb2783f1891bf246",
+      "started_at": "2026-10-28T09:35:45.377855656Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 6000000000
+    },
+    "oai-nrue-1": {
+      "id": "239d9f40998cddfedbd6b907acd83c88bdd1965cb08589213f0fee6052db5203",
+      "image": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "started_at": "2026-10-28T09:35:48.734894122Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 4000000000
+    },
+    "oai-nrue-2": {
+      "id": "e3faa80811f1ac96a175082b86c5ab7d7737af2ff7933882f8d37475f2797dd6",
+      "image": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "started_at": "2026-10-28T09:35:51.371694823Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 4000000000
+    },
+    "free5gc-upf-edge": {
+      "id": "90aee11863f298792dd610265c5a5f9992a868e4e1993914e05a9acbcdf1b53c",
+      "image": "sha256:bb37f20be6793321ec180f12c39240d7a6d97a0ccc505412507a4c62923e013b",
+      "started_at": "2026-10-28T09:35:41.19202168Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 2000000000
+    },
+    "free5gc-upf-alternate": {
+      "id": "6d19c9bd3e7a441f2e71475f87c776cd1c01b2cc50a33e4d7e5eced441cee432",
+      "image": "sha256:bb37f20be6793321ec180f12c39240d7a6d97a0ccc505412507a4c62923e013b",
+      "started_at": "2026-10-28T09:35:41.193822467Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 2000000000
+    },
+    "free5gc-pcf": {
+      "id": "625608be0cdf5152db79ca47484017f9aafa517482912fccc9030873e79f0937",
+      "image": "sha256:fbcafda58e37758806bd561c5afb7b4ead5418da906339ae765f3a388edf58c3",
+      "started_at": "2026-10-28T09:35:39.439120197Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "free5gc-smf": {
+      "id": "9d512fabc87a01be347c3686eed7f864465a0ec5d791d8fdacb23ba23eb7ac7c",
+      "image": "sha256:ac18f248e55db50c288e43b41381c10a36fe599c8aa77eee3351009c64082511",
+      "started_at": "2026-10-28T09:35:41.830931373Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "free5gc-amf": {
+      "id": "d94371447848b6cfeed7196982b734717d51e12f223e42612102828275ff6ad7",
+      "image": "sha256:f1a096415005d6ca19ca58cb610dee16be65864c7c671e7bd17d8dca67bf60cd",
+      "started_at": "2026-10-28T09:35:40.687373482Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "action-gateway": {
+      "id": "a59e063b1d2d9e25c73310b08fbca0c1db1bb891f4d1a22f4274a25042c28b0d",
+      "image": "sha256:0aba092880b3eda3f262a99374cf18c26fea4f96c5511b4ff73253a58c611912",
+      "started_at": "2026-10-28T09:36:06.318531917Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "snapshot-builder": {
+      "id": "ac2295c083b26c362ce40b51b96292c2005b1fda420dcddf77cedc254c449b1a",
+      "image": "sha256:0aba092880b3eda3f262a99374cf18c26fea4f96c5511b4ff73253a58c611912",
+      "started_at": "2026-10-28T09:36:06.320294725Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "session-tracker": {
+      "id": "9adbfdb761fdf78ea39bbd0fd684315ca9dd4fd42e40e7856da0b662f1b914ba",
+      "image": "sha256:0aba092880b3eda3f262a99374cf18c26fea4f96c5511b4ff73253a58c611912",
+      "started_at": "2026-10-28T09:35:57.292541375Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "traffic-sidecar-ue-1": {
+      "id": "7a47dcf789ba5b21f7d7d38738d0b5d6d6ae474926155a9b29d3d9d60ef83ea4",
+      "image": "sha256:b3425c36584707529272dddbb9949540a7389aa76eeab33325df2c5d60cb02ac",
+      "started_at": "2026-10-28T09:35:56.290127981Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "traffic-sidecar-ue-2": {
+      "id": "6d06868605cb441769158243b5c170306d359bcf72c90da1f772f9471158f257",
+      "image": "sha256:b3425c36584707529272dddbb9949540a7389aa76eeab33325df2c5d60cb02ac",
+      "started_at": "2026-10-28T09:35:56.784257492Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "mec-app-edge": {
+      "id": "68492a9360212bae70728da646fd14d3edcfaa391e591753650371de5c3cf787",
+      "image": "sha256:cb3f8d9ff98375d2191eddf44fabb252468567097c1d1f1721a291dd80721ff0",
+      "started_at": "2026-10-28T09:35:48.339147242Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 1000000000
+    }
+  },
+  "gates": {
+    "baseline": {
+      "time": "2026-10-28T09:36:20.859380+00:00",
+      "rfsp_fixture": 64
+    },
+    "ursp": {
+      "native_NAS_roundtrip": true,
+      "preestablished_PDU_count": 4
+    },
+    "rfsp": {
+      "roundtrip": [
+        64,
+        65,
+        64
+      ],
+      "scope": "NGAP control plane; no radio mapping"
+    },
+    "negatives": {
+      "rejected_without_native_mutation": 6
+    },
+    "sm": {
+      "native_add_modify_delete": true,
+      "exact_kernel_restore": true
+    },
+    "final": {
+      "stable_windows": 3,
+      "all_six_receiver_counters_increased": true,
+      "exact_kernel_graph_restored": true,
+      "no_container_restarts": true,
+      "application_cpus": 1,
+      "runtime_source_files": 93
+    }
+  },
+  "regression": {
+    "passed": 132,
+    "failed": 0,
+    "log": "experiments/oai-acceptance-20261028/logs/python-regression-v4.log"
+  },
+  "negative_cases": {
+    "duplicate-precedence": {
+      "http_status": 422,
+      "task_status": null
+    },
+    "stale-version": {
+      "http_status": 200,
+      "task_status": "rejected"
+    },
+    "unknown-ue": {
+      "http_status": 422,
+      "task_status": null
+    },
+    "unsubscribed-dnn": {
+      "http_status": 200,
+      "task_status": "rejected"
+    },
+    "unsubscribed-slice": {
+      "http_status": 200,
+      "task_status": "rejected"
+    },
+    "wrong-principal": {
+      "http_status": 403,
+      "task_status": null
+    }
+  },
+  "final_snapshot_id": "snapshot-79428b2c25fb93b6ebfd",
+  "final_observed_to": "2026-10-28T09:37:27.853079Z",
+  "flows": [
+    {
+      "id": "inference-edge-flow",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 18537.0,
+      "throughput_ul_mbps": 1.9726930205367557,
+      "throughput_dl_mbps": 1.972690436453721,
+      "latency_ms": 4.644155174239793,
+      "correlation": "complete"
+    },
+    {
+      "id": "protected-inference-edge-flow",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 18545.0,
+      "throughput_ul_mbps": 1.9724233926073809,
+      "throughput_dl_mbps": 1.9733004446370637,
+      "latency_ms": 5.342623980885202,
+      "correlation": "complete"
+    },
+    {
+      "id": "inference-edge-tcp",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 451.0,
+      "throughput_ul_mbps": 0.9932972205216576,
+      "throughput_dl_mbps": 0.0,
+      "latency_ms": 5.485454545454545,
+      "correlation": "complete"
+    },
+    {
+      "id": "protected-inference-edge-tcp",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 451.0,
+      "throughput_ul_mbps": 0.9931972463729042,
+      "throughput_dl_mbps": 0.0,
+      "latency_ms": 5.351818181818182,
+      "correlation": "complete"
+    },
+    {
+      "id": "inference-edge-http",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 1608.0,
+      "throughput_ul_mbps": 0.0,
+      "throughput_dl_mbps": 0.17476060542875452,
+      "latency_ms": 54.53629145102406,
+      "correlation": "complete"
+    },
+    {
+      "id": "protected-inference-edge-http",
+      "qfi": 1,
+      "five_qi": 9,
+      "drb_id": 1,
+      "availability": 1.0,
+      "received": 1584.0,
+      "throughput_ul_mbps": 0.0,
+      "throughput_dl_mbps": 0.1697296433047584,
+      "latency_ms": 56.1790983510119,
+      "correlation": "complete"
+    }
+  ],
+  "restored_kernel_counts_per_upf": {
+    "edge": {
+      "far": 4,
+      "pdr": 4,
+      "qer": 4,
+      "urr": 4
+    },
+    "alternate": {
+      "far": 4,
+      "pdr": 4,
+      "qer": 4,
+      "urr": 4
+    }
+  },
+  "runtime_sources": {
+    "action-gateway": {
+      "files": 93,
+      "equal": true
+    },
+    "snapshot-builder": {
+      "files": 93,
+      "equal": true
+    },
+    "session-tracker": {
+      "files": 93,
+      "equal": true
+    },
+    "traffic-sidecar-ue-1": {
+      "files": 93,
+      "equal": true
+    },
+    "traffic-sidecar-ue-2": {
+      "files": 93,
+      "equal": true
+    },
+    "mec-app-edge": {
+      "files": 93,
+      "equal": true
+    }
+  },
+  "earlier_attempts": [
+    {
+      "run_id": "oai-acceptance-20261028-1",
+      "result": "startup failed on idle-slice empty min; stopped; raw evidence retained"
+    },
+    {
+      "run_id": "oai-acceptance-20261028-2",
+      "result": "native roundtrips and exact restore passed; exposed incorrect same-PDU per-flow QoS projection; stopped for fix"
+    },
+    {
+      "run_id": "oai-acceptance-20261028-3",
+      "result": "SM native add reached RAN; Gateway pending-evidence KeyError; exact native recovery and stop verified before fix"
+    }
+  ],
+  "rfsp_fixture": {
+    "initial_native_value": 0,
+    "acceptance_baseline": 64,
+    "test": [
+      64,
+      65,
+      64
+    ],
+    "protected_ue_native_value": 0
+  },
+  "fixes": [
+    "idle slice QoS aggregation",
+    "recognize native updated DRB events",
+    "bind per-flow QoS to unique native QFI instead of latest PDU event",
+    "wait within existing watchdog deadline when DRB evidence is pending",
+    "reuse only exact completed initial NAS bootstrap on resume",
+    "pinned-PCF scoped restore client preserves initialized empty-map representation"
+  ],
+  "limits": [
+    "RFSP verified through PCF/AMF/NGAP/gNB acknowledgement; radio_mapping=none; no handover or idle reselection claim",
+    "Functional RFsim validation, not a guarantee of SLA: HTTP latency in this scene exceeds the declared 20 ms",
+    "URSP selects between preestablished PDU sessions; on-demand PDU creation not tested",
+    "QFI binding remains incomplete if multiple observed QFIs share the requested 5QI; never guesses",
+    "ELF/image bytes differ from retained images; no universal semantic equivalence or exhaustive physical SDR validation",
+    "No model/business-agent inference, training or paused dataset collection was resumed"
+  ],
+  "evidence_root": "/home/xzy/MergedSystem/TestBed/artifacts/runs/oai-acceptance-20261028-4/evidence/oai-live-acceptance",
+  "evidence_sha256": {
+    "sm-modify-stable-00.json": "0279192a7dd9b116946f6e0f14034da1d0154324c6bf5f728d23f0bb8eb9f076",
+    "negative-duplicate-precedence-before.json": "32a9c4baaa2e853f2986ff06c2eaf67bca32bcebef8b83c16fce988215752831",
+    "final-complete.json": "ec0d604b31fa83b56b7ac53234d8e03dd19bd117d2325f48826a7d6233bd5626",
+    "ursp-to-alternate-before.json": "a2f085a7ba862d8e231a5fdb9ad828457a9aaad4da6904cc5591aada4b925cf1",
+    "sm-modify-request.json": "7a54e00a982801305acb565a438723c0946029dc7b55804e1b8835c822195d9d",
+    "sm-start.json": "6f6520421cc4212020400e87a2f7f531edce3d040baf108969f42b6c60056e24",
+    "negative-duplicate-precedence-request.json": "772640fa44549b8f1d5d1a3acdf09d556feb331fd2ab9ef5e8c733d204a2da5d",
+    "sm-complete.json": "525f4d8dc657cd9ca10e6d469f3fce3ecd87232699e97d0427867d86a449d8e6",
+    "sm-modify-radio.json": "e6c084e763d5bfe22d18151990805e115a83eed3f4f14cfc835642a5636d6554",
+    "negative-duplicate-precedence-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "sm-add-radio.json": "ce6c575745813218b8874809d9c8329ac039d523eee65f3431ed49df7533da69",
+    "negative-wrong-principal-before.json": "b86f5b6e36bd230aa7fce4ea43bbf99fc5698912db27ed09e837ff477c595bd5",
+    "pre-fixture-policy.json": "b663e1f125eaeb4b928837510e036527e4a0ce3776f50e086decb08237b5d5d9",
+    "sm-add-before.json": "e3a535ead91669a6970d7c88d992bb63462498aa7ff7ff1ba74a8e6fbdca1bcc",
+    "rfsp-to-65-before.json": "93010e16d6b648a5883f5f6be8fd08f1cdd4916027b6170ddc8ae939cc5c3039",
+    "negative-unsubscribed-slice-request.json": "613c1ae14b54b898bd87a6ef467f4f293f96de7d9827e0e06db0f07bceeef957",
+    "negative-unknown-ue-response.json": "045c63c2b0607ba746791eba353758d81d44e12f2031322f95589c8f21bcd983",
+    "negative-stale-version-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "sm-restored-radio.json": "f18996debdc1fefc64eb541a1b133aa5f54f71a66f4744dde9e38b9e3ef64ede",
+    "ursp-complete.json": "25c8ff1a81648b03c027f8ec59305c5e2447645d0278b84c6246b3435540a6d0",
+    "alternate-kernel.json": "fb0bdd195ee9a1c832205d1a44b6e606b5dfb131ee95118307a4a16879ad4616",
+    "final-window-2-00.json": "96898da761a22a302c90090ee5152fc553bd57a7772cc13a49c79aa07c18e871",
+    "baseline-kernel.json": "fb0bdd195ee9a1c832205d1a44b6e606b5dfb131ee95118307a4a16879ad4616",
+    "negative-unsubscribed-dnn-request.json": "42e9797655cbec9f5377dd87210fa435d595003ade6d858ecc186b1eb39df7c7",
+    "rfsp-restore-64-request.json": "b1e3edf08425ef616ff25787ef37b3b99773c24379232c8fea008ab89967d623",
+    "sm-add-stable-00.json": "177151502aef7de2d16f2e3e528b7d3ee432642c356151d6a0ab547ed06901e4",
+    "ursp-restored-stable-00.json": "bcacaad331e0c8a57fd8b6a3c158d7e9f3c073036fed1b0fe3698e077fd64e1d",
+    "sm-restored-stable-00.json": "85d78cd5f04985767945da5f8d7b16e0619311476119aa3204a5f998515d0ed1",
+    "negative-stale-version-request.json": "0f0a9b0311e2ca855410ecc8b50223288c60d966df71b2c7c86dc32e92de8f31",
+    "rfsp-complete.json": "0dcdf3b76115a4b0c08dd47a50e39ca14d44ebe5d8701875d60e74dd79b4c08d",
+    "alternate-stable-00.json": "c80c8ab8142d71d2366b5ec5bcbdba1f8eee1cab9dd00e66523703f955003ec0",
+    "rfsp-fixture-64-request.json": "7858acf32e0663f2ee8023275f8cd2ded2159d024cc241995c7a35a21f68b7fa",
+    "sm-modify-policy.json": "fd2a69a42c96a9319ab265a3b52bd2130e6c68ffe207492b6d8a255178a03715",
+    "negative-unsubscribed-slice-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "initial-stable-00.json": "d265079f5f6e8b4278a6dd1d43f7d2562b59d0b41bab09b1902e6e5a2737d622",
+    "sm-initial-policy.json": "d0c978f85a37e4035a08c8e4a9eea83a2a5414bc265dd86fe1b52b75f05cde21",
+    "protected-policy.json": "52ec8334072374a6afaf284ed223db70b29c07a018ee284f02c9408411d7b54f",
+    "sm-modify-before.json": "69e4ecb8327e963c26fcaa2f580b232182d4bac66aa35defc379ae49985e81ff",
+    "negative-unknown-ue-request.json": "3a2c205b166387e3a224264daa8036bd475fe9840bae23a6e24d4320d974a544",
+    "rfsp-fixture-64-before.json": "323d38cb611b81e6db67b5fb84326c4931e0ff49d7e7e00e5777cbc303868c00",
+    "baseline-policy.json": "90735fd4d6920c80daca41b3730f5d6a779847d892706bda949a9d3981ab9a09",
+    "rfsp-restore-64-before.json": "2653d530c72140bcb65f93aabc3090b581f150e3d858e15b96bf4018ca160dae",
+    "negatives-complete.json": "e9849d9a65a748aafcadc46f7d7b44712fc536fa49ee41d7644a295745024e59",
+    "final-window-0-00.json": "b5800a43c21d74a6d37f6a85847d9b1d30a8bbc48909fc1324f9fe40bf58e08b",
+    "sm-initial-kernel.json": "fb0bdd195ee9a1c832205d1a44b6e606b5dfb131ee95118307a4a16879ad4616",
+    "negative-unknown-ue-before.json": "58f7b8c69ad9c8311d8f587418ac646e8ceab89759ec88f15968817afc263030",
+    "baseline-allocations.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "negative-unsubscribed-dnn-response.json": "71b187a3569a5f3730190d96f778cb46b7f7510137f711ba9b97bb5ed2e67e96",
+    "baseline-containers.json": "3d084cffbc9f85b20b284659328af2a73a1556ace798b5f1cd52cb49b0778eb2",
+    "sm-modify-kernel.json": "19c88ad9852f24f5d6deafc916972acfb2ba617d3c17c8144c6a927e35192d8d",
+    "negative-wrong-principal-request.json": "664fe422c1a5ba6a26e14a5799b0f3c268a97a8cd010b20c8474152792358915",
+    "baseline.json": "d265079f5f6e8b4278a6dd1d43f7d2562b59d0b41bab09b1902e6e5a2737d622",
+    "runtime-source-hashes.json": "3431b73d5e50981c6b6db9666253af3598387b07fdf633e9ef3476845d29ab48",
+    "negative-unsubscribed-dnn-before.json": "0c96050726ebd14a94bdba00fe927722522164803abf0ee153598aa0b180b163",
+    "sm-add-response.json": "75512f46f552a2f9a86dcc0b24fcd25d4d0a5d0061ba4094bc987dd89bda9153",
+    "negative-duplicate-precedence-response.json": "f02e0cf1ed0b4e7ec2ed8241eaa00e9b0f1b45f1e87b1fca5e3da7d25e7068af",
+    "baseline-complete.json": "7a600c0059697dc01d5a459fbee5cab5b5ea89cbb3cf749a928be6a462edd9fc",
+    "sm-add-request.json": "3cd00533df6d90b2905723a63f7e1fa1991de58bfb6250de639bc950946c4cff",
+    "sm-add-kernel.json": "7177eb20581c36ac745cf6f820f2fc7d5feb353a2746afe40028c80e4aa67d6c",
+    "rfsp-to-65-response.json": "f1d6b7db79f4fbdc1fa821f5fe59cc2ec3d99ceb3710b6fa337ae8b8fd9a075b",
+    "sm-restore-readback-00.json": "102cdf7b9662b9abfae5ab9309ea7fef3eae16028951c903190465e90c252f20",
+    "rfsp-restore-64-response.json": "cec97c4510f479aa5336c16eca78a9f3b88332c8a431e0dce6ef8f5a504acd1d",
+    "ursp-to-alternate-request.json": "70879cce1245e3229172395f898da645a8d7004819b7c663082dbc7f15958356",
+    "negative-stale-version-response.json": "f4edcc375548247ad05c6e86bf299aff77f27609fe27d4b6411df0590f485ad5",
+    "rfsp-to-65-request.json": "fcc8329c15a658ee7f95f12c550f82c12be16bf24b8b1397bdbd0a2b50e9e86f",
+    "ursp-restore-before.json": "3efba86f759dce86b55e156db95c85a944ea99736fb08b3b11e6922e47445a6b",
+    "sm-restore-request.json": "506840870057256232fbe5710cb8053a3bd9e775b980269f6be73bd503675e09",
+    "negative-unknown-ue-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "ursp-restore-request.json": "0861b612a1d75524a5ff1c9d83310c1906f86d1ab49e33cdbbe5df8ac82c0b70",
+    "sm-restored-allocations.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "sm-add-policy.json": "33d93b2e31f28994527e4b12194f322333ab125d2750d3fe0de85b4980071757",
+    "negative-unsubscribed-slice-response.json": "0515515a6d31d849fcf8e1c6630b49891e8d36bf459eaced65746cf411b8eae4",
+    "rfsp-65-stable-00.json": "19833fac18025144a4fa093cb40b1c166238c187cb405a61d1acb7ad7797f9dd",
+    "ursp-to-alternate-response.json": "1e7ffd7d32c0cad14ff98d777d4db2846eb7f1717426fe98e5d982deebcf7b9a",
+    "negative-wrong-principal-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "final-window-1-00.json": "f9877a6c089e90ee7c0d490a4d1c5acd1c898c2e689504b40f2e7c9042e20634",
+    "final-containers.json": "3d084cffbc9f85b20b284659328af2a73a1556ace798b5f1cd52cb49b0778eb2",
+    "rfsp-fixture-64-response.json": "e344c86897e326ac59083855e7ed33d25902c10740626a066a01ae2738f9ffc1",
+    "negative-wrong-principal-response.json": "33bede7b5f8f28f1a9f7f9c3855142139b4fe7514ec200090ee803668bf881e4",
+    "sm-restore-response.json": "5484f55824ecf821b30fac0ec862ca94238a57c1db7706e35d9c7b715161ec40",
+    "sm-modify-response.json": "1a087fa9ab0fc6c4ccb36fc08302d65ae8b246d8f3efbe191109d1e68f325f0f",
+    "negative-unsubscribed-slice-before.json": "96123a6920c38eae1198678c3bd0f913673f246820425b22071cc9e0242d4f58",
+    "negative-unsubscribed-dnn-readback.json": "ba8b8f855c227fea34efe0d7157a1e7cc0dd1012843a631cce1c05f9f6f777ef",
+    "negative-stale-version-before.json": "db12d727896b6d49a3fa7ffa298fb51f2ed92faf175f54f93a8dcda51272bb83",
+    "final-kernel.json": "fb0bdd195ee9a1c832205d1a44b6e606b5dfb131ee95118307a4a16879ad4616",
+    "sm-restore-readback-01.json": "0e7cbb8fd9450a55bf2e0aed3d15f8bd8d651df73390547ede7fa140a8cd0862",
+    "sm-restored-kernel.json": "fb0bdd195ee9a1c832205d1a44b6e606b5dfb131ee95118307a4a16879ad4616",
+    "ursp-restore-response.json": "91ad8377681ed76e353a365247d6fe2f2f1bb1d756b45a0be9c81db105ba6b04"
+  }
+}

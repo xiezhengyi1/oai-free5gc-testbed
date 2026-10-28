@@ -17,8 +17,17 @@ from testbed.telemetry.ran_exporter import (
     parse_ue_rnti,
     ran_records_ready,
 )
-from testbed.telemetry.snapshot_builder import _maximum_observed, _prb_utilization
-from testbed.telemetry.snapshot_writer import PostgresGraphWriter, SnapshotStore, graph_summary
+from testbed.telemetry.snapshot_builder import (
+    _bind_sm_policy_associations,
+    _maximum_observed,
+    _prb_utilization,
+)
+from testbed.telemetry.snapshot_writer import (
+    PostgresGraphWriter,
+    SnapshotStore,
+    graph_delta,
+    graph_summary,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -28,9 +37,61 @@ def test_snapshot_aggregate_uses_only_observed_flow_metrics() -> None:
     assert _maximum_observed([None, None]) is None
 
 
-def test_snapshot_prb_utilization_requires_all_ue_measurements() -> None:
-    assert _prb_utilization([20.0, 10.0], 100.0) == 0.3
+def test_snapshot_prb_utilization_averages_non_concurrent_ue_grants() -> None:
+    assert _prb_utilization([], 100.0) == 0.0
+    assert _prb_utilization([20.0, 10.0], 100.0) == 0.15
     assert _prb_utilization([20.0, None], 100.0) is None
+
+
+def test_snapshot_binds_each_pdu_session_to_its_live_sm_policy() -> None:
+    sessions = [
+        {
+            "supi": "imsi-208930000000001",
+            "pdu_session_id": 2,
+            "dnn": "urllc",
+            "snssai": "02000001",
+        }
+    ]
+    policies = (
+        {
+            "supi": "imsi-208930000000001",
+            "sm_policy_associations": [
+                {
+                    "pdu_session_id": 1,
+                    "dnn": "embb",
+                    "snssai": "01000001",
+                    "resource_uri": "http://pcf/sm-policies/session-1",
+                },
+                {
+                    "pdu_session_id": 2,
+                    "dnn": "urllc",
+                    "snssai": "02000001",
+                    "resource_uri": "http://pcf/sm-policies/session-2",
+                },
+            ],
+        },
+    )
+
+    assert _bind_sm_policy_associations(sessions, policies)[0]["sm_policy_uri"] == (
+        "http://pcf/sm-policies/session-2"
+    )
+
+
+def test_snapshot_rejects_missing_sm_policy_binding() -> None:
+    sessions = [
+        {
+            "supi": "imsi-208930000000001",
+            "pdu_session_id": 1,
+            "dnn": "embb",
+            "snssai": "01000001",
+        }
+    ]
+    policies = (
+        {"supi": "imsi-208930000000001", "sm_policy_associations": []},
+    )
+
+    with pytest.raises(RuntimeError, match="requires exactly one match"):
+        _bind_sm_policy_associations(sessions, policies)
 
 
 def test_snapshot_store_writes_history_and_latest_metric_artifacts(tmp_path: Path) -> None:
@@ -41,6 +102,7 @@ def test_snapshot_store_writes_history_and_latest_metric_artifacts(tmp_path: Pat
     snapshot = UnifiedSnapshot(
         snapshot_id="snapshot-artifact-1",
         run_id="run-artifact-1",
+        baseline_epoch="run-artifact-1:0",
         observed_from=now,
         observed_to=now,
         topology={},
@@ -74,6 +136,18 @@ def test_run_state_machine_requires_ordered_transitions(tmp_path: Path) -> None:
     assert state.sequence == 1
 
 
+def test_baseline_epoch_changes_only_on_reset(tmp_path: Path) -> None:
+    store = RunStore(tmp_path)
+    store.initialize()
+    assert store.current_baseline_epoch() == f"{tmp_path.name}:0"
+
+    store.advance(RunPhase.CORE_READY, {})
+    assert store.current_baseline_epoch() == f"{tmp_path.name}:0"
+
+    store.reset()
+    assert store.current_baseline_epoch() == f"{tmp_path.name}:1"
+
+
 def test_running_state_can_record_an_in_place_recovery(tmp_path: Path) -> None:
     store = RunStore(tmp_path)
     store.initialize()
@@ -94,6 +168,17 @@ def test_running_state_can_record_an_in_place_recovery(tmp_path: Path) -> None:
     assert state.phase == RunPhase.RUNNING
     assert state.sequence == 9
     assert state.evidence == {"ready": True, "reason": "host_restart"}
+
+
+def test_stopped_state_can_be_recovered(tmp_path: Path) -> None:
+    store = RunStore(tmp_path)
+    store.initialize()
+    store.stop({"compose_stopped": True})
+
+    state = store.recover({"ready": True, "reason": "operator_resume"})
+
+    assert state.phase == RunPhase.RUNNING
+    assert state.evidence == {"ready": True, "reason": "operator_resume"}
 
 
 def test_failed_recovery_can_be_retried_without_resetting_the_run(tmp_path: Path) -> None:
@@ -263,6 +348,21 @@ PDU Session Setup: ID=1, outgoing TEID=0x22222222
     )
 
 
+def test_session_policy_update_retains_established_teids() -> None:
+    log_text = """
+UE 1: assigned DRB 1 to QFI 1 (5QI 9) in PDU session 2
+N3 GTP-U tunnel: PDUSession=2/UL TEID=0x00000006
+PDU Session Setup: ID=2, outgoing TEID=0x91a56e78
+UE 1: assigned DRB 3 to QFI 2 (5QI 2) in PDU session 2
+"""
+    session = parse_session_fields(log_text, "imsi-1", "urllc", 2, 1)
+    assert session["drb_id"] == 3
+    assert session["qfi"] == 2
+    assert session["five_qi"] == 2
+    assert session["ul_teid"] == "0x00000006"
+    assert session["dl_teid"] == "0x91a56e78"
+
+
 def test_nrue_connected_rnti_is_parsed() -> None:
     assert parse_ue_rnti("RNTI 0xe404 State = NR_RRC_CONNECTED") == 0xE404
     assert parse_ue_rnti("UE 0 RNTI ae9e stats sfn: 512.8") == 0xAE9E
@@ -278,6 +378,10 @@ def test_ran_exporter_waits_for_each_current_ue_rnti() -> None:
 
     assert not ran_records_ready(ues, rntis, records)
     records["gnb-2"][0xA505] = {}
+    assert not ran_records_ready(ues, rntis, records)
+    complete = dict(cu_ue_id=1, prb_ul=1, mcs_ul=1, mcs_dl=1, bler_ul=0, bler_dl=0)
+    records["gnb-1"][0xE404] = complete
+    records["gnb-2"][0xA505] = complete
     assert ran_records_ready(ues, rntis, records)
 
 
@@ -301,6 +405,7 @@ def test_graph_summary_preserves_agent_flow_contract() -> None:
     snapshot = UnifiedSnapshot(
         snapshot_id="snapshot-1",
         run_id="run-1",
+        baseline_epoch="run-1:0",
         observed_from=now,
         observed_to=now,
         topology={},
@@ -326,3 +431,32 @@ def test_graph_summary_preserves_agent_flow_contract() -> None:
     assert {"ue", "app", "flow", "slice"} <= types
     assert summary["testbed_snapshot"]["snapshot_id"] == "snapshot-1"
     assert any(metric["metric_name"] == "session.qfi" for metric in summary["metrics"])
+
+
+def test_graph_delta_only_contains_changes() -> None:
+    now = datetime.now(UTC)
+    previous = graph_summary(
+        UnifiedSnapshot(
+            snapshot_id="snapshot-1",
+            run_id="run-1",
+            baseline_epoch="run-1:0",
+            observed_from=now,
+            observed_to=now,
+            topology={},
+            slice_states=(),
+            sessions=(),
+            flows=(),
+            ran_nodes=(),
+            core_nodes=(),
+            containers=(),
+            mec_sites=(),
+            mobility=(),
+            active_actions=(),
+            trigger_event="Periodic",
+        )
+    )
+    current = {**previous, "snapshot_id": "snapshot-2"}
+    delta = graph_delta(current, previous)
+    assert delta["mode"] == "delta"
+    assert delta["upsert"] == {"nodes": [], "edges": [], "metrics": []}
+    assert delta["delete"] == {"node_keys": [], "edge_keys": [], "metric_keys": []}

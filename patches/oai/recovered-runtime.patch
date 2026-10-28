@@ -1,0 +1,81 @@
+diff --git a/openair2/RRC/NR/rrc_gNB.c b/openair2/RRC/NR/rrc_gNB.c
+index c55f6c7..452da02 100644
+--- a/openair2/RRC/NR/rrc_gNB.c
++++ b/openair2/RRC/NR/rrc_gNB.c
+@@ -3596,7 +3596,8 @@ static const char *get_pdusession_status_text(pdu_session_status_t status)
+ static bool write_rrc_stats(const gNB_RRC_INST *rrc)
+ {
+   const char *filename = "nrRRC_stats.log";
+-  FILE *f = fopen(filename, "w");
++  const char *temporary = "nrRRC_stats.log.tmp";
++  FILE *f = fopen(temporary, "w");
+   if (f == NULL) {
+     LOG_W(NR_RRC, "cannot open %s for writing: %d, %s\n", filename, errno, strerror(errno));
+     return false;
+@@ -3622,6 +3623,12 @@ static bool write_rrc_stats(const gNB_RRC_INST *rrc)
+       fprintf(f, " S-TMSI %x", ue_ctxt->Initialue_identity_5g_s_TMSI.fiveg_tmsi);
+     fprintf(f, ":\n");
+ 
++    int pending_rrc_transactions = 0;
++    for (int xid = 0; xid < NR_RRC_TRANSACTION_IDENTIFIER_NUMBER; ++xid)
++      pending_rrc_transactions += ue_ctxt->xids[xid] != RRC_ACTION_NONE;
++    fprintf(f, "    RRC transaction: handover_in_progress=%d pending_reconfigurations=%d\n",
++            ue_ctxt->ho_context != NULL, pending_rrc_transactions);
++
+     time_t last_seen = now - ue_ctxt->last_seen;
+     fprintf(f, "    last RRC activity: %ld seconds ago\n", last_seen);
+ 
+@@ -3646,7 +3653,10 @@ static bool write_rrc_stats(const gNB_RRC_INST *rrc)
+   fprintf(f, "\n");
+   dump_du_info(rrc, f);
+ 
+-  fclose(f);
++  if (fclose(f) != 0 || rename(temporary, filename) != 0) {
++    LOG_W(NR_RRC, "cannot publish %s: %d, %s\n", filename, errno, strerror(errno));
++    return false;
++  }
+   return true;
+ }
+ 
+diff --git a/openair2/RRC/NR/rrc_gNB_NGAP.c b/openair2/RRC/NR/rrc_gNB_NGAP.c
+index ff06eaf..6ef377d 100644
+--- a/openair2/RRC/NR/rrc_gNB_NGAP.c
++++ b/openair2/RRC/NR/rrc_gNB_NGAP.c
+@@ -1024,13 +1024,6 @@ static void nr_rrc_send_e1_after_qos_update(gNB_RRC_UE_t *UE,
+       }
+     }
+     if (!drb_still_used) {
+-      if (nr_rrc_remove_drb_by_id(&UE->drbs, drb->drb_id)) {
+-        LOG_I(NR_RRC,
+-              "UE %d: removed DRB ID %d for PDU session %d (no remaining QoS flows mapped)\n",
+-              UE->rrc_ue_id,
+-              drb->drb_id,
+-              dst->pdusession_id);
+-      }
+       // Add DRB to remove directly to e1_req
+       DevAssert(pdu_mod->n_drb_to_remove < E1AP_MAX_NUM_DRBS);
+       drb_to_remove_t *rem = &pdu_mod->drbs_to_remove[pdu_mod->n_drb_to_remove++];
+@@ -1053,6 +1046,12 @@ static void nr_rrc_send_e1_after_qos_update(gNB_RRC_UE_t *UE,
+         find_or_add_e1_drb_mod(pdu_mod, drb->drb_id, dst);
+     }
+   }
++  // Erasing compacts UE->drbs: retain IDs and finish iteration before removal.
++  for (int i = 0; i < pdu_mod->n_drb_to_remove; ++i) {
++    const int id = pdu_mod->drbs_to_remove[i].id;
++    nr_rrc_remove_drb_by_id(&UE->drbs, id);
++  }
++
+ }
+ 
+ static void nr_rrc_apply_qos_add_modify(gNB_RRC_INST *rrc,
+@@ -1120,6 +1119,10 @@ static void nr_rrc_apply_qos_add_modify(gNB_RRC_INST *rrc,
+         }
+       }
+       LOG_I(NR_RRC, "UE %d: updating QoS for QFI=%d (DRB=%d)\n", UE->rrc_ue_id, q_in->qfi, drb_id);
++      if (dst_qos->fiveQI_type == NON_DYNAMIC)
++        LOG_I(NR_RRC, "UE %d: updated DRB %d to QFI %d (5QI %d) in PDU session %d\n",
++              UE->rrc_ue_id, drb_id, dst_qos->qfi,
++              dst_qos->qos_characteristics.non_dynamic.fiveQI, dst->pdusession_id);
+       find_or_add_e1_drb_mod(pdu_mod, drb_id, dst);
+       drb_needs_e1_refresh[drb_id] = true;
+     } else {

@@ -1,0 +1,41 @@
+--- a/openair2/LAYER2/NR_MAC_UE/nr_ue_procedures.c
++++ b/openair2/LAYER2/NR_MAC_UE/nr_ue_procedures.c
+@@ -839,6 +839,28 @@
+   dlsch_pdu->scaling_factor_S = factor[dci->tb_scaling];
+   dlsch_pdu->k1_feedback = 0;
+   return 0;
++}
++
++/* Reject an external DCI with impossible ACK timing before changing HARQ state.
++ * Keep the original scheduling assertions as internal invariants. */
++bool nr_ue_dl10_feedback_admissible(NR_UE_MAC_INST_t *mac, const dci_pdu_rel15_t *dci, nr_rnti_type_t rnti_type)
++{
++  if (rnti_type == TYPE_RA_RNTI_ || rnti_type == TYPE_SI_RNTI_
++      || get_FeedbackDisabled(mac->sc_info.downlinkHARQ_FeedbackDisabled_r17, dci->harq_pid.val))
++    return true;
++  if (!mac->current_DL_BWP)
++    return false;
++  const int scs = mac->current_DL_BWP->scs;
++  const uint16_t feedback = 1 + dci->pdsch_to_harq_feedback_timing_indicator.val
++                            + GET_NTN_UE_K_OFFSET(&mac->phy_config.config_req.ntn_config, scs);
++  const long minimum = GET_DURATION_RX_TO_TX(&mac->phy_config.config_req.ntn_config, scs);
++  if (feedback < minimum) {
++    LOG_W(NR_MAC, "Reject DCI 1_0 before HARQ admission: crnti=%04x rnti_type=%d harq=%d indicator=%d feedback=%u minimum=%ld\n",
++          mac->crnti, rnti_type, dci->harq_pid.val,
++          dci->pdsch_to_harq_feedback_timing_indicator.val, feedback, minimum);
++    return false;
++  }
++  return true;
+ }
+ 
+ static int nr_ue_process_dci_dl_10(NR_UE_MAC_INST_t *mac,
+@@ -897,6 +919,9 @@
+      *    28 DAI_: For format1_1: 4 if more than one serving cell are configured in the DL and the higher layer parameter HARQ-ACK-codebook=dynamic, where the 2 MSB bits are the counter DAI and the 2 LSB bits are the total DAI
+      *    33 TPC_PUCCH:
+    */
++
++  if (!nr_ue_dl10_feedback_admissible(mac, dci, get_rnti_type(mac, dci_ind->rnti)))
++    return -1;
+ 
+   fapi_nr_dl_config_request_t *dl_config = get_dl_config_request(mac, slot);
+   fapi_nr_dl_config_request_pdu_t *dl_conf_req = &dl_config->dl_config_list[dl_config->number_pdus];

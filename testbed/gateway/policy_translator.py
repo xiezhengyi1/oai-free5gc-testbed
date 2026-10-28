@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from testbed.gateway.contracts import PolicyAction
 from testbed.scenario.schema import Scenario
@@ -17,7 +18,10 @@ class TranslatedPolicy:
 
 
 def _bandwidth(value_mbps: float) -> str:
-    return f"{round(value_mbps * 1000)} Kbps"
+    kbps = Decimal(str(value_mbps)) * 1000
+    if kbps != kbps.to_integral_value():
+        raise ValueError("policy rate requires exact integer Kbps; implicit rounding is not allowed")
+    return f"{int(kbps)} Kbps"
 
 
 def translate_policy(scenario: Scenario, action: PolicyAction) -> TranslatedPolicy:

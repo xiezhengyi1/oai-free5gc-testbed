@@ -11,6 +11,7 @@ from testbed.scenario.schema import StrictModel
 class UnifiedSnapshot(StrictModel):
     snapshot_id: str
     run_id: str
+    baseline_epoch: str = Field(min_length=1)
     observed_from: datetime
     observed_to: datetime
     topology: dict[str, Any]
@@ -23,4 +24,5 @@ class UnifiedSnapshot(StrictModel):
     mec_sites: tuple[dict[str, Any], ...]
     mobility: tuple[dict[str, Any], ...]
     active_actions: tuple[dict[str, Any], ...]
+    ue_policies: tuple[dict[str, Any], ...] = ()
     trigger_event: str = Field(min_length=1)

@@ -1,0 +1,54 @@
+bash: cannot set terminal process group (4179633): Inappropriate ioctl for device
+bash: no job control in this shell
+Using CPython 3.12.9 interpreter at: /home/yinyuexi/miniconda3/bin/python3
+Removed virtual environment at: .venv
+Creating virtual environment at: .venv
+Resolved 40 packages in 1ms
+Downloading pydantic-core (2.0MiB)
+Downloading sqlalchemy (3.2MiB)
+Downloading ruff (9.8MiB)
+Downloading psycopg-binary (4.9MiB)
+ Downloading pydantic-core
+ Downloading sqlalchemy
+ Downloading psycopg-binary
+ Downloading ruff
+Prepared 9 packages in 4m 44s
+Installed 38 packages in 16ms
+ + annotated-doc==0.0.5
+ + annotated-types==0.8.0
+ + anyio==4.14.2
+ + certifi==2026.7.22
+ + click==8.5.0
+ + coverage==7.16.0
+ + fastapi==0.141.1
+ + greenlet==3.5.5
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + idna==3.19
+ + iniconfig==2.3.0
+ + jinja2==3.1.6
+ + markdown-it-py==4.2.0
+ + markupsafe==3.0.3
+ + mdurl==0.1.2
+ + oai-free5gc-testbed==0.1.0 (from file:///home/yinyuexi/xiezhengyi/oai-free5gc-testbed)
+ + packaging==26.3
+ + pluggy==1.6.0
+ + prometheus-client==0.26.0
+ + psycopg==3.3.4
+ + psycopg-binary==3.3.4
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pygments==2.21.0
+ + pytest==8.4.2
+ + pytest-cov==6.3.0
+ + pyyaml==6.0.3
+ + rich==15.0.0
+ + ruff==0.16.5
+ + shellingham==1.5.4
+ + sqlalchemy==2.0.52
+ + starlette==1.6.0
+ + typer==0.27.2
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + uvicorn==0.52.4

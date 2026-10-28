@@ -1,0 +1,117 @@
+--- a/openair2/LAYER2/NR_MAC_UE/nr_ue_procedures.c
++++ b/openair2/LAYER2/NR_MAC_UE/nr_ue_procedures.c
+@@ -4086,6 +4086,51 @@
+ //  F:    lenght of L is 0:8 or 1:16 bits wide
+ //  R:    Reserved bit, set to zero.
+ ////////////////////////////////
++
++/* Validate the external DL-SCH envelope before HARQ ACK or MAC side effects.
++ * CRC16 can accept an erroneous codeword. Keep the parser's assertions as
++ * invariants; a structurally invalid received TB is never admitted to it.
++ * This checks the same subheader widths and CE sizes as the existing parser.
++ */
++bool nr_ue_mac_pdu_bounds_valid(uint8_t *pdu, int length)
++{
++  if (!pdu || length <= 0)
++    return false;
++  while (length > 0) {
++    const uint8_t lcid = ((const NR_MAC_SUBHEADER_FIXED *)pdu)->LCID;
++    uint16_t size = 0, header = 1;
++    if (lcid == DL_SCH_LCID_PADDING)
++      return true;
++    if (lcid <= 32 || lcid == DL_SCH_LCID_SP_SRS_ACTIVATION ||
++        lcid == DL_SCH_LCID_TCI_STATE_ACT_UE_SPEC_PDSCH ||
++        lcid == DL_SCH_LCID_APERIODIC_CSI_TRI_STATE_SUBSEL ||
++        lcid == DL_SCH_LCID_SP_CSI_RS_CSI_IM_RES_SET_ACT) {
++      const unsigned needed = (pdu[0] & 0x40) ? 3 : 2;
++      if ((unsigned)length < needed || !get_mac_len(pdu, length, &size, &header))
++        return false;
++    } else {
++      switch (lcid) {
++        case DL_SCH_LCID_RECOMMENDED_BITRATE:
++        case DL_SCH_LCID_SP_ZP_CSI_RS_RES_SET_ACT:
++        case DL_SCH_LCID_SP_CSI_REP_PUCCH_ACT:
++        case DL_SCH_LCID_TCI_STATE_IND_UE_SPEC_PDCCH: size = 2; break;
++        case DL_SCH_LCID_PUCCH_SPATIAL_RELATION_ACT: size = 3; break;
++        case DL_SCH_LCID_DUPLICATION_ACT:
++        case DL_SCH_LCID_SCell_ACT_1_OCT:
++        case DL_SCH_LCID_TA_COMMAND: size = 1; break;
++        case DL_SCH_LCID_SCell_ACT_4_OCT: size = 4; break;
++        case DL_SCH_LCID_CON_RES_ID: size = 6; break;
++        default: break; /* Existing parser consumes one byte for other LCIDs. */
++      }
++    }
++    if ((unsigned)length < (unsigned)header + size)
++      return false;
++    pdu += header + size;
++    length -= header + size;
++  }
++  return true;
++}
++
+ static void nr_ue_process_mac_pdu(NR_UE_MAC_INST_t *mac, nr_downlink_indication_t *dl_info, int pdu_id)
+ {
+   frame_t frameP = dl_info->frame;
+--- a/openair1/SCHED_NR_UE/phy_procedures_nr_ue.c
++++ b/openair1/SCHED_NR_UE/phy_procedures_nr_ue.c
+@@ -43,6 +43,8 @@
+ #include "intertask_interface.h"
+ #include "T.h"
+ #include "instrumentation.h"
++#include "LAYER2/NR_MAC_UE/mac_proto.h"
++extern bool nr_ue_mac_pdu_bounds_valid(uint8_t *pdu, int length);
+ 
+ static const unsigned int gain_table[31] = {100,  112,  126,  141,  158,  178,  200,  224,  251, 282,  316,
+                                             359,  398,  447,  501,  562,  631,  708,  794,  891, 1000, 1122,
+@@ -632,6 +634,9 @@
+ 
+ /*! \brief Process the whole DLSCH slot
+  */
++int nr_macdiag_decode_active[32];
++static unsigned nr_macdiag_overlap_reports;
++static void nr_macdiag_leave(int *index) { __atomic_sub_fetch(&nr_macdiag_decode_active[*index], 1, __ATOMIC_SEQ_CST); }
+ static void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
+                                    const UE_nr_rxtx_proc_t *proc,
+                                    NR_UE_DLSCH_t *dlsch,
+@@ -665,6 +670,10 @@
+     return;
+   }
+ 
++  int diag_index __attribute__((cleanup(nr_macdiag_leave))) = cw_idx * 16 + harq_pid;
++  int diag_previous = __atomic_fetch_add(&nr_macdiag_decode_active[diag_index], 1, __ATOMIC_SEQ_CST);
++  if (diag_previous && __atomic_fetch_add(&nr_macdiag_overlap_reports, 1, __ATOMIC_SEQ_CST) < 16)
++    fprintf(stderr, "MAC_DIAG_DECODE_OVERLAP frame=%d slot=%d harq=%d cw=%d previous=%d\n", frame_rx, nr_slot_rx, harq_pid, cw_idx, diag_previous);
+   start_meas_nr_ue_phy(ue, DLSCH_UNSCRAMBLING_STATS);
+   nr_dlsch_unscrambling(llr, G, 0, config->dlDataScramblingId, dlsch->rnti);
+   stop_meas_nr_ue_phy(ue, DLSCH_UNSCRAMBLING_STATS);
+@@ -673,6 +682,19 @@
+   uint8_t output[lenWithCrc(1, dlsch->cw_info.TBS) / 8];
+   nr_dlsch_decoding(ue, proc, dlsch, cw_idx, config, llr, output, freq_alloc->num_rbs, G);
+   stop_meas_nr_ue_phy(ue, DLSCH_DECODING_STATS);
++
++  if (dl_harq->decodeResult && dlsch->rnti_type == TYPE_C_RNTI_) {
++    NR_UE_MAC_INST_t *mac = get_mac_inst(ue->Mod_id);
++    /* MSG-B carries a successRAR prefix, not a plain DL-SCH envelope. */
++    bool msg_b = mac && mac->ra.ra_type == RA_2_STEP && mac->ra.ra_state == nrRA_WAIT_MSGB;
++    if (!msg_b && !nr_ue_mac_pdu_bounds_valid(output, dlsch->cw_info.TBS / 8)) {
++      LOG_E(NR_MAC, "Reject invalid DL-SCH envelope before ACK: frame=%d slot=%d harq=%d TBS=%u\n",
++            proc->frame_rx, proc->nr_slot_rx, harq_pid, dlsch->cw_info.TBS);
++      dl_harq->decodeResult = false;
++      dl_harq->status = NR_ACTIVE;
++      dlsch->last_iteration_cnt = dlsch->max_ldpc_iterations;
++    }
++  }
+ 
+   int ind_type = -1;
+   switch (dlsch->rnti_type) {
+--- a/openair1/PHY/NR_UE_TRANSPORT/nr_dlsch_decoding.c
++++ b/openair1/PHY/NR_UE_TRANSPORT/nr_dlsch_decoding.c
+@@ -64,6 +64,8 @@
+   AssertFatal(dmrs_Type == 0 || dmrs_Type == 1, "Illegal dmrs_type %d\n", dmrs_Type);
+   fapi_nr_dl_cw_info_t *cw_info = &dlsch->cw_info;
+   NR_DL_UE_HARQ_t *harq_process = &phy_vars_ue->dl_harq_processes[cw_idx][dlsch_config->harq_process_nbr];
++  /* No early error return may reuse an earlier transport block ACK. */
++  harq_process->decodeResult = false;
+   LOG_D(PHY, "Round %d RV idx %d\n", harq_process->DLround, cw_info->rv);
+   uint8_t nb_re_dmrs;
+   if (dmrs_Type == NFAPI_NR_DMRS_TYPE1)

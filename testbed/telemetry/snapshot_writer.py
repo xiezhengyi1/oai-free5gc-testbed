@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,7 @@ from sqlalchemy import create_engine, text
 
 from testbed.artifacts.metrics_exporter import export_metrics
 from testbed.telemetry.models import UnifiedSnapshot
+from testbed.telemetry.state_projection import StateProjection
 
 
 class SnapshotStore:
@@ -20,17 +22,21 @@ class SnapshotStore:
         export_metrics(self.path.parent, snapshot.model_dump(mode="json"))
 
     def get(self, snapshot_id: str) -> UnifiedSnapshot:
-        for line in self.path.read_text(encoding="utf-8").splitlines():
-            snapshot = UnifiedSnapshot.model_validate_json(line)
-            if snapshot.snapshot_id == snapshot_id:
-                return snapshot
+        needle = json.dumps(snapshot_id, ensure_ascii=False).encode("utf-8")
+        with self.path.open("rb") as handle:
+            for line in handle:
+                if needle in line:
+                    snapshot = UnifiedSnapshot.model_validate_json(line)
+                    if snapshot.snapshot_id == snapshot_id:
+                        return snapshot
         raise KeyError(snapshot_id)
 
     def latest(self) -> UnifiedSnapshot:
-        lines = self.path.read_text(encoding="utf-8").splitlines()
+        with self.path.open("rb") as handle:
+            lines = deque(handle, maxlen=1)
         if not lines:
             raise LookupError("no snapshots have been written")
-        return UnifiedSnapshot.model_validate_json(lines[-1])
+        return UnifiedSnapshot.model_validate_json(lines[0])
 
 
 def graph_summary(snapshot: UnifiedSnapshot) -> dict[str, Any]:
@@ -152,20 +158,94 @@ def graph_summary(snapshot: UnifiedSnapshot) -> dict[str, Any]:
     }
 
 
+def graph_delta(
+    current: dict[str, Any], previous: dict[str, Any]
+) -> dict[str, Any]:
+    node_changes, deleted_nodes = _collection_delta(
+        current["nodes"], previous["nodes"], "node_key"
+    )
+    edge_changes, deleted_edges = _collection_delta(
+        current["edges"], previous["edges"], "edge_key"
+    )
+    metric_changes, deleted_metrics = _collection_delta(
+        current["metrics"], previous["metrics"], "metric_key"
+    )
+    return {
+        "mode": "delta",
+        "testbed_state": {
+            key: current["testbed_snapshot"][key]
+            for key in ("baseline_epoch", "sessions", "ue_policies", "active_actions")
+        },
+        "snapshot_id": current["snapshot_id"],
+        "run_id": current["run_id"],
+        "trigger_event": current["trigger_event"],
+        "observed_from": current["observed_from"],
+        "observed_to": current["observed_to"],
+        "upsert": {
+            "nodes": node_changes,
+            "edges": edge_changes,
+            "metrics": metric_changes,
+        },
+        "delete": {
+            "node_keys": deleted_nodes,
+            "edge_keys": deleted_edges,
+            "metric_keys": deleted_metrics,
+        },
+    }
+
+
+def _collection_delta(
+    current: list[dict[str, Any]], previous: list[dict[str, Any]], key: str
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if key == "metric_key":
+        current_by_key = {_metric_key(item): item for item in current}
+        previous_by_key = {_metric_key(item): item for item in previous}
+    else:
+        current_by_key = {item[key]: item for item in current}
+        previous_by_key = {item[key]: item for item in previous}
+    upserts = [
+        item
+        for item_key, item in current_by_key.items()
+        if previous_by_key.get(item_key) != item
+    ]
+    return upserts, sorted(set(previous_by_key) - set(current_by_key))
+
+
+def _metric_key(metric: dict[str, Any]) -> str:
+    return ":".join(
+        (metric["owner_type"], metric["owner_key"], metric["metric_name"])
+    )
+
+
 class PostgresGraphWriter:
     def __init__(self, database_url: str) -> None:
         self.engine = create_engine(
             database_url.replace("postgresql://", "postgresql+psycopg://", 1)
         )
+        self.previous_summary: dict[str, Any] | None = None
+        self.previous_snapshot_id: str | None = None
+        self.projection = StateProjection(checkpoint_every=100)
+        self.write_count = 0
 
     def write(self, snapshot: UnifiedSnapshot) -> None:
         summary = graph_summary(snapshot)
+        stored_graph = (
+            {"mode": "full", **summary}
+            if self.previous_summary is None or self.write_count % 100 == 0
+            else graph_delta(summary, self.previous_summary)
+        )
         statement = text(
             """
             INSERT INTO network_graph_snapshot
                 (snapshot_id, base_network_snapshot_id, trigger_event, graph_summary, created_at)
             VALUES
-                (:snapshot_id, NULL, :trigger_event, CAST(:graph_summary AS JSONB), :created_at)
+                (
+                    :snapshot_id,
+                    :base_network_snapshot_id,
+                    :trigger_event,
+                    CAST(:graph_summary AS JSONB),
+                    :created_at
+                )
             """
         )
         with self.engine.begin() as connection:
@@ -173,8 +253,13 @@ class PostgresGraphWriter:
                 statement,
                 {
                     "snapshot_id": snapshot.snapshot_id,
+                    "base_network_snapshot_id": self.previous_snapshot_id if stored_graph["mode"] == "delta" else None,
                     "trigger_event": snapshot.trigger_event,
-                    "graph_summary": json.dumps(summary),
-                    "created_at": snapshot.observed_to.replace(tzinfo=None),
+                    "graph_summary": json.dumps(stored_graph),
+                    "created_at": snapshot.observed_to,
                 },
             )
+            self.projection.apply(connection, summary=summary, native=snapshot.model_dump(mode="json"))
+        self.write_count += 1
+        self.previous_summary = summary
+        self.previous_snapshot_id = snapshot.snapshot_id

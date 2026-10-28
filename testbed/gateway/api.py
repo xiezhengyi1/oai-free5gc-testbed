@@ -20,6 +20,8 @@ from testbed.gateway.contracts import (
     SliceResourceAction,
 )
 from testbed.gateway.executor import ActionExecutor
+from testbed.gateway.ue_policy import AMAction, URSPAction
+from testbed.gateway.subscription_authorization import AuthorizationAction, authorization_digest, FIELDS
 from testbed.scenario.loader import load_scenario
 from testbed.scenario.schema import StrictModel
 from testbed.state.lock_store import TargetLock
@@ -65,7 +67,7 @@ def _api_keys() -> dict[str, str]:
     return parsed
 
 
-def principal(x_api_key: Annotated[str, Header(alias="X-API-Key")]) -> str:
+def principal(x_api_key: Annotated[str, Header()]) -> str:
     matches = [name for name, key in _api_keys().items() if key == x_api_key]
     if len(matches) != 1:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid API key")
@@ -80,7 +82,10 @@ def _validate_common(
 ) -> None:
     arbiter.authorize(actor, action)
     snapshot = arbiter.validate_snapshot(action.run_id, action.snapshot_id)
-    if isinstance(action, PolicyAction):
+    if isinstance(action, AMAction):
+        if action.target.supi not in {ue.supi for ue in scenario.ues}:
+            raise ValueError("AM policy target is not a declared UE")
+    elif isinstance(action, (PolicyAction, URSPAction)):
         arbiter.validate_policy_target(action, snapshot)
     elif isinstance(action, (SliceLifecycleAction, SliceResourceAction)):
         arbiter.validate_slice_target(action.target.slice_id)
@@ -105,10 +110,10 @@ def _dispatch_control(operation: str) -> ControlDispatch:
         "-v",
         f"{host_run_dir}:{host_run_dir}",
         "-e",
-        f"MULTIAGENTS_DATABASE_URL={os.environ['MULTIAGENTS_DATABASE_URL']}",
+        "MULTIAGENTS_DATABASE_URL",
         "-e",
-        f"ACTION_GATEWAY_API_KEYS={os.environ['ACTION_GATEWAY_API_KEYS']}",
-        "oai-free5gc-testbed/control:0.1.0",
+        "ACTION_GATEWAY_API_KEYS",
+        inspected["Config"]["Image"],
         "python",
         "-m",
         "testbed.gateway.control_worker",
@@ -136,6 +141,13 @@ async def lock_conflict(_request: object, error: FileExistsError):
     from fastapi.responses import JSONResponse
 
     return JSONResponse(status_code=409, content={"detail": str(error)})
+
+
+@app.exception_handler(ValueError)
+async def invalid_action(_request: object, error: ValueError):
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(status_code=422, content={"detail": str(error)})
 
 
 @app.get("/health")
@@ -178,6 +190,10 @@ def slice_status(slice_id: str, _actor: Annotated[str, Depends(principal)]) -> S
 
 @app.post("/v1/runs/{run_id}/reset", status_code=202)
 def reset(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispatch:
+    if "UE_POLICY_ADMIN_TOKEN" in os.environ:
+        raise HTTPException(
+            status_code=409, detail="NAS profile requires explicit isolated Compose lifecycle"
+        )
     if actor != "project":
         raise HTTPException(status_code=403, detail="reset requires the project principal")
     if run_id != active_run_id:
@@ -195,11 +211,48 @@ def stop(run_id: str, actor: Annotated[str, Depends(principal)]) -> ControlDispa
 
 
 @app.post("/v1/actions/policy", response_model=ActionReceipt)
-def policy(action: PolicyAction, actor: Annotated[str, Depends(principal)]) -> ActionReceipt:
+def policy(
+    action: Annotated[PolicyAction | AMAction | URSPAction, Field(discriminator="action_type")],
+    actor: Annotated[str, Depends(principal)],
+) -> ActionReceipt:
     _validate_common(action, actor)
-    target = f"path:{action.target.supi}:{action.target.flow_id}"
+    target = f"policy:{action.target.supi}"
+    if (run_dir / "ue-policy/dynamic-pdu.json").exists():
+        target = "dynamic-policy"
     with TargetLock(run_dir / "locks", target):
+        if isinstance(action, (AMAction, URSPAction)):
+            return executor.standard_policy(action)
         return executor.policy(action)
+
+
+@app.get("/v1/ue-policies/{supi}")
+def ue_policy(supi: str, _actor: Annotated[str, Depends(principal)]):
+    if supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    return executor.pcf.ue_policy(supi)
+
+
+@app.get("/v1/subscription-authorizations/{supi}")
+def subscription_authorization(supi: str, actor: Annotated[str, Depends(principal)]):
+    if actor != "project":
+        raise HTTPException(status_code=403, detail="subscription provisioning requires the project principal")
+    if supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    subscriber = executor.subscribers.get(supi, scenario.plmn.mcc + scenario.plmn.mnc)
+    return {"supi": supi, "digest": authorization_digest(subscriber),
+            "subscription": {field: subscriber[field] for field in FIELDS}}
+
+
+@app.post("/v1/actions/subscription-authorization", response_model=ActionReceipt)
+def update_subscription_authorization(action: AuthorizationAction, actor: Annotated[str, Depends(principal)]):
+    if actor != "project":
+        raise HTTPException(status_code=403, detail="subscription provisioning requires the project principal")
+    arbiter.validate_snapshot(action.run_id, action.snapshot_id)
+    if action.target.supi not in {ue.supi for ue in scenario.ues}:
+        raise HTTPException(status_code=404, detail="unknown SUPI")
+    target = "dynamic-policy" if (run_dir / "ue-policy/dynamic-pdu.json").exists() else f"policy:{action.target.supi}"
+    with TargetLock(run_dir / "locks", target):
+        return executor.standard_policy(action)
 
 
 @app.post("/v1/actions/resource", response_model=ActionReceipt)

@@ -1,3 +1,9 @@
+OAI 基础源码已找回、重新构建并通过真实 URSP/RFSP/QoS 闭环及恢复验收。HTTP 服务端等待问题已修复，当前运行 `http-nodelay-20261028-1`，原 20 ms HTTP 时延项通过。见 [HTTP 修复验收](docs/http-latency-validation-20261028.md)、[协议验收](docs/oai-acceptance-20261028.md) 和 [构建记录](docs/oai-rebuild-20261028.md)。
+
+完整 OAI 源码随仓库保存于 [sources/openairinterface5g](sources/README.md)，共 4,325 个文件；逐文件哈希和恢复来源见 [源码清单](sources/oai-source-manifest.json)。
+
+> 2026-10-28 恢复部署：当前入口为服务器 `/home/xzy/MergedSystem/TestBed`，使用私有主机环境和固定镜像。运行说明及验收见 [恢复记录](docs/recovery-20261028.md)。下文旧机器路径保留为历史说明。
+
 # OAI + free5GC 融合仿真环境
 
 本项目在一台 Linux 服务器上使用 Docker Compose 组织 OAI gNB、OAI nrUE、free5GC、边缘/云应用、链路仿真和监控组件。项目把严格校验的 YAML 场景编译为独立运行目录，再按固定顺序完成核心网、RAN、UE、业务流和监控系统的启动。

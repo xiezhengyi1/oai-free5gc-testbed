@@ -1,8 +1,8 @@
 schema_version: "1.0"
 scenario_id: s2-original-live
 sources:
-  oai: /home/yyx/6gcore/openairinterface5g
-  free5gc_compose: /home/yyx/6gcore/free5gc-compose-v4.1.0-testbed
+  oai: /home/yinyuexi/xiezhengyi/openairinterface5g
+  free5gc_compose: /home/yinyuexi/xiezhengyi/free5gc-compose-v4.1.0-testbed
 versions: {oai: "2026.w35", free5gc_compose: v4.1.0, gtp5g: v0.9.5}
 networks:
   sbi-net: {cidr: 172.30.0.0/24, bridge_name: tb-sbi}
@@ -176,6 +176,6 @@ resources:
     drone-control-app: {cpus: 0.5, memory_mb: 512}
     video-4k-app: {cpus: 0.5, memory_mb: 512}
     cloud-render-app: {cpus: 0.5, memory_mb: 512}
-observability: {scrape_interval_seconds: 2, snapshot_interval_seconds: 5, snapshot_window_seconds: 10, prometheus: true, cadvisor: true, grafana: true, traffic_exporter: true, ran_exporter: true}
+observability: {scrape_interval_seconds: 10, snapshot_interval_seconds: 15, snapshot_window_seconds: 30, prometheus: true, cadvisor: true, grafana: true, traffic_exporter: true, ran_exporter: true}
 runtime: {startup_timeout_seconds: 600, readiness_poll_seconds: 2, action_timeout_seconds: 90}
 integrations: {multiagents_database_url_env: MULTIAGENTS_DATABASE_URL, action_gateway_api_keys_env: ACTION_GATEWAY_API_KEYS}

@@ -1,0 +1,90 @@
+--- a/openair2/RRC/NR/MESSAGES/asn1_msg.c
++++ b/openair2/RRC/NR/MESSAGES/asn1_msg.c
+@@ -518,7 +518,7 @@
+ 
+   // radioBearerConfig
+   if ((params->srb_config_list && params->srb_config_list->list.size)
+-      || (params->drb_config_list && params->drb_config_list->list.size)) {
++      || (params->drb_config_list && params->drb_config_list->list.size) || params->n_drb_rel) {
+     ie->radioBearerConfig = calloc_or_fail(1, sizeof(*ie->radioBearerConfig));
+     struct NR_RadioBearerConfig *cfg = ie->radioBearerConfig;
+     cfg->srb_ToAddModList = params->srb_config_list;
+--- a/openair2/RRC/NR/rrc_gNB_radio_bearers.c
++++ b/openair2/RRC/NR/rrc_gNB_radio_bearers.c
+@@ -239,6 +239,7 @@
+ 
+ /** @brief Remove DRB by ID from list
+  *  @return true if a DRB was removed, false if not found */
++void nr_rrc_note_removed_drb(seq_arr_t *key,int id);
+ bool nr_rrc_remove_drb_by_id(seq_arr_t *drb_ptr, const int drb_id)
+ {
+   DevAssert(drb_ptr);
+@@ -248,6 +249,7 @@
+     return false;
+   }
+ 
++  nr_rrc_note_removed_drb(drb_ptr,drb_id);
+   nr_rrc_rm_drb(drb_ptr, drb);
+   return true;
+ }
+--- a/openair2/RRC/NR/rrc_gNB.c
++++ b/openair2/RRC/NR/rrc_gNB.c
+@@ -888,6 +888,42 @@
+ }
+ 
+ /** @brief Prepare the instance of RRCReconfigurationParams to be pass to RRC encoding */
++
++/* Capture exact removed DRB IDs before CU bookkeeping disappears. RRC task
++ * carries them into the next radioBearerConfig; no UE/DRB ABI is changed. */
++#include <pthread.h>
++#define RELEASE_SLOTS 1024
++static struct {seq_arr_t *key; bool ids[MAX_DRBS_PER_UE+1];} pending_drbs[RELEASE_SLOTS];
++static pthread_mutex_t pending_drb_lock=PTHREAD_MUTEX_INITIALIZER;
++void nr_rrc_note_removed_drb(seq_arr_t *key,int id) {
++  DevAssert(id>0 && id<=MAX_DRBS_PER_UE);
++  pthread_mutex_lock(&pending_drb_lock);
++  int slot=-1;
++  for(int i=0;i<RELEASE_SLOTS;i++) if(pending_drbs[i].key==key){slot=i;break;}
++  if(slot<0)for(int i=0;i<RELEASE_SLOTS;i++)if(!pending_drbs[i].key){slot=i;pending_drbs[i].key=key;break;}
++  AssertFatal(slot>=0,"Pending DRB release table exhausted\n");pending_drbs[slot].ids[id]=true;
++  pthread_mutex_unlock(&pending_drb_lock);
++}
++void nr_rrc_forget_removed_drbs(seq_arr_t *key) {
++  pthread_mutex_lock(&pending_drb_lock);
++  for(int i=0;i<RELEASE_SLOTS;i++)if(pending_drbs[i].key==key){memset(&pending_drbs[i],0,sizeof(pending_drbs[i]));break;}
++  pthread_mutex_unlock(&pending_drb_lock);
++}
++static void collect_pending_drb_releases(nr_rrc_reconfig_param_t *params,gNB_RRC_UE_t *UE) {
++  bool ids[MAX_DRBS_PER_UE+1]={0};
++  pthread_mutex_lock(&pending_drb_lock);
++  for(int i=0;i<RELEASE_SLOTS;i++)if(pending_drbs[i].key==&UE->drbs){memcpy(ids,pending_drbs[i].ids,sizeof(ids));memset(&pending_drbs[i],0,sizeof(pending_drbs[i]));break;}
++  pthread_mutex_unlock(&pending_drb_lock);
++  for(int id=1;id<=MAX_DRBS_PER_UE;id++)if(ids[id]) {
++    bool listed=false,active=false;
++    for(int j=0;j<params->n_drb_rel;j++)if(params->drb_rel[j]==id)listed=true;
++    FOR_EACH_SEQ_ARR(drb_t *,drb,&UE->drbs)if(drb->drb_id==id)active=true;
++    if(listed||active)continue;
++    AssertFatal(params->n_drb_rel<MAX_DRBS_PER_UE,"DRB release list overflow\n");
++    if(!params->drb_rel)params->drb_rel=calloc_or_fail(MAX_DRBS_PER_UE,sizeof(int));
++    params->drb_rel[params->n_drb_rel++]=id;
++  }
++}
+ nr_rrc_reconfig_param_t get_RRCReconfiguration_params(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE, uint8_t srb_reest_bitmap, bool drb_reestablish)
+ {
+   uint8_t xid = rrc_gNB_get_next_transaction_identifier(rrc->module_id);
+@@ -941,6 +977,7 @@
+     LOG_D(NR_RRC, "Transfer NAS info with size %ld to RRCReconfiguration params\n", UE->nas_pdu.len);
+   }
+ 
++  collect_pending_drb_releases(&params,UE);
+   return params;
+ }
+ 
+@@ -2812,6 +2849,7 @@
+   free(UE->redcap_cap);
+   UE->redcap_cap = NULL;
+   seq_arr_free(&UE->pduSessions, free_pdusession);
++  nr_rrc_forget_removed_drbs(&UE->drbs);
+   seq_arr_free(&UE->drbs, free_drb);
+   seq_arr_free(&UE->serving_cells, NULL);
+ }

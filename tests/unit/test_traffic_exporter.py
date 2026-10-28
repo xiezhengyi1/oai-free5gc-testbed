@@ -3,15 +3,18 @@ from __future__ import annotations
 import io
 import socket
 import subprocess
+import sys
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from testbed.traffic.commands import traffic_command
+from testbed.traffic.app_server import TcpSinkHandler, TcpSinkServer
 from testbed.traffic.exporter import (
     BoundHTTPConnection,
-    _parse_iperf_interval,
     _ping_worker,
+    _tcp_worker,
 )
 from testbed.traffic.profiles import TrafficProfile
 
@@ -69,38 +72,50 @@ def test_ping_worker_terminates_process_when_stop_is_set(
     assert process.terminated is True
 
 
-def test_bookworm_iperf_interval_is_parsed_without_json_stream() -> None:
-    line = "[  5]   1.00-2.00   sec  5.96 MBytes  50.0 Mbits/sec    2   1.25 MBytes"
+@pytest.mark.skipif(sys.platform != "linux", reason="SO_BINDTODEVICE requires Linux")
+def test_tcp_sink_accepts_concurrent_flow_workers() -> None:
+    server = TcpSinkServer(("127.0.0.1", 0), TcpSinkHandler)
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.start()
+    port = server.server_address[1]
+    stop = threading.Event()
 
-    assert _parse_iperf_interval(line) == (1.0, 50.0, 2.0)
+    def profile(flow_id: str) -> TrafficProfile:
+        return TrafficProfile.model_validate(
+            {
+                "flow_id": flow_id,
+                "ue_id": flow_id,
+                "supi": f"imsi-{flow_id}",
+                "session_id": "session-1",
+                "interface": "lo",
+                "service_instance_id": "service-1",
+                "five_tuple": {
+                    "source_ip": "127.0.0.1",
+                    "source_port": 0,
+                    "destination_ip": "127.0.0.1",
+                    "destination_port": port,
+                    "protocol": "tcp",
+                },
+                "rate_mbps": 1,
+                "packet_size_bytes": 1200,
+                "sla": {"latency_ms": 20},
+            }
+        )
 
-
-def test_traffic_command_uses_supported_streaming_text_output() -> None:
-    profile = TrafficProfile.model_validate(
-        {
-            "flow_id": "flow-1",
-            "ue_id": "ue-1",
-            "supi": "imsi-208930000000001",
-            "session_id": "session-1",
-            "interface": "oaitun_ue1",
-            "service_instance_id": "service-1",
-            "five_tuple": {
-                "source_ip": "assigned-after-pdu-session",
-                "source_port": 41001,
-                "destination_ip": "172.34.0.100",
-                "destination_port": 5201,
-                "protocol": "tcp",
-            },
-            "rate_mbps": 1,
-            "packet_size_bytes": 1200,
-            "sla": {"latency_ms": 20},
-        }
-    )
-
-    command = traffic_command(profile)
-
-    assert "--json-stream" not in command
-    assert command[command.index("--format") + 1] == "m"
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(_tcp_worker, profile("flow-1"), stop),
+                executor.submit(_tcp_worker, profile("flow-2"), stop),
+            ]
+            time.sleep(0.2)
+            stop.set()
+            for future in futures:
+                future.result(timeout=2)
+    finally:
+        server.shutdown()
+        server.server_close()
+        server_thread.join(timeout=2)
 
 
 def test_bound_http_connection_reuses_declared_source_port(
@@ -113,6 +128,9 @@ def test_bound_http_connection_reuses_declared_source_port(
         def settimeout(self, _timeout: float) -> None:
             return
 
+        def dup(self):
+            return FakeSocket()
+
         def setsockopt(self, level: int, option: int, value: object) -> None:
             self.options.append((level, option, value))
 
@@ -123,6 +141,7 @@ def test_bound_http_connection_reuses_declared_source_port(
             return
 
     created = FakeSocket()
+    monkeypatch.setattr(socket, "SO_BINDTODEVICE", 25, raising=False)
     monkeypatch.setattr(socket, "socket", lambda *_args: created)
     profile = TrafficProfile.model_validate(
         {

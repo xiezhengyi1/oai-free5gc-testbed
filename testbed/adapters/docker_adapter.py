@@ -60,6 +60,14 @@ class DockerAdapter:
             raise ValueError("compose_up requires at least one explicit service")
         self._run(self._compose_command("up", "-d", "--no-build", *services), timeout_seconds=300)
 
+    def compose_run(self, service: str, command: list[str]) -> str:
+        return self._run(
+            self._compose_command(
+                "run", "--rm", "--no-deps", "--entrypoint", command[0], service, *command[1:]
+            ),
+            timeout_seconds=300,
+        )
+
     def compose_create(self, services: list[str]) -> None:
         if not services:
             raise ValueError("compose_create requires at least one explicit service")
@@ -103,9 +111,20 @@ class DockerAdapter:
     def container_running(self, container: str) -> bool:
         return self.inspect(container)["State"]["Running"] is True
 
-    def container_logs(self, container: str, *, tail: int | str = 5000) -> str:
+    def container_logs(
+        self, container: str, *, tail: int | str = 5000, since: str | None = None,
+        timestamps: bool = False,
+    ) -> str:
         return self._run(
-            ["docker", "logs", "--tail", str(tail), container],
+            [
+                "docker",
+                "logs",
+                *(["--timestamps"] if timestamps else []),
+                "--tail",
+                str(tail),
+                *(["--since", since] if since else []),
+                container,
+            ],
             timeout_seconds=60,
             merge_stderr=True,
         )

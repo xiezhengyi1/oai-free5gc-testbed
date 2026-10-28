@@ -1,0 +1,434 @@
+{
+  "verified_at": "2026-10-08T11:40:30.456801+00:00",
+  "host": "ibn3090",
+  "ssh": "xzy@10.112.50.129",
+  "workspace": "/data/disk1/workspace/xzy/testbed",
+  "am": {
+    "cases_passed": 7,
+    "completed_handovers": 4,
+    "blocked_cases": 2,
+    "already_on_target_cases": 1,
+    "evidence": "/data/disk1/workspace/xzy/testbed/experiments/am-rfsp-20261008/run/evidence/20261008T111808Z-suite",
+    "scope": "RFsim connected-mode inter-DU handover within n78",
+    "sla_verified": false
+  },
+  "full_scenario": {
+    "run_id": "ibn3090-s2-20261008",
+    "phase": "RUNNING",
+    "running_services": 46,
+    "gnbs": 3,
+    "ues": 6,
+    "sessions": 11,
+    "flows": 11,
+    "slices": 3,
+    "baseline_restored": true,
+    "reset_generation": 1,
+    "latest_snapshot_id": "snapshot-22492f72f1391aa1c647"
+  },
+  "cross_host_read": {
+    "verified": true,
+    "run_id": "ibn3090-s2-20261008",
+    "snapshot_id": "snapshot-ead462b30511207342b7",
+    "age_seconds": 9.105531,
+    "flows": 11,
+    "ues": 6,
+    "gnbs": 3,
+    "slices": 3,
+    "sessions": 11,
+    "subscribers_read": 6,
+    "stage": "restored",
+    "traffic": [
+      {
+        "flow_id": "remote-drive-video-1",
+        "packets_received": 101464.0,
+        "throughput_ul": 3.8013050306285674,
+        "throughput_dl": 3.793316401721454
+      },
+      {
+        "flow_id": "factory-robot-video-1",
+        "packets_received": 100904.0,
+        "throughput_ul": 3.800011404000868,
+        "throughput_dl": 3.7963963208764073
+      },
+      {
+        "flow_id": "iot-sensor-telemetry-1",
+        "packets_received": 1058.0,
+        "throughput_ul": 0.1898931113579572,
+        "throughput_dl": 0.0
+      },
+      {
+        "flow_id": "ar-gaming-control-1",
+        "packets_received": 26729.0,
+        "throughput_ul": 0.25022430965591486,
+        "throughput_dl": 0.249681380887593
+      },
+      {
+        "flow_id": "ar-gaming-video-2",
+        "packets_received": 3056.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.14682630209660127
+      },
+      {
+        "flow_id": "telemedicine-video-1",
+        "packets_received": 101159.0,
+        "throughput_ul": 3.799324414369056,
+        "throughput_dl": 3.7847992040688627
+      },
+      {
+        "flow_id": "web-browse-session-1",
+        "packets_received": 3027.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.14267715546853704
+      },
+      {
+        "flow_id": "video-4k-stream-1",
+        "packets_received": 2919.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.14019011430449604
+      },
+      {
+        "flow_id": "video-4k-control-2",
+        "packets_received": 21186.0,
+        "throughput_ul": 0.1998069633256806,
+        "throughput_dl": 0.1992656940736689
+      },
+      {
+        "flow_id": "cloud-render-stream-1",
+        "packets_received": 2771.0,
+        "throughput_ul": 0.0,
+        "throughput_dl": 0.1308461717925227
+      },
+      {
+        "flow_id": "cloud-render-telemetry-2",
+        "packets_received": 1061.0,
+        "throughput_ul": 0.09746413706727906,
+        "throughput_dl": 0.0
+      }
+    ],
+    "sla_verified": false
+  },
+  "cross_host_sm": {
+    "action_id": "action-63a6a9083d63302a3780",
+    "status": "verified",
+    "scope": "pcf_policy_readback_and_flow_correlation",
+    "data_plane_verified": false
+  },
+  "file_organization": {
+    "relocated_items": 100,
+    "home_migration_files_remaining": 0,
+    "index": "/data/disk1/workspace/xzy/testbed/README.md",
+    "move_record": "/data/disk1/workspace/xzy/testbed/logs/migration/file-layout-moves.json"
+  },
+  "build": {
+    "host": "ibn3090",
+    "source_commit": "56ffb40e275ba584a3032b926203c4ec03890497",
+    "source_diff_sha256": "4e01df0f17b26d6f48b2ad64f7201fd70df42364526744311a4d818b7d3305f4",
+    "build_flags": {
+      "AVX512": false,
+      "AVX2": true,
+      "compiler": "gcc-12"
+    },
+    "base_image_manifest_digests": {
+      "oaisoftwarealliance/oai-gnb:2026.w35-uepolicy": "sha256:a825a0b98fe48049a6ed3a1eba533a0185e95c8ee19ba62a784a11dbd3c19fcf",
+      "oaisoftwarealliance/oai-nr-ue:2026.w35-uepolicy": "sha256:7b38e04e9903b1192539e1c1e4bc316ec42d896339eccb67027cd429d17e748e"
+    },
+    "binaries_sha256": {
+      "nr-softmodem": "54268892770d78a9e5cb46784c895efa7ccaa44131852eed3ea8465e50893860",
+      "nr-uesoftmodem": "482b7bb27fdac7ad4506a6c82358c968d541a82d712e154f5b6fd15ee141ed86",
+      "libparams_libconfig.so": "a5ecd48ae9a931afa7f260ccb2218e62b189a0a21df7ea691b18bff468f2a333",
+      "libdfts.so": "e8626a345e83a3d5d381728852f6fb096cba6b35358f04301f66f660e14b0a08",
+      "libcoding.so": "c24a6470c28c26c1d0c7babbf18990b951ad6de070aa6abb95e283fbc1dd1267",
+      "libldpc.so": "9cee031258c42e2fab061fd22d4aa206f369d6ca9866345fefffb7282b5ed3c7",
+      "libldpc_orig.so": "270db08b4661207688586f27f809cdc1ace46988590caeb4a6fe471a6316a26d",
+      "librfsimulator.so": "19f93ed6489d0f506f84ddd1e082e93825f889dd14ab7a43dc73deb865b1c4e4"
+    },
+    "images": {
+      "oai-free5gc-testbed/oai-gnb:20261008-avx2": "sha256:d7209241ac0083ed17c19ea49057c57c6ce388b968cbb88fc8c39f7205316718",
+      "oai-free5gc-testbed/oai-nr-ue:20261008-avx2": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92"
+    }
+  },
+  "installation_archives_sha256": {
+    "sources.tar.gz": "186e2a5043f524af7add6b0cc0732e0b25276ca5d33c50d83b68563914715f37",
+    "python-runtime.tar.gz": "ee3c00ceabdddb4a019a3ffadc92bf29e8122d33185c6b109585e188c5b5752b",
+    "simde.tar.gz": "99afbd08d6d03effa5bfb8daa2a3451eccfd4a0384a519bf3c2889217301ba5d",
+    "asn1c.tar.gz": "6f79b95ac7e8f2cfca3867e32d0d56e71e5634c13a5f4e5edd3e14f351031d50"
+  },
+  "containers": [
+    {
+      "name": "action-gateway",
+      "image": "oai-free5gc-testbed/control:qos-20260927",
+      "image_id": "sha256:32922fcb22318a047f3edbffb2dee5e802d87f183cdbb7ee73b6d15c8031a13f",
+      "status": "running"
+    },
+    {
+      "name": "ar-gaming-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "cadvisor",
+      "image": "gcr.io/cadvisor/cadvisor:v0.57.0",
+      "image_id": "sha256:e75bdb03b74b0b6995f208f166fead2e6e555dde73e44200113bb26f41b1981d",
+      "status": "running"
+    },
+    {
+      "name": "cloud-render-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "drone-control-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "factory-robot-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-amf",
+      "image": "free5gc/amf:v4.1.0-uepolicy",
+      "image_id": "sha256:f1a096415005d6ca19ca58cb610dee16be65864c7c671e7bd17d8dca67bf60cd",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-ausf",
+      "image": "free5gc/ausf:v4.1.0",
+      "image_id": "sha256:eaea2e127af48ba5357b4160c33788c90fff211a7a9fd40800af58c82acc7d04",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-chf",
+      "image": "free5gc/chf:v4.1.0",
+      "image_id": "sha256:0112d44135b7f06365d98efc0bc7d326cc39c8df5522c74c6446d505dd979dca",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-nef",
+      "image": "free5gc/nef:v4.1.0",
+      "image_id": "sha256:95af25ff315f37d415d9457a395a1b2e13aefd5bca0093362252ae8da992d072",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-nrf",
+      "image": "free5gc/nrf:v4.1.0",
+      "image_id": "sha256:c04eb7c8f562b7c8d405a58331b3829e8653ce4d9f95026ff7f124bcb379a5a7",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-nssf",
+      "image": "free5gc/nssf:v4.1.0",
+      "image_id": "sha256:10b31f683b0d043cd192af7a8019f96ff02f12eef52e0c7c12156394edd0869c",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-pcf",
+      "image": "free5gc/pcf:qos-20260927",
+      "image_id": "sha256:e396f7530787162ff0be49ea424761daa90ef4d18139645901faf69a553a944d",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-smf",
+      "image": "free5gc/smf:qos-20260927",
+      "image_id": "sha256:43a500d20d607e889e6fc0d801af3539bf17d7b79750b9c68578e49c68b3852d",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-udm",
+      "image": "free5gc/udm:v4.1.0",
+      "image_id": "sha256:70de1b17deca1bedd8d9b63494dcaa3ce80378a7c360cd68c55409ef9ee0b7b6",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-udr",
+      "image": "free5gc/udr:v4.1.0",
+      "image_id": "sha256:994098d6a290f3f1c8ba4ab45c773f5235147d564277512178e981accac2a74a",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-upf-slice-1",
+      "image": "free5gc/upf:v4.1.0",
+      "image_id": "sha256:2ea1d80253b541972dfb4430989080fb4f93fe6784b1fe6034227cf1a8525587",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-upf-slice-2",
+      "image": "free5gc/upf:v4.1.0",
+      "image_id": "sha256:2ea1d80253b541972dfb4430989080fb4f93fe6784b1fe6034227cf1a8525587",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-upf-slice-3",
+      "image": "free5gc/upf:v4.1.0",
+      "image_id": "sha256:2ea1d80253b541972dfb4430989080fb4f93fe6784b1fe6034227cf1a8525587",
+      "status": "running"
+    },
+    {
+      "name": "free5gc-webui",
+      "image": "free5gc/webui:v4.1.0",
+      "image_id": "sha256:eec2d77d05fed9b20b51648d5853ec35c4af585be215df099540db84913f3f9c",
+      "status": "running"
+    },
+    {
+      "name": "grafana",
+      "image": "grafana/grafana:13.1.0",
+      "image_id": "sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63",
+      "status": "running"
+    },
+    {
+      "name": "iot-sensor-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "mongodb",
+      "image": "mongo:4.4",
+      "image_id": "sha256:4be76f674fc4b27859816811b8baa3c51830eb1dbf4ca81a51e26b79edd662ef",
+      "status": "running"
+    },
+    {
+      "name": "oai-gnb-1",
+      "image": "oai-free5gc-testbed/oai-gnb:20261008-avx2",
+      "image_id": "sha256:d7209241ac0083ed17c19ea49057c57c6ce388b968cbb88fc8c39f7205316718",
+      "status": "running"
+    },
+    {
+      "name": "oai-gnb-2",
+      "image": "oai-free5gc-testbed/oai-gnb:20261008-avx2",
+      "image_id": "sha256:d7209241ac0083ed17c19ea49057c57c6ce388b968cbb88fc8c39f7205316718",
+      "status": "running"
+    },
+    {
+      "name": "oai-gnb-3",
+      "image": "oai-free5gc-testbed/oai-gnb:20261008-avx2",
+      "image_id": "sha256:d7209241ac0083ed17c19ea49057c57c6ce388b968cbb88fc8c39f7205316718",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-1",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-2",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-3",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-4",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-5",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "oai-nrue-6",
+      "image": "oai-free5gc-testbed/oai-nr-ue:20261008-avx2",
+      "image_id": "sha256:88ec015765b1488f3d5b2ae81118a3d479f1db43138ccc2a47b9a9d166f11e92",
+      "status": "running"
+    },
+    {
+      "name": "prometheus",
+      "image": "prom/prometheus:v3.12.0",
+      "image_id": "sha256:69f5241418838263316593f7274a304b095c40bcf22e57272865da91bd60a8ac",
+      "status": "running"
+    },
+    {
+      "name": "ran-exporter",
+      "image": "oai-free5gc-testbed/control:qos-20260927",
+      "image_id": "sha256:32922fcb22318a047f3edbffb2dee5e802d87f183cdbb7ee73b6d15c8031a13f",
+      "status": "running"
+    },
+    {
+      "name": "remote-drive-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "session-tracker",
+      "image": "oai-free5gc-testbed/control:qos-20260927",
+      "image_id": "sha256:32922fcb22318a047f3edbffb2dee5e802d87f183cdbb7ee73b6d15c8031a13f",
+      "status": "running"
+    },
+    {
+      "name": "snapshot-builder",
+      "image": "oai-free5gc-testbed/control:qos-20260927",
+      "image_id": "sha256:32922fcb22318a047f3edbffb2dee5e802d87f183cdbb7ee73b6d15c8031a13f",
+      "status": "running"
+    },
+    {
+      "name": "telemedicine-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-1",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-2",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-3",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-4",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-5",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "traffic-sidecar-ue-6",
+      "image": "oai-free5gc-testbed/traffic-sidecar:uepolicy",
+      "image_id": "sha256:918237024475b6be13998cb7692236d2f3e05740f4c7c869578776a61412f231",
+      "status": "running"
+    },
+    {
+      "name": "video-4k-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    },
+    {
+      "name": "web-browse-app",
+      "image": "oai-free5gc-testbed/app:0.1.0",
+      "image_id": "sha256:5f8f06a770674ee2845cb85b11386e0669887a07bfdb58a4db1ab772ef73463b",
+      "status": "running"
+    }
+  ]
+}

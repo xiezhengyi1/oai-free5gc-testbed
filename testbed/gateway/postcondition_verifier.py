@@ -15,9 +15,9 @@ def verify_policy(action: PolicyAction, snapshot: UnifiedSnapshot) -> dict[str, 
     session = flow["session"]
     ran = flow["ran"]
     observed = {
-        "five_qi": session["five_qi"],
-        "qfi": session["qfi"],
-        "drb_id": ran["drb_id"],
+        "five_qi": session.get("five_qi"),
+        "qfi": session.get("qfi"),
+        "drb_id": ran.get("drb_id"),
     }
     if observed["five_qi"] != action.parameters.five_qi:
         raise RuntimeError(
@@ -26,6 +26,15 @@ def verify_policy(action: PolicyAction, snapshot: UnifiedSnapshot) -> dict[str, 
         )
     if observed["qfi"] is None or observed["drb_id"] is None:
         raise RuntimeError("policy postcondition is missing QFI or DRB evidence")
+    active = session.get("active_sm_qos")
+    if active is None:
+        raise RuntimeError("policy postcondition is missing live PCF QoS readback")
+    for name, expected in action.parameters.model_dump().items():
+        if active[name] != expected:
+            raise RuntimeError(f"policy readback mismatch for {name}: expected {expected}, observed {active[name]}")
+    observed["active_sm_qos"] = active
+    observed["verification_scope"] = "pcf_policy_readback_and_flow_correlation"
+    observed["data_plane_verified"] = False
     return observed
 
 

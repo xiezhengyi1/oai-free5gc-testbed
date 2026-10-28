@@ -9,3 +9,12 @@ htmlcov/
 artifacts/runs/*
 !artifacts/runs/.gitkeep
 
+
+configs/hosts/*.env
+logs/
+scenarios/validation/ibn3090-*.yaml
+/experiments/oai-rebuild-*/
+/experiments/oai-acceptance-*/
+/experiments/http-nodelay-*/
+/sources/openairinterface5g/.cpm/
+/sources/openairinterface5g/openair2/E2AP/flexric/

@@ -22,6 +22,7 @@ class SubscriberAdapter:
         observed = self.get(ue_id, plmn_id)
         for field in (
             "AuthenticationSubscription",
+            "AccessAndMobilitySubscriptionData",
             "SessionManagementSubscriptionData",
             "SmfSelectionSubscriptionData",
             "SmPolicyData",

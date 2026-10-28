@@ -9,15 +9,17 @@ import struct
 import subprocess
 import threading
 import time
+import errno
 from collections import deque
 from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
-from http.client import HTTPConnection
+from http.client import HTTPConnection, IncompleteRead
 from pathlib import Path
 
 from prometheus_client import Counter, Gauge, start_http_server
 
-from testbed.traffic.commands import ping_command, traffic_command
+from testbed.traffic.commands import ping_command
 from testbed.traffic.profiles import TrafficProfile, load_profiles
+from testbed.traffic.ue_policy import publish_route, query_ue_route
 
 LABELS = ("flow_id", "supi", "ue_id", "protocol", "service_instance_id")
 RUNNING = Gauge("testbed_flow_running", "Whether the traffic process is running", LABELS)
@@ -110,12 +112,6 @@ COMPAT_UDP_PARALLEL = Gauge(
 )
 
 PING_PATTERN = re.compile(r"icmp_seq=(\d+).*time=([0-9.]+)\s*ms")
-IPERF_INTERVAL_PATTERN = re.compile(
-    r"\[\s*\d+\]\s+([0-9.]+)-([0-9.]+)\s+sec\s+"
-    r"[0-9.]+\s+\S+Bytes\s+([0-9.]+)\s+Mbits/sec(?:\s+(\d+))?"
-)
-
-
 class BoundHTTPConnection(HTTPConnection):
     def __init__(self, profile: TrafficProfile) -> None:
         super().__init__(
@@ -125,9 +121,15 @@ class BoundHTTPConnection(HTTPConnection):
         )
         self.interface = profile.interface
         self.source_port = profile.five_tuple.source_port
+        self.transport = None
 
     def connect(self) -> None:
+        if self.transport is not None:
+            self.interrupt()
+            self.transport.close()
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.transport = connection.dup()
+        self.sock = connection
         connection.settimeout(self.timeout)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.setsockopt(
@@ -136,6 +138,25 @@ class BoundHTTPConnection(HTTPConnection):
         connection.bind(("", self.source_port))
         connection.connect((self.host, self.port))
         self.sock = connection
+
+    def interrupt(self) -> None:
+        # HTTP/1.0 can transfer socket ownership to HTTPResponse before read().
+        transport = self.transport
+        if transport is not None and transport.fileno() != -1:
+            try:
+                transport.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+                transport.shutdown(socket.SHUT_RDWR)
+            except OSError as exc:
+                if exc.errno not in (errno.ENOTCONN, errno.EBADF):
+                    raise
+    def abort(self) -> None:
+        self.interrupt()
+        self.release()
+
+    def release(self) -> None:
+        self.close()
+        if self.transport is not None:
+            self.transport.close()
 
 
 def _labels(profile: TrafficProfile) -> tuple[str, ...]:
@@ -166,67 +187,79 @@ def _initialize_flow_metrics(profile: TrafficProfile) -> None:
     UDP_RECEIVED.labels(*labels)
 
 
-def _parse_iperf_interval(line: str) -> tuple[float, float, float] | None:
-    match = IPERF_INTERVAL_PATTERN.search(line)
-    if match is None:
-        return None
-    started_at, ended_at, throughput_mbps, retransmits = match.groups()
-    return (
-        float(ended_at) - float(started_at),
-        float(throughput_mbps),
-        float(retransmits or 0),
-    )
-
-
-def _traffic_worker(profile: TrafficProfile, stop: threading.Event) -> None:
+def _tcp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     labels = _labels(profile)
-    process = subprocess.Popen(
-        traffic_command(profile),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        bufsize=1,
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection.settimeout(5)
+    connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    connection.setsockopt(
+        socket.SOL_SOCKET,
+        socket.SO_BINDTODEVICE,
+        profile.interface.encode() + b"\0",
     )
+    connection.bind(("", profile.five_tuple.source_port))
+    connection.connect(
+        (
+            profile.five_tuple.destination_ip,
+            profile.five_tuple.destination_port,
+        )
+    )
+    connection.setblocking(False)
+    payload = b"x" * profile.packet_size_bytes
+    interval = profile.timing.packet_interval(profile.packet_size_bytes, profile.rate_mbps)
+    sent_bytes_window = 0
+    last_report = time.monotonic()
+    origin = last_report
+    deadline = profile.timing.next_active(origin, origin)
     RUNNING.labels(*labels).set(1)
     COMPAT_TRAFFIC_RUNNING.set(1)
+    COMPAT_TCP_PARALLEL.set(1)
     try:
-        if process.stdout is None:
-            raise RuntimeError("iperf3 stdout pipe was not created")
-        for line in process.stdout:
+        while not stop.is_set():
+            if stop.wait(max(0, deadline - time.monotonic())):
+                break
+            started = time.monotonic()
+            offset = 0
+            while offset < len(payload) and not stop.is_set():
+                _, writable, _ = select.select([], [connection], [], 0.2)
+                if writable:
+                    try:
+                        written = connection.send(payload[offset:])
+                    except BlockingIOError:
+                        continue
+                    if written == 0:
+                        raise ConnectionError("TCP peer closed while sending")
+                    offset += written
             if stop.is_set():
                 break
-            interval = _parse_iperf_interval(line)
-            if interval is not None:
-                duration, throughput_mbps, retransmits = interval
-                bits_per_second = throughput_mbps * 1_000_000
+            sent_bytes_window += len(payload)
+            COMPAT_TCP_SENT_BYTES.inc(len(payload))
+            now = time.monotonic()
+            elapsed = now - last_report
+            if elapsed >= 1.0:
+                throughput_mbps = sent_bytes_window * 8 / elapsed / 1_000_000
                 THROUGHPUT.labels(*labels).set(throughput_mbps)
                 THROUGHPUT_UL.labels(*labels).set(throughput_mbps)
-                RETRANSMITS.labels(*labels).inc(retransmits)
-                COMPAT_TCP_SENT_BYTES.inc(bits_per_second * duration / 8)
-                COMPAT_TCP_RETRANSMITS.inc(retransmits)
-                COMPAT_TCP_BPS.set(bits_per_second)
-                COMPAT_TCP_INTERVAL_RETRANSMITS.set(retransmits)
-                COMPAT_TCP_PARALLEL.set(1)
+                COMPAT_TCP_BPS.set(throughput_mbps * 1_000_000)
                 COMPAT_TCP_SEQUENCE.inc()
-        if stop.is_set():
-            return
-        return_code = process.wait(timeout=5)
-        if not stop.is_set() and return_code != 0:
-            stderr = process.stderr.read() if process.stderr else ""
-            raise RuntimeError(f"iperf3 failed for {profile.flow_id}: {stderr}")
+                sent_bytes_window = 0
+                last_report = now
+            deadline = profile.timing.next_active(max(started + interval, now), origin)
     finally:
         RUNNING.labels(*labels).set(0)
         COMPAT_TRAFFIC_RUNNING.set(0)
-        if process.poll() is None:
-            process.terminate()
-            process.wait(timeout=5)
+        if stop.is_set():
+            connection.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+        connection.close()
 
 
 def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     labels = _labels(profile)
     header = struct.Struct("!Qd")
     payload = b"x" * (profile.packet_size_bytes - header.size)
-    interval = profile.packet_size_bytes * 8 / (profile.rate_mbps * 1_000_000)
+    if profile.udp_response_bytes is not None:
+        payload = struct.pack("!4sH", b"LCT1", profile.udp_response_bytes) + payload[6:]
+    interval = profile.timing.packet_interval(profile.packet_size_bytes, profile.rate_mbps)
     expiry_seconds = max(1.0, float(profile.sla["latency_ms"]) * 4 / 1000)
     destination = (
         profile.five_tuple.destination_ip,
@@ -250,11 +283,15 @@ def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     sent_bytes_window = 0
     received_window = 0
     lost_window = 0
-    next_send = time.monotonic()
-    last_report = next_send
+    origin = time.monotonic()
+    next_send = profile.timing.next_active(origin, origin)
+    last_report = origin
     RUNNING.labels(*labels).set(1)
     COMPAT_TRAFFIC_RUNNING.set(1)
-    COMPAT_UDP_TARGET_BPS.set(profile.rate_mbps * 1_000_000)
+    COMPAT_UDP_TARGET_BPS.set(
+        profile.timing.scheduled_rate_mbps(profile.packet_size_bytes, profile.rate_mbps)
+        * 1_000_000
+    )
     COMPAT_UDP_LENGTH.set(profile.packet_size_bytes)
     COMPAT_UDP_PARALLEL.set(1)
     try:
@@ -268,12 +305,12 @@ def _udp_worker(profile: TrafficProfile, stop: threading.Event) -> None:
                 pending[sequence] = now
                 sent_order.append((sequence, now))
                 UDP_SENT.labels(*labels).inc()
-                next_send += interval
+                next_send = profile.timing.next_active(max(next_send + interval, now + interval), origin)
 
             timeout = min(max(0.0, next_send - now), 0.05)
             readable, _, _ = select.select([udp_socket], [], [], timeout)
             if readable:
-                response = udp_socket.recv(profile.packet_size_bytes)
+                response = udp_socket.recv(65535)
                 received_at = time.monotonic()
                 received_sequence, sent_at = header.unpack_from(response)
                 if received_sequence in pending:
@@ -338,8 +375,12 @@ def _ping_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     try:
         if process.stdout is None:
             raise RuntimeError("ping stdout pipe was not created")
-        for line in process.stdout:
-            if stop.is_set():
+        while not stop.is_set():
+            ready, _, _ = select.select([process.stdout], [], [], 0.2)
+            if not ready:
+                continue
+            line = process.stdout.readline()
+            if not line:
                 break
             match = PING_PATTERN.search(line)
             if match:
@@ -381,20 +422,46 @@ def _ping_worker(profile: TrafficProfile, stop: threading.Event) -> None:
 
 def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
     labels = _labels(profile)
-    interval = profile.packet_size_bytes * 8 / (profile.rate_mbps * 1_000_000)
+    interval = profile.timing.packet_interval(profile.packet_size_bytes, profile.rate_mbps)
     RUNNING.labels(*labels).set(1)
     COMPAT_TRAFFIC_RUNNING.set(1)
     connection = BoundHTTPConnection(profile)
+    finished = threading.Event()
+    def cancel_on_stop():
+        while not finished.wait(0.05):
+            if stop.is_set():
+                connection.interrupt()
+                return
+    canceller = threading.Thread(target=cancel_on_stop)
+    canceller.start()
     previous_latency_ms: float | None = None
     jitter_ms = 0.0
     received_bytes_window = 0
     last_report = time.monotonic()
+    origin = last_report
+    deadline = profile.timing.next_active(origin, origin)
     try:
         while not stop.is_set():
+            if stop.wait(max(0, deadline - time.monotonic())):
+                break
             started = time.monotonic()
-            connection.request("GET", f"/payload?bytes={profile.packet_size_bytes}")
-            response = connection.getresponse()
-            body = response.read()
+            try:
+                connection.request("GET", f"/payload?bytes={profile.packet_size_bytes}")
+                with connection.getresponse() as response:
+                    body = response.read()
+            except (OSError, IncompleteRead, ValueError) as exc:
+                connection.abort()
+                RUNNING.labels(*labels).set(0)
+                COMPAT_TRAFFIC_RUNNING.set(0)
+                if stop.is_set():
+                    break
+                if not isinstance(exc, (TimeoutError, ConnectionError, IncompleteRead)):
+                    raise
+                connection = BoundHTTPConnection(profile)
+                deadline = profile.timing.next_active(time.monotonic() + interval, origin)
+                continue
+            RUNNING.labels(*labels).set(1)
+            COMPAT_TRAFFIC_RUNNING.set(1)
             if response.status != 200:
                 raise RuntimeError(f"HTTP flow received status {response.status}")
             elapsed = time.monotonic() - started
@@ -414,11 +481,53 @@ def _http_worker(profile: TrafficProfile, stop: threading.Event) -> None:
                 THROUGHPUT_DL.labels(*labels).set(downlink_mbps)
                 received_bytes_window = 0
                 last_report = now
-            stop.wait(max(0.0, interval - elapsed))
+            deadline = profile.timing.next_active(max(started + interval, now), origin)
     finally:
-        connection.close()
+        finished.set()
+        canceller.join()
+        if stop.is_set():
+            connection.abort()
+        else:
+            connection.release()
         RUNNING.labels(*labels).set(0)
         COMPAT_TRAFFIC_RUNNING.set(0)
+
+
+def _policy_worker(profile: TrafficProfile, stop: threading.Event) -> None:
+    policy_dir = Path(os.environ["OAI_UE_POLICY_DIR"])
+    worker = {"http": _http_worker, "udp": _udp_worker, "tcp": _tcp_worker}[
+        profile.five_tuple.protocol
+    ]
+    current_interface = None
+    local_stop = threading.Event()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = []
+        try:
+            while not stop.is_set():
+                for future in futures:
+                    if future.done():
+                        future.result()
+                        raise RuntimeError(f"flow worker stopped: {profile.flow_id}")
+                route = query_ue_route(profile, policy_dir)
+                interface = route["interface"] if route is not None else None
+                if interface != current_interface:
+                    local_stop.set()
+                    for future in futures:
+                        future.result(timeout=10)
+                    futures = []
+                    current_interface = interface
+                    if route is not None:
+                        effective = profile.model_copy(update={"interface": interface})
+                        local_stop = threading.Event()
+                        futures = [
+                            pool.submit(worker, effective, local_stop),
+                            pool.submit(_ping_worker, effective, local_stop),
+                        ]
+                if route is not None:
+                    publish_route(policy_dir, route)
+                stop.wait(1)
+        finally:
+            local_stop.set()
 
 
 def main() -> None:
@@ -433,12 +542,15 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=len(profiles) * 2) as executor:
         futures = []
         for profile in profiles:
+            if "OAI_UE_POLICY_DIR" in os.environ:
+                futures.append(executor.submit(_policy_worker, profile, stop))
+                continue
             if profile.five_tuple.protocol == "http":
                 worker = _http_worker
             elif profile.five_tuple.protocol == "udp":
                 worker = _udp_worker
             else:
-                worker = _traffic_worker
+                worker = _tcp_worker
             futures.append(executor.submit(worker, profile, stop))
             futures.append(executor.submit(_ping_worker, profile, stop))
         done, _pending = wait(futures, return_when=FIRST_EXCEPTION)

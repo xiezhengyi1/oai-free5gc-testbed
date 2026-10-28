@@ -1,0 +1,64 @@
+{
+  "upstream_commit": "ceccfc8ffa4340d5bdc08a9fc84d2e6ab3f9472c",
+  "recovered_head": "56ffb40e275ba584a3032b926203c4ec03890497",
+  "historical_archive_sha256": "186e2a5043f524af7add6b0cc0732e0b25276ca5d33c50d83b68563914715f37",
+  "patch_sequence": [
+    "recovered-base.patch",
+    "mac-admission.patch",
+    "dci-admission.patch",
+    "drb-release.patch",
+    "recovered-runtime.patch"
+  ],
+  "patch_sha256": {
+    "recovered-base.patch": "257ebf42c0bd681236ffb2d57e8de7eba40cec067272e927fa6c465892338125",
+    "mac-admission.patch": "0de4671032e7a1ef0eb1cf2e1cea22152ee2cd88f7e018c181028623131a33d4",
+    "dci-admission.patch": "e93cb88826192d906e1fcf73e64bdab77a0ece7fb850efcc99f815d99befff18",
+    "drb-release.patch": "8cf86c696cb11f3ecc35b6eb988eebd9ebcce1cd06e9db0684270e84371571c5",
+    "recovered-runtime.patch": "ae17425500c5e135c6e9ef8607a9aa4e8cd34c9b93e9ea3d6c90908ef6312b86"
+  },
+  "base_changes": [
+    "common/utils/system.c",
+    "docker/Dockerfile.build.ubuntu",
+    "gnb-policy.Dockerfile",
+    "openair2/COMMON/ngap_messages_def.h",
+    "openair2/COMMON/ngap_messages_types.h",
+    "openair2/F1AP/f1ap_cu_rrc_message_transfer.c",
+    "openair2/F1AP/f1ap_ids.h",
+    "openair2/GNB_APP/gnb_config.c",
+    "openair2/RRC/NR/nr_rrc_defs.h",
+    "openair2/RRC/NR/rrc_gNB.c",
+    "openair2/RRC/NR/rrc_gNB_mobility.c",
+    "openair2/RRC/NR/rrc_gNB_mobility.h",
+    "openair2/SDAP/nr_sdap/nr_sdap.c",
+    "openair2/SDAP/nr_sdap/nr_sdap.h",
+    "openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c",
+    "openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c",
+    "openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h",
+    "openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c",
+    "openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h",
+    "openair3/NAS/NR_UE/CMakeLists.txt",
+    "openair3/NAS/NR_UE/nr_nas_msg.c",
+    "openair3/NAS/NR_UE/nr_nas_msg.h",
+    "openair3/NAS/NR_UE/test_ue_policy.c",
+    "openair3/NAS/NR_UE/ue_policy.c",
+    "openair3/NAS/NR_UE/ue_policy.h",
+    "openair3/NAS/NR_UE/ue_policy_service.c",
+    "openair3/NAS/NR_UE/ue_policy_service.h",
+    "openair3/NGAP/ngap_gNB_decoder.c",
+    "openair3/NGAP/ngap_gNB_handlers.c",
+    "openair3/NGAP/ngap_gNB_ue_context.h",
+    "ue-policy.Dockerfile"
+  ],
+  "late_runtime_changes": [
+    "openair2/RRC/NR/rrc_gNB.c",
+    "openair2/RRC/NR/rrc_gNB_NGAP.c"
+  ],
+  "replayed_source_files_equal": 4325,
+  "different": [],
+  "excluded": [
+    ".git",
+    ".cpm",
+    "optional flexric submodule"
+  ],
+  "historical_cmake_omission": "HEAD tracked helper files restored; remaining clean upstream helper files retained"
+}

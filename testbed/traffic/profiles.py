@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from testbed.traffic.timing import TrafficTiming
+
 import json
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class FiveTuple(BaseModel):
@@ -17,6 +19,8 @@ class FiveTuple(BaseModel):
 
 
 class TrafficProfile(BaseModel):
+    timing: TrafficTiming = Field(default_factory=TrafficTiming)
+    udp_response_bytes: int | None = Field(default=None, ge=16, le=65507)
     model_config = ConfigDict(extra="forbid", frozen=True)
     flow_id: str
     ue_id: str
@@ -28,6 +32,13 @@ class TrafficProfile(BaseModel):
     rate_mbps: float = Field(gt=0)
     packet_size_bytes: int = Field(gt=0)
     sla: dict[str, Any]
+
+    @model_validator(mode="after")
+    def udp_response_contract(self):
+        if self.udp_response_bytes is not None:
+            if self.five_tuple.protocol != "udp" or self.packet_size_bytes < 22:
+                raise ValueError("UDP response sizing requires UDP and a request of at least 22 bytes")
+        return self
 
 
 def load_profiles(path: Path, ue_id: str) -> list[TrafficProfile]:

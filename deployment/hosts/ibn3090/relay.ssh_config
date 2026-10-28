@@ -1,0 +1,30 @@
+Host testbed-ibn3090
+    HostName 10.112.50.129
+    User xzy
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    LocalForward 127.0.0.1:28181 127.0.0.1:8081
+    LocalForward 127.0.0.1:28180 127.0.0.1:8080
+    LocalForward 127.0.0.1:28500 127.0.0.1:5000
+    LocalForward 127.0.0.1:28800 127.0.0.1:28000
+    RemoteForward 127.0.0.1:15432 127.0.0.1:25432
+    RemoteForward 127.0.0.1:16666 127.0.0.1:7890
+
+Host testbed-yanglab
+    HostName 8.129.108.34
+    User yinyuexi
+    Port 2224
+    RemoteForward 127.0.0.1:28181 127.0.0.1:28181
+    RemoteForward 127.0.0.1:28180 127.0.0.1:28180
+    RemoteForward 127.0.0.1:28500 127.0.0.1:28500
+    RemoteForward 127.0.0.1:28800 127.0.0.1:28800
+    LocalForward 127.0.0.1:25432 127.0.0.1:5432
+
+Host *
+    BatchMode yes
+    ExitOnForwardFailure yes
+    ServerAliveInterval 15
+    ServerAliveCountMax 3
+    ConnectTimeout 15
+    StrictHostKeyChecking yes

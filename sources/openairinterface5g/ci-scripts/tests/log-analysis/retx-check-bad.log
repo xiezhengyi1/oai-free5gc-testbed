@@ -1,0 +1,54 @@
+9185541.336575 [NR_RRC] I UE 1 Logical Channel DL-DCCH, Generate SecurityModeCommand (bytes 3)
+9185541.356794 [NR_RRC] A [UL] (cellID bc614e, UE ID 1 RNTI a491) Received Security Mode Complete
+9185541.357264 [NR_RRC] I UE 1: Logical Channel DL-DCCH, Generate NR UECapabilityEnquiry (bytes 8, xid 2)
+9185541.373199 [NR_RRC] A [UL] (cellID bc614e, UE ID 1 RNTI a491) Received UE capabilities
+9185541.373330 [NR_RRC] I Send message to ngap: NGAP_UE_CAPABILITIES_IND
+9185541.373356 [NR_RRC] A [DL] (cellID bc614e, UE ID 1 RNTI a491) Send DL Information Transfer [53 bytes]
+9185541.373368 [NR_RRC] I Send message to sctp: NGAP_InitialContextSetupResponse
+9185541.390034 [NR_MAC] I Frame.Slot 384.0
+UE RNTI a491 CU-UE-ID 1 in-sync PH 59 dB PCMAX 21 dBm, average RSRP -101 (4 meas)
+UE a491: CQI 2, RI 2, PMI (0,0)
+UE a491: dlsch_rounds 13/1/0/0, dlsch_errors 0, pucch0_DTX 0, BLER 0.11000 MCS (0) 0 CCE fail 0
+UE a491: ulsch_rounds 23/1/0/0, ulsch_errors 0, ulsch_DTX 1, BLER 0.08447 MCS (0) 0 (Qm 2 deltaMCS 0 dB) NPRB 5  SNR 34.0 dB CCE fail 0
+UE a491: MAC:    TX            367 RX           3664 bytes
+UE a491: LCID 1: TX            213 RX           1649 bytes
+
+9185559.310044 [NR_MAC] I Frame.Slot 128.0
+UE RNTI bf9b CU-UE-ID 1 in-sync PH 48 dB PCMAX 21 dBm
+UE bf9b: dlsch_rounds 370/368/368/368, dlsch_errors 368, pucch0_DTX 1377, BLER 1.00000 MCS (0) 0 CCE fail 64
+UE bf9b: ulsch_rounds 150/148/147/147, ulsch_errors 147, ulsch_DTX 589, BLER 1.00000 MCS (0) 0 (Qm 2 deltaMCS 0 dB) NPRB 104  SNR 38.0 dB CCE fail 0
+UE bf9b: MAC:    TX          10145 RX             82 bytes
+UE bf9b: LCID 1: TX           5283 RX             53 bytes
+
+9185582.350069 [NR_MAC] I Frame.Slot 384.0
+UE RNTI 257a CU-UE-ID 2 in-sync PH 48 dB PCMAX 21 dBm, average RSRP -83 (16 meas)
+UE 257a: CQI 15, RI 2, PMI (0,1)
+UE 257a: UL-RI 2, TPMI 0
+UE 257a: dlsch_rounds 153/1/0/0, dlsch_errors 0, pucch0_DTX 0, BLER 0.00000 MCS (1) 0 CCE fail 0
+UE 257a: ulsch_rounds 562/2/1/0, ulsch_errors 0, ulsch_DTX 3, BLER 0.00000 MCS (1) 0 (Qm 2 deltaMCS 0 dB) NPRB 5  SNR 29.5 dB CCE fail 0
+UE 257a: MAC:    TX          13416 RX          26519 bytes
+UE 257a: LCID 1: TX            523 RX           2046 bytes
+UE 257a: LCID 2: TX              0 RX              0 bytes
+UE 257a: LCID 4: TX           9800 RX           9945 bytes
+
+9185687.310202 [NR_MAC] I Frame.Slot 640.0
+UE RNTI 257a CU-UE-ID 2 in-sync PH 61 dB PCMAX 21 dBm, average RSRP -83 (16 meas)
+UE 257a: CQI 15, RI 2, PMI (0,1)
+UE 257a: UL-RI 2, TPMI 0
+UE 257a: dlsch_rounds 64992/129/13/0, dlsch_errors 0, pucch0_DTX 10, BLER 0.00242 MCS (1) 27 CCE fail 0
+UE 257a: ulsch_rounds 39328/2610/8/0, ulsch_errors 0, ulsch_DTX 14, BLER 0.11139 MCS (1) 9 (Qm 4 deltaMCS 0 dB) NPRB 273  SNR 25.5 dB CCE fail 0
+UE 257a: MAC:    TX     3344707955 RX      818603547 bytes
+UE 257a: LCID 1: TX            832 RX           4312 bytes
+UE 257a: LCID 2: TX              0 RX              0 bytes
+UE 257a: LCID 4: TX     3322610250 RX      815642955 bytes
+
+9185692.430254 [NR_MAC] I Frame.Slot 128.0
+UE RNTI 257a CU-UE-ID 2 in-sync PH 48 dB PCMAX 21 dBm, average RSRP -84 (16 meas)
+UE 257a: CQI 15, RI 2, PMI (0,1)
+UE 257a: UL-RI 2, TPMI 0
+UE 257a: dlsch_rounds 68071/142/14/0, dlsch_errors 0, pucch0_DTX 10, BLER 0.00427 MCS (1) 25 CCE fail 0
+UE 257a: ulsch_rounds 41777/2863/10/0, ulsch_errors 0, ulsch_DTX 17, BLER 0.11456 MCS (1) 10 (Qm 4 deltaMCS 0 dB) NPRB 5  SNR 29.0 dB CCE fail 0
+UE 257a: MAC:    TX     3424886787 RX      879242724 bytes
+UE 257a: LCID 1: TX            847 RX           4422 bytes
+UE 257a: LCID 2: TX              0 RX              0 bytes
+UE 257a: LCID 4: TX     3401067134 RX      875911216 bytes

@@ -10,7 +10,9 @@ from testbed.gateway.contracts import (
     SliceLifecycleAction,
     SliceResourceAction,
 )
+from testbed.gateway.ue_policy import AMAction, URSPAction
 from testbed.scenario.schema import Scenario
+from testbed.state.run_store import RunStore
 from testbed.telemetry.models import UnifiedSnapshot
 from testbed.telemetry.snapshot_writer import SnapshotStore
 
@@ -20,10 +22,11 @@ class ActionArbiter:
         self.run_dir = run_dir.resolve(strict=True)
         self.scenario = scenario
         self.run_id = run_id
+        self.runs = RunStore(self.run_dir)
         self.snapshots = SnapshotStore(self.run_dir)
 
     def authorize(self, principal: str, action: object) -> None:
-        if isinstance(action, PolicyAction) and principal != "multiagents":
+        if isinstance(action, (PolicyAction, AMAction, URSPAction)) and principal != "multiagents":
             raise PermissionError("PolicyAction requires the multiagents principal")
         if (
             isinstance(
@@ -40,6 +43,12 @@ class ActionArbiter:
         snapshot = self.snapshots.get(snapshot_id)
         if snapshot.run_id != run_id:
             raise ValueError("snapshot belongs to another run")
+        current_epoch = self.runs.current_baseline_epoch()
+        if snapshot.baseline_epoch != current_epoch:
+            raise ValueError(
+                f"baseline_invalid: snapshot epoch {snapshot.baseline_epoch} "
+                f"does not match current epoch {current_epoch}"
+            )
         age = datetime.now(UTC) - snapshot.observed_to
         if age.total_seconds() > self.scenario.runtime.action_timeout_seconds:
             raise ValueError(f"snapshot is stale: {snapshot_id}")

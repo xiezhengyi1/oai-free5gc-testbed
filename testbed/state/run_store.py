@@ -19,6 +19,10 @@ PHASE_ORDER = (
 )
 
 
+def baseline_epoch(run_id: str, reset_generation: int) -> str:
+    return f"{run_id}:{reset_generation}"
+
+
 class RunStore:
     def __init__(self, run_dir: Path) -> None:
         self.run_dir = run_dir.resolve(strict=True)
@@ -32,6 +36,10 @@ class RunStore:
 
     def current(self) -> RunState:
         return RunState.model_validate_json(self.current_path.read_text(encoding="utf-8"))
+
+    def current_baseline_epoch(self) -> str:
+        state = self.current()
+        return baseline_epoch(state.run_id, state.reset_generation)
 
     def advance(self, phase: RunPhase, evidence: dict[str, Any]) -> RunState:
         current = self.current()
@@ -79,8 +87,10 @@ class RunStore:
 
     def recover(self, evidence: dict[str, Any]) -> RunState:
         current = self.current()
-        if current.phase not in (RunPhase.RUNNING, RunPhase.FAILED):
-            raise ValueError(f"recover requires RUNNING or FAILED phase, observed {current.phase}")
+        if current.phase not in (RunPhase.RUNNING, RunPhase.FAILED, RunPhase.STOPPED):
+            raise ValueError(
+                f"recover requires RUNNING, FAILED, or STOPPED phase, observed {current.phase}"
+            )
         return self._write(
             RunState(
                 run_id=current.run_id,

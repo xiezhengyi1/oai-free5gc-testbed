@@ -1,0 +1,8 @@
+7799905.793901 [NR_MAC] I Frame.Slot 256.0
+UE RNTI f40a CU-UE-ID 2 in-sync PH 48 dB PCMAX 20 dBm, average RSRP -44 (16 meas)
+UE f40a: dlsch_rounds 86/0/0/0, dlsch_errors 0, pucch0_DTX 0, BLER 0.00052 MCS (0) 0 CCE fail 3
+UE f40a: ulsch_rounds 518/0/0/0, ulsch_errors 0, ulsch_DTX 0, BLER 0.00000 MCS (0) 0 (Qm 2 deltaMCS 0 dB) NPRB 5  SNR 51.0 dB CCE fail 0
+UE f40a: MAC:    TX           3836 RX          13684 bytes
+UE f40a: LCID 1: TX            530 RX            281 bytes
+UE f40a: LCID 2: TX              3 RX             35 bytes
+UE f40a: LCID 4: TX           1886 RX           2100 bytes

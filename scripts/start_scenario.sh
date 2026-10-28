@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository_root=/home/yyx/6gcore/oai-free5gc-testbed
+repository_root=/home/yinyuexi/xiezhengyi/oai-free5gc-testbed
 test "$(pwd -P)" = "$repository_root"
 
 scenario_path=${1:?usage: bash scripts/start_scenario.sh SCENARIO_PATH RUN_ID}

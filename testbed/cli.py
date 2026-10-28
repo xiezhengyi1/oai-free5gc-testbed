@@ -17,7 +17,7 @@ from testbed.scenario.loader import load_scenario
 from testbed.state.run_store import RunStore
 from testbed.telemetry.snapshot_writer import SnapshotStore
 
-app = typer.Typer(no_args_is_help=True, pretty_exceptions_show_locals=False)
+app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCENARIO = REPOSITORY_ROOT / "scenarios" / "mvp" / "s1_single_ue_single_upf.yaml"
 
