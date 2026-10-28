@@ -1,0 +1,106 @@
+{
+  "recorded_at": "2026-10-28T09:45:56.606542+00:00",
+  "run_id": "oai-acceptance-20261028-4",
+  "finding": "dominant HTTP tail is split header/body writes interacting with TCP Nagle and delayed ACK; not a 3GPP signalling failure",
+  "loopback": {
+    "original": {
+      "median": {
+        "headers_ms": 0.3065644996240735,
+        "body_wait_ms": 43.766357470303774,
+        "total_ms": 44.06157194171101
+      },
+      "mean": {
+        "headers_ms": 0.32761876718723215,
+        "body_wait_ms": 45.543061882199254,
+        "total_ms": 45.870680649386486
+      }
+    },
+    "server_nodelay": {
+      "median": {
+        "headers_ms": 0.14939001994207501,
+        "body_wait_ms": 0.016845064237713814,
+        "total_ms": 0.16641448019072413
+      },
+      "mean": {
+        "headers_ms": 0.15552948752883822,
+        "body_wait_ms": 0.017071579350158572,
+        "total_ms": 0.1726010668789968
+      }
+    },
+    "client_nodelay": {
+      "median": {
+        "headers_ms": 0.3206899855285883,
+        "body_wait_ms": 43.69840299477801,
+        "total_ms": 44.00286253076047
+      },
+      "mean": {
+        "headers_ms": 0.3254534021834843,
+        "body_wait_ms": 44.79387297760695,
+        "total_ms": 45.11932637979044
+      }
+    },
+    "both_nodelay": {
+      "median": {
+        "headers_ms": 0.16055995365604758,
+        "body_wait_ms": 0.019085011444985867,
+        "total_ms": 0.17965998267754912
+      },
+      "mean": {
+        "headers_ms": 0.16449610484414734,
+        "body_wait_ms": 0.019720617274288088,
+        "total_ms": 0.18421672211843543
+      }
+    }
+  },
+  "live_path": {
+    "original": {
+      "median": {
+        "headers_ms": 6.524718948639929,
+        "body_wait_ms": 48.06757398182526,
+        "total_ms": 54.86463202396408
+      },
+      "mean": {
+        "headers_ms": 6.505467409927708,
+        "body_wait_ms": 48.18439674757732,
+        "total_ms": 54.68986415750502
+      }
+    },
+    "quickack_after_headers": {
+      "median": {
+        "headers_ms": 5.8603244833648205,
+        "body_wait_ms": 5.971849546767771,
+        "total_ms": 11.742838541977108
+      },
+      "mean": {
+        "headers_ms": 6.2100453360471874,
+        "body_wait_ms": 5.9864930566012236,
+        "total_ms": 12.196538392648412
+      }
+    },
+    "original_again": {
+      "median": {
+        "headers_ms": 5.835140007548034,
+        "body_wait_ms": 47.017695440445095,
+        "total_ms": 52.91445454349741
+      },
+      "mean": {
+        "headers_ms": 6.301476969383657,
+        "body_wait_ms": 47.22332374270385,
+        "total_ms": 53.524800712087504
+      }
+    }
+  },
+  "measurement": "client request start through full response body read; not one-way radio latency",
+  "production_runtime_modified": false,
+  "sla_acceptance_replaced": false,
+  "app_cpu_cores": 0.02685224445359854,
+  "samples_per_case": {
+    "loopback": 32,
+    "live_path": 24
+  },
+  "raw_sha256": {
+    "loopback-ab.json": "d152daca080011934ce8692bd8b8fd75060b4920c7e089cb677b42ff58137eba",
+    "live-path-ab.json": "9418d4548387b178e75eaa51b4bac90b1d5c8e551944d903ea5c48aed32a0f50",
+    "observed-before.json": "3bff8d72ca96a73e45e7731f763430d8693ac2bdda270135764166e85bd338f5"
+  }
+}

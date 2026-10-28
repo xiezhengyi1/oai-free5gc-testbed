@@ -8,3 +8,5 @@
 *.j2 text eol=lf
 *.md text eol=lf
 .env.example text eol=lf
+# Recovered OAI inputs must retain their original bytes, including upstream CRLF files.
+sources/openairinterface5g/** -text -eol

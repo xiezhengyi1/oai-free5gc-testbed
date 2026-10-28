@@ -41,6 +41,15 @@ def _maximum_observed(values: list[float | None]) -> float | None:
     return max(observed) if observed else None
 
 
+def _slice_qos(flows: list[dict[str, Any]]) -> dict[str, float | None]:
+    return {
+        "latency": min((flow["sla"]["latency"] for flow in flows), default=None),
+        "processing_delay": 0.0 if flows else None,
+        "jitter": min((flow["sla"]["jitter"] for flow in flows), default=None),
+        "loss_rate": min((flow["sla"]["loss_rate"] for flow in flows), default=None),
+    }
+
+
 def _prb_utilization(values: list[float | None], capacity: float) -> float | None:
     if not values:
         return 0.0
@@ -104,6 +113,29 @@ def _active_sm_qos(policy: dict[str, Any], qos_ref: int) -> dict[str, Any] | Non
         "mbr_dl_mbps": mbps("maxbrDl"),
         "source": "pcf_sm_policy_association_readback",
     }
+
+
+def _flow_session_qos(session: dict[str, Any], policy: dict[str, Any], qos_ref: int) -> dict[str, Any]:
+    """Bind this flow's PCC decision to native QoS evidence, never PDU's last update.
+
+    The current native observation exposes QFI/5QI/DRB, not the SMF's QoS-ID→QFI map.
+    Match only a unique observed 5QI. Ambiguity stays incomplete for callers to resolve.
+    """
+    result = dict(session)
+    active = _active_sm_qos(policy, qos_ref)
+    if active is None:
+        expected = {rule["authDefQos"]["5qi"] for rule in policy.get("sessRules", {}).values()}
+    else:
+        expected = {active["five_qi"]}
+    matches = [row for row in session.get("qos_flows", []) if row["five_qi"] in expected]
+    if len(expected) == 1 and len(matches) == 1 and "correlation_error" not in session:
+        result.update(matches[0])
+    else:
+        for key in ("qfi", "five_qi", "drb_id"):
+            result.pop(key, None)
+        result["correlation_status"] = "incomplete"
+        result["correlation_error"] = "PCC/default QoS has no unique native QFI/DRB binding"
+    return result
 
 
 class SnapshotBuilder:
@@ -352,11 +384,16 @@ class SnapshotBuilder:
                 flow.protocol,
                 flow.service_instance_id,
             )
+            flow_session = session_map.get((ue.supi, flow.session_id))
+            if ue_policies and flow_session is not None:
+                flow_session = _flow_session_qos(
+                    flow_session, policies_by_uri[flow_session["sm_policy_uri"]], qos_ref
+                )
             flows.append(
                 correlate_flow(
                     self.scenario,
                     flow,
-                    session_map.get((ue.supi, flow.session_id)),
+                    flow_session,
                     ran_by_ue[ue.id],
                     telemetry,
                     flow_allocations.get(flow.id),
@@ -399,12 +436,7 @@ class SnapshotBuilder:
                         "current_bandwidth_dl": allocated_dl,
                     },
                     "load_unit": "Mbps",
-                    "qos": {
-                        "latency": min(flow["sla"]["latency"] for flow in declared_flows),
-                        "processing_delay": 0.0,
-                        "jitter": min(flow["sla"]["jitter"] for flow in declared_flows),
-                        "loss_rate": min(flow["sla"]["loss_rate"] for flow in declared_flows),
-                    },
+                    "qos": _slice_qos(declared_flows or state_flows),
                     "qos_source": "declared_flow_sla",
                     "telemetry": {
                         "utilization_ul": (allocated_ul / capacity.total_bandwidth_ul_mbps),

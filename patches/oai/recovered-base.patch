@@ -1,0 +1,2004 @@
+diff --git a/common/utils/system.c b/common/utils/system.c
+index bb0873c..d958f8f 100644
+--- a/common/utils/system.c
++++ b/common/utils/system.c
+@@ -232,6 +232,21 @@ bool has_cap_sys_nice(void)
+ }
+ #endif
+ 
++typedef struct {
++  void *(*func)(void *);
++  void *param;
++  char name[16];
++} named_thread_start_t;
++
++static void *named_thread_start(void *opaque)
++{
++  named_thread_start_t start = *(named_thread_start_t *)opaque;
++  free(opaque);
++  int ret = pthread_setname_np(pthread_self(), start.name);
++  AssertFatal(ret == 0, "Error naming current thread: ret: %d\n", ret);
++  return start.func(start.param);
++}
++
+ void threadCreate(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority)
+ {
+   int ret;
+@@ -272,15 +287,15 @@ void threadCreate(pthread_t* t, void * (*func)(void*), void * param, char* name,
+     AssertFatal(ret == 0, "Error in pthread_attr_setaffinity_np(): ret: %d, errno: %d\n", ret, errno);
+   }
+ 
+-  ret=pthread_create(t, &attr, func, param);
++  named_thread_start_t *start = malloc(sizeof(*start));
++  AssertFatal(start != NULL, "Cannot allocate thread start context\n");
++  start->func = func;
++  start->param = param;
++  strncpy(start->name, name, sizeof(start->name) - 1);
++  start->name[sizeof(start->name) - 1] = '\0';
++  ret=pthread_create(t, &attr, named_thread_start, start);
+   AssertFatal(ret == 0, "Error in pthread_create(): ret: %d, errno: %d\n", ret, errno);
+ 
+-  char short_name[16];
+-  strncpy(short_name, name, sizeof(short_name) - 1);
+-  short_name[sizeof(short_name) - 1] = '\0';
+-  ret = pthread_setname_np(*t, short_name);
+-  AssertFatal(ret == 0, "Error in pthread_setname_np(): ret: %d, errno: %d\n", ret, errno);
+-
+   pthread_attr_destroy(&attr);
+ }
+ 
+diff --git a/docker/Dockerfile.build.ubuntu b/docker/Dockerfile.build.ubuntu
+index 29c1278..e31ad60 100644
+--- a/docker/Dockerfile.build.ubuntu
++++ b/docker/Dockerfile.build.ubuntu
+@@ -9,6 +9,7 @@
+ 
+ FROM ran-base:latest AS ran-build
+ ARG BUILD_OPTION
++ENV CPM_SOURCE_CACHE=/oai-ran/.cpm
+ 
+ ARG E2AP_VERSION=E2AP_V3
+ ARG KPM_VERSION=KPM_V3_00
+@@ -35,7 +36,6 @@ RUN \
+       -w ZMQ \
+       --noavx512 \
+       --build-tool-opt -k10 \
+-      --cmake-opt -DT_RECORD_DB=ON \
+       --cmake-opt -DCMAKE_C_FLAGS="-Werror" --cmake-opt -DCMAKE_CXX_FLAGS="-Werror" $BUILD_OPTION && \
+     # Mainly to see if the sanitize option was perfectly executed
+     echo "---- ldd on executables ----" && \
+diff --git a/gnb-policy.Dockerfile b/gnb-policy.Dockerfile
+new file mode 100644
+index 0000000..3931e05
+--- /dev/null
++++ b/gnb-policy.Dockerfile
+@@ -0,0 +1,2 @@
++FROM oaisoftwarealliance/oai-gnb:2026.w35
++COPY cmake_targets/ue-policy-build/nr-softmodem /opt/oai-gnb/bin/nr-softmodem
+diff --git a/openair2/COMMON/ngap_messages_def.h b/openair2/COMMON/ngap_messages_def.h
+index c467abf..ed6d8d0 100644
+--- a/openair2/COMMON/ngap_messages_def.h
++++ b/openair2/COMMON/ngap_messages_def.h
+@@ -57,6 +57,7 @@ MESSAGE_DEF(NGAP_PATH_SWITCH_REQ, MESSAGE_PRIORITY_MED, ngap_path_switch_req_t,
+ MESSAGE_DEF(NGAP_PATH_SWITCH_REQ_ACK, MESSAGE_PRIORITY_MED, ngap_path_switch_req_ack_t, ngap_path_switch_req_ack)
+ 
+ /* NGAP -> RRC messages */
++MESSAGE_DEF(NGAP_RFSP_UPDATE, MESSAGE_PRIORITY_MED, ngap_rfsp_update_t, ngap_rfsp_update)
+ MESSAGE_DEF(NGAP_DOWNLINK_NAS              , MESSAGE_PRIORITY_MED, ngap_downlink_nas_t              , ngap_downlink_nas )
+ MESSAGE_DEF(NGAP_INITIAL_CONTEXT_SETUP_REQ , MESSAGE_PRIORITY_MED, ngap_initial_context_setup_req_t , ngap_initial_context_setup_req )
+ MESSAGE_DEF(NGAP_PAGING_IND                , MESSAGE_PRIORITY_MED, ngap_paging_ind_t                , ngap_paging_ind )
+diff --git a/openair2/COMMON/ngap_messages_types.h b/openair2/COMMON/ngap_messages_types.h
+index 95d43ac..90c1ba4 100644
+--- a/openair2/COMMON/ngap_messages_types.h
++++ b/openair2/COMMON/ngap_messages_types.h
+@@ -16,6 +16,12 @@
+ #include "utils.h"
+ 
+ // Defines to access message fields.
++#define NGAP_RFSP_UPDATE(mSGpTR) (mSGpTR)->ittiMsg.ngap_rfsp_update
++typedef struct {
++  uint32_t gNB_ue_ngap_id;
++  uint16_t rfsp_index;
++} ngap_rfsp_update_t;
++
+ #define NGAP_REGISTER_GNB_REQ(mSGpTR)           (mSGpTR)->ittiMsg.ngap_register_gnb_req
+ 
+ #define NGAP_REGISTER_GNB_CNF(mSGpTR)           (mSGpTR)->ittiMsg.ngap_register_gnb_cnf
+diff --git a/openair2/F1AP/f1ap_cu_rrc_message_transfer.c b/openair2/F1AP/f1ap_cu_rrc_message_transfer.c
+index c28daa4..b207fca 100644
+--- a/openair2/F1AP/f1ap_cu_rrc_message_transfer.c
++++ b/openair2/F1AP/f1ap_cu_rrc_message_transfer.c
+@@ -90,12 +90,11 @@ int CU_handle_UL_RRC_MESSAGE_TRANSFER(instance_t instance, sctp_assoc_t assoc_id
+     return -1;
+   }
+ 
+-  /* the RLC-PDCP does not transport the DU UE ID (yet), so we drop it here.
+-   * For the moment, let's hope this won't become relevant; to sleep in peace,
+-   * let's put an assert to check that it is the expected DU UE ID. */
++  /* Drain in-flight source SRB PDUs during handover. Dropping them would leave
++   * a COUNT gap in the shared CU PDCP entity (SRB t-Reordering is infinity). */
+   f1_ue_data_t ue_data = cu_get_f1_ue_data(msg.gNB_CU_ue_id);
+-  if (ue_data.secondary_ue != msg.gNB_DU_ue_id) {
+-    LOG_E(F1AP, "unexpected DU UE ID %u received, expected it to be %u\n", ue_data.secondary_ue, msg.gNB_DU_ue_id);
++  if (!cu_f1_ue_matches_ul(&ue_data, assoc_id, msg.gNB_DU_ue_id)) {
++    LOG_E(F1AP, "unexpected UL RRC binding assoc_id=%d DU UE ID=%u\n", assoc_id, msg.gNB_DU_ue_id);
+     free_ul_rrc_message_transfer(&msg);
+     return -1;
+   }
+diff --git a/openair2/F1AP/f1ap_ids.h b/openair2/F1AP/f1ap_ids.h
+index 4d20322..8832e32 100644
+--- a/openair2/F1AP/f1ap_ids.h
++++ b/openair2/F1AP/f1ap_ids.h
+@@ -18,8 +18,18 @@ typedef struct f1_ue_data_t {
+   uint32_t secondary_ue;
+   sctp_assoc_t e1_assoc_id;
+   sctp_assoc_t du_assoc_id; // only used at the CU
++  uint32_t handover_source_ue;
++  sctp_assoc_t handover_source_assoc_id;
+ } f1_ue_data_t;
+ 
++/* Both bindings belong to the same CU PDCP entity until F1 handover completes. */
++static inline bool cu_f1_ue_matches_ul(const f1_ue_data_t *data, sctp_assoc_t assoc_id, uint32_t du_ue_id)
++{
++  return (data->du_assoc_id == assoc_id && data->secondary_ue == du_ue_id)
++         || (data->handover_source_assoc_id > 0 && data->handover_source_assoc_id == assoc_id
++             && data->handover_source_ue == du_ue_id);
++}
++
+ void cu_init_f1_ue_data(void);
+ bool cu_add_f1_ue_data(uint32_t ue_id, const f1_ue_data_t *data);
+ bool cu_exists_f1_ue_data(uint32_t ue_id);
+diff --git a/openair2/GNB_APP/gnb_config.c b/openair2/GNB_APP/gnb_config.c
+index 0443cb6..e61b784 100644
+--- a/openair2/GNB_APP/gnb_config.c
++++ b/openair2/GNB_APP/gnb_config.c
+@@ -2210,6 +2210,30 @@ static void sort_neighbour_configuration(gNB_RRC_INST *rrc)
+ /** @brief Fill neighbour cell configuration from config file
+  * @param[in] gnb_idx gNB index
+  * @param[in,out] rrc Pointer to RRC instance */
++static void fill_rfsp_profiles(const uint8_t gnb_idx, gNB_RRC_INST *rrc)
++{
++  paramdef_t params[] = {
++      {"index", NULL, PARAMFLAG_MANDATORY, .uptr = NULL, .defuintval = 0, TYPE_UINT, 0},
++      {"target_cell_id", NULL, PARAMFLAG_MANDATORY, .u64ptr = NULL, .defint64val = 0, TYPE_UINT64, 0},
++  };
++  paramlist_def_t profiles = {"rfsp_profiles", NULL, 0};
++  char path[MAX_OPTNAME_SIZE + 8];
++  snprintf(path, sizeof(path), "%s.[%i]", GNB_CONFIG_STRING_GNB_LIST, gnb_idx);
++  config_getlist(config_get_if(), &profiles, params, sizeofArray(params), path);
++  seq_arr_init(&rrc->rfsp_profiles, sizeof(nr_rfsp_profile_t));
++  for (int i = 0; i < profiles.numelt; ++i) {
++    const unsigned int index = *profiles.paramarray[i][0].uptr;
++    const uint64_t cell = *profiles.paramarray[i][1].u64ptr;
++    AssertFatal(index >= 1 && index <= 256, "RFSP index must be in 1..256\n");
++    AssertFatal(cell < (1ULL << 36), "RFSP target must be a 36-bit NR cell ID\n");
++    FOR_EACH_SEQ_ARR(nr_rfsp_profile_t *, existing, &rrc->rfsp_profiles)
++      AssertFatal(existing->index != index, "Duplicate RFSP index %u\n", index);
++    nr_rfsp_profile_t profile = {.index = index, .target_cell_id = cell};
++    seq_arr_push_back(&rrc->rfsp_profiles, &profile, sizeof(profile));
++    LOG_I(GNB_APP, "RFSP_PROFILE index=%u target_cell=%lu\n", index, cell);
++  }
++}
++
+ static void fill_neighbour_cell_configuration(const uint8_t gnb_idx, gNB_RRC_INST *rrc)
+ {
+   char path[MAX_OPTNAME_SIZE + 8];
+@@ -2433,6 +2457,7 @@ gNB_RRC_INST *RCconfig_NRRRC()
+         fill_neighbour_cell_configuration(k, rrc);
+ 
+         fill_measurement_configuration(k, rrc);
++        fill_rfsp_profiles(k, rrc);
+ 
+         rrc->SIBs = fill_cu_sibs(GNBParamList.paramarray[i]);
+ 
+diff --git a/openair2/RRC/NR/nr_rrc_defs.h b/openair2/RRC/NR/nr_rrc_defs.h
+index c425bdd..1ecf5a0 100644
+--- a/openair2/RRC/NR/nr_rrc_defs.h
++++ b/openair2/RRC/NR/nr_rrc_defs.h
+@@ -607,6 +607,11 @@ typedef struct sib2_config_s {
+ #define NR_KPM_SS_SINR_NB_LEVELS 128 /* SS-SINR report level: 0..127, TS 38.133 Table 10.1.16.1-1 */
+ 
+ //---NR---(completely change)---------------------
++typedef struct {
++  uint16_t index;
++  uint64_t target_cell_id;
++} nr_rfsp_profile_t;
++
+ typedef struct gNB_RRC_INST_s {
+ 
+   ngran_node_t                                        node_type;
+@@ -637,6 +642,7 @@ typedef struct gNB_RRC_INST_s {
+   // Per-cell neighbour configurations, indexed by cell_id
+   seq_arr_t *neighbour_cell_configuration;
+   nr_measurement_configuration_t measurementConfiguration;
++  seq_arr_t rfsp_profiles; /* operator-defined RFSP index -> target NR cell */
+ 
+   RB_HEAD(rrc_du_tree, nr_rrc_du_container_t) dus; // DUs, indexed by assoc_id
+   size_t num_dus;
+diff --git a/openair2/RRC/NR/rrc_gNB.c b/openair2/RRC/NR/rrc_gNB.c
+index 0c14ee7..9ae23ad 100644
+--- a/openair2/RRC/NR/rrc_gNB.c
++++ b/openair2/RRC/NR/rrc_gNB.c
+@@ -3689,6 +3689,10 @@ void *rrc_gnb_task(void *args_p)
+         rrc_gNB_process_NGAP_DOWNLINK_NAS(msg_p, instance);
+         break;
+ 
++      case NGAP_RFSP_UPDATE:
++        nr_rrc_apply_rfsp(RC.nrrrc[instance], &NGAP_RFSP_UPDATE(msg_p));
++        break;
++
+       case NGAP_PDUSESSION_SETUP_REQ:
+         if (!rrc_delay_transaction(instance, msg_p))
+           rrc_gNB_process_NGAP_PDUSESSION_SETUP_REQ(msg_p, instance);
+diff --git a/openair2/RRC/NR/rrc_gNB_mobility.c b/openair2/RRC/NR/rrc_gNB_mobility.c
+index 00cf321..a334190 100644
+--- a/openair2/RRC/NR/rrc_gNB_mobility.c
++++ b/openair2/RRC/NR/rrc_gNB_mobility.c
+@@ -63,6 +63,10 @@ void nr_rrc_apply_target_context(gNB_RRC_UE_t *UE)
+         target_ctx->new_rnti);
+ 
+   /* update F1 data: secondary UE association and DU association */
++  if (UE->ho_context->source) {
++    ue_data.handover_source_ue = UE->ho_context->source->du_ue_id;
++    ue_data.handover_source_assoc_id = UE->ho_context->source->cell->assoc_id;
++  }
+   ue_data.secondary_ue = target_ctx->du_ue_id;
+   ue_data.du_assoc_id = target_ctx->cell->assoc_id;
+   bool success = cu_update_f1_ue_data(UE->rrc_ue_id, &ue_data);
+@@ -232,6 +236,12 @@ static void nr_rrc_f1_ho_acknowledge(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE)
+ static void nr_rrc_f1_ho_complete(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE)
+ {
+   DevAssert(UE->ho_context != NULL);
++  if (UE->ho_context->rfsp_index) {
++    const nr_rrc_cell_container_t *target = UE->ho_context->target->cell;
++    LOG_I(NR_RRC,
++          "RFSP_RADIO ran_ue_id=%u rfsp=%u status=completed target_cell=%lu target_pci=%u target_ssb_arfcn=%d\n",
++          UE->rrc_ue_id, UE->ho_context->rfsp_index, target->info.cell_id, target->info.pci, get_ssb_arfcn(target));
++  }
+   nr_ho_source_cu_t *source_ctx = UE->ho_context->source;
+   DevAssert(source_ctx != NULL);
+   RETURN_IF_INVALID_ASSOC_ID(source_ctx->cell->assoc_id);
+@@ -252,6 +262,8 @@ static void nr_rrc_f1_ho_complete(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE)
+ static void nr_rrc_cancel_f1_ho(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE)
+ {
+   DevAssert(UE->ho_context != NULL);
++  if (UE->ho_context->rfsp_index)
++    LOG_W(NR_RRC, "RFSP_RADIO ran_ue_id=%u rfsp=%u status=cancelled\n", UE->rrc_ue_id, UE->ho_context->rfsp_index);
+   nr_ho_target_cu_t *target_ctx = UE->ho_context->target;
+   DevAssert(target_ctx != NULL);
+   f1ap_ue_context_rel_cmd_t cmd = {
+@@ -301,8 +313,62 @@ void nr_rrc_trigger_f1_ho(gNB_RRC_INST *rrc,
+   nr_initiate_handover(rrc, ue, source_cell, &hpi, ack, success, cancel, NULL);
+ }
+ 
++void nr_rrc_apply_rfsp(gNB_RRC_INST *rrc, const ngap_rfsp_update_t *update)
++{
++  const nr_rfsp_profile_t *profile = NULL;
++  FOR_EACH_SEQ_ARR(nr_rfsp_profile_t *, candidate, &rrc->rfsp_profiles) {
++    if (candidate->index == update->rfsp_index) {
++      profile = candidate;
++      break;
++    }
++  }
++  rrc_gNB_ue_context_t *context = rrc_gNB_get_ue_context(rrc, update->gNB_ue_ngap_id);
++  if (!profile || !context) {
++    LOG_W(NR_RRC, "RFSP_RADIO ran_ue_id=%u rfsp=%u status=blocked reason=%s\n",
++          update->gNB_ue_ngap_id, update->rfsp_index, profile ? "ue_unavailable" : "unmapped_index");
++    return;
++  }
++  gNB_RRC_UE_t *ue = &context->ue_context;
++  nr_rrc_cell_container_t *source = rrc_get_pcell_for_ue(rrc, ue);
++  nr_rrc_cell_container_t *target = get_cell_by_cell_id(&rrc->cells, profile->target_cell_id);
++  const char *blocked = NULL;
++  if (!source || !target)
++    blocked = "cell_unavailable";
++  else if (ue->ho_context)
++    blocked = "handover_in_progress";
++  else if (!seq_arr_size(&ue->drbs))
++    blocked = "no_established_drb";
++  else if (source != target && source->assoc_id == target->assoc_id)
++    blocked = "requires_inter_du_handover";
++  for (int i = 0; !blocked && i < NR_RRC_TRANSACTION_IDENTIFIER_NUMBER; ++i)
++    if (ue->xids[i] != RRC_ACTION_NONE)
++      blocked = "reconfiguration_in_progress";
++  if (blocked) {
++    LOG_W(NR_RRC, "RFSP_RADIO ran_ue_id=%u rfsp=%u status=blocked reason=%s\n",
++          ue->rrc_ue_id, update->rfsp_index, blocked);
++    return;
++  }
++  LOG_I(NR_RRC,
++        "RFSP_RADIO ran_ue_id=%u rfsp=%u status=%s source_cell=%lu source_pci=%u source_ssb_arfcn=%d "
++        "target_cell=%lu target_pci=%u target_ssb_arfcn=%d\n",
++        ue->rrc_ue_id, update->rfsp_index, source == target ? "already_on_target" : "triggered",
++        source->info.cell_id, source->info.pci, get_ssb_arfcn(source),
++        target->info.cell_id, target->info.pci, get_ssb_arfcn(target));
++  if (source == target)
++    return;
++  nr_rrc_trigger_f1_ho(rrc, ue, source, target);
++  ue->ho_context->rfsp_index = update->rfsp_index;
++}
++
+ void nr_rrc_finalize_ho(gNB_RRC_UE_t *ue)
+ {
++  if (ue->ho_context->source && ue->ho_context->target) {
++    f1_ue_data_t data = cu_get_f1_ue_data(ue->rrc_ue_id);
++    data.handover_source_ue = 0;
++    data.handover_source_assoc_id = 0;
++    bool updated = cu_update_f1_ue_data(ue->rrc_ue_id, &data);
++    DevAssert(updated);
++  }
+   if (ue->ho_context->source)
+     free_byte_array(ue->ho_context->source->old_cgc);
+   free_ho_ctx(ue->ho_context);
+diff --git a/openair2/RRC/NR/rrc_gNB_mobility.h b/openair2/RRC/NR/rrc_gNB_mobility.h
+index 3107cbb..98ec8d3 100644
+--- a/openair2/RRC/NR/rrc_gNB_mobility.h
++++ b/openair2/RRC/NR/rrc_gNB_mobility.h
+@@ -71,6 +71,7 @@ typedef struct nr_ho_target_cu {
+ } nr_ho_target_cu_t;
+ 
+ typedef struct nr_handover_context_s {
++  uint16_t rfsp_index; /* zero for handovers not triggered by an RFSP update */
+   nr_ho_source_cu_t *source;
+   nr_ho_target_cu_t *target;
+ } nr_handover_context_t;
+@@ -83,6 +84,7 @@ void nr_rrc_trigger_f1_ho(gNB_RRC_INST *rrc,
+                           const nr_rrc_cell_container_t *source_cell,
+                           const nr_rrc_cell_container_t *target_cell);
+ void nr_rrc_finalize_ho(gNB_RRC_UE_t *ue);
++void nr_rrc_apply_rfsp(gNB_RRC_INST *rrc, const ngap_rfsp_update_t *update);
+ void nr_rrc_n2_ho_failure(gNB_RRC_INST *rrc, uint32_t gnb_ue_id, ngap_handover_failure_t *msg);
+ 
+ void nr_rrc_trigger_n2_ho(gNB_RRC_INST *rrc, gNB_RRC_UE_t *ue, const nr_neighbour_cell_t *neighbour_config);
+diff --git a/openair2/SDAP/nr_sdap/nr_sdap.c b/openair2/SDAP/nr_sdap/nr_sdap.c
+index c1a774f..bc3c731 100644
+--- a/openair2/SDAP/nr_sdap/nr_sdap.c
++++ b/openair2/SDAP/nr_sdap/nr_sdap.c
+@@ -8,6 +8,7 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <inttypes.h>
++#include <netinet/in.h>
+ #include <pthread.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -24,6 +25,8 @@ typedef struct sdap_tun_iface_s {
+   int sock;
+   char *ifname;
+   int qfi;
++  pthread_mutex_t qos_rules_lock;
++  nr_sdap_qos_rule_t qos_rules[NR_SDAP_MAX_QOS_RULES];
+   struct sdap_tun_iface_s *next;
+ } sdap_tun_iface_t;
+ 
+@@ -58,7 +61,170 @@ void nr_sdap_tun_store_qfi(ue_id_t ue_id, int pdusession_id, uint8_t qfi)
+   if (iface == NULL)
+     return;
+ 
++  pthread_mutex_lock(&iface->qos_rules_lock);
+   iface->qfi = qfi;
++  pthread_mutex_unlock(&iface->qos_rules_lock);
++}
++
++static int qos_rule_index(const nr_sdap_qos_rule_t *rules, uint8_t id)
++{
++  for (int i = 0; i < NR_SDAP_MAX_QOS_RULES; ++i) {
++    if (rules[i].active && rules[i].id == id)
++      return i;
++  }
++  return -1;
++}
++
++static int free_qos_rule_index(const nr_sdap_qos_rule_t *rules)
++{
++  for (int i = 0; i < NR_SDAP_MAX_QOS_RULES; ++i) {
++    if (!rules[i].active)
++      return i;
++  }
++  return -1;
++}
++
++int nr_sdap_tun_apply_qos_rules(
++    ue_id_t ue_id,
++    int pdusession_id,
++    const nr_sdap_qos_rule_t *updates,
++    size_t update_count)
++{
++  sdap_tun_iface_t *iface = sdap_tun_iface_lookup(ue_id, pdusession_id);
++  if (iface == NULL)
++    return -1;
++  pthread_mutex_lock(&iface->qos_rules_lock);
++  nr_sdap_qos_rule_t next[NR_SDAP_MAX_QOS_RULES];
++  memcpy(next, iface->qos_rules, sizeof(next));
++  for (size_t i = 0; i < update_count; ++i) {
++    const nr_sdap_qos_rule_t *update = &updates[i];
++    int index = qos_rule_index(next, update->id);
++    switch (update->operation) {
++      case 1:
++        if (index >= 0 || (index = free_qos_rule_index(next)) < 0)
++          goto invalid;
++        next[index] = *update;
++        next[index].active = true;
++        break;
++      case 2:
++        if (index < 0)
++          goto invalid;
++        memset(&next[index], 0, sizeof(next[index]));
++        break;
++      case 3:
++        if (index < 0 || next[index].packet_filter_count + update->packet_filter_count > NR_SDAP_MAX_PACKET_FILTERS)
++          goto invalid;
++        memcpy(&next[index].packet_filters[next[index].packet_filter_count],
++               update->packet_filters,
++               update->packet_filter_count * sizeof(update->packet_filters[0]));
++        next[index].packet_filter_count += update->packet_filter_count;
++        next[index].precedence = update->precedence;
++        next[index].qfi = update->qfi;
++        break;
++      case 4:
++        if (index < 0)
++          goto invalid;
++        next[index] = *update;
++        next[index].active = true;
++        break;
++      case 5:
++        if (index < 0)
++          goto invalid;
++        for (int delete_index = 0; delete_index < update->packet_filter_count; ++delete_index) {
++          int found = -1;
++          for (int filter_index = 0; filter_index < next[index].packet_filter_count; ++filter_index) {
++            if (next[index].packet_filters[filter_index].id == update->packet_filters[delete_index].id) {
++              found = filter_index;
++              break;
++            }
++          }
++          if (found < 0)
++            goto invalid;
++          memmove(&next[index].packet_filters[found],
++                  &next[index].packet_filters[found + 1],
++                  (next[index].packet_filter_count - found - 1) * sizeof(next[index].packet_filters[0]));
++          next[index].packet_filter_count--;
++        }
++        next[index].precedence = update->precedence;
++        next[index].qfi = update->qfi;
++        break;
++      case 6:
++        if (index < 0)
++          goto invalid;
++        next[index].precedence = update->precedence;
++        next[index].qfi = update->qfi;
++        break;
++      default:
++        goto invalid;
++    }
++  }
++  memcpy(iface->qos_rules, next, sizeof(next));
++  pthread_mutex_unlock(&iface->qos_rules_lock);
++  return 0;
++
++invalid:
++  pthread_mutex_unlock(&iface->qos_rules_lock);
++  return -1;
++}
++
++static bool masked_ipv4_equal(const uint8_t *packet_address, const uint8_t *rule_address, const uint8_t *mask)
++{
++  for (int i = 0; i < 4; ++i) {
++    if ((packet_address[i] & mask[i]) != (rule_address[i] & mask[i]))
++      return false;
++  }
++  return true;
++}
++
++static bool packet_filter_matches(const nr_sdap_qos_packet_filter_t *filter, const uint8_t *packet, size_t length)
++{
++  if (filter->direction != 2 && filter->direction != 3)
++    return false;
++  if (length < 20 || (packet[0] >> 4) != 4)
++    return false;
++  size_t header_length = (packet[0] & 0x0f) * 4;
++  if (header_length < 20 || length < header_length)
++    return false;
++  uint8_t protocol = packet[9];
++  if (filter->has_local_ipv4 && !masked_ipv4_equal(packet + 12, filter->local_ipv4, filter->local_ipv4_mask))
++    return false;
++  if (filter->has_remote_ipv4 && !masked_ipv4_equal(packet + 16, filter->remote_ipv4, filter->remote_ipv4_mask))
++    return false;
++  if (filter->has_protocol && protocol != filter->protocol)
++    return false;
++  if (filter->has_local_ports || filter->has_remote_ports) {
++    if ((protocol != IPPROTO_TCP && protocol != IPPROTO_UDP) || length < header_length + 4)
++      return false;
++    uint16_t local_port = ((uint16_t)packet[header_length] << 8) | packet[header_length + 1];
++    uint16_t remote_port = ((uint16_t)packet[header_length + 2] << 8) | packet[header_length + 3];
++    if (filter->has_local_ports && (local_port < filter->local_port_low || local_port > filter->local_port_high))
++      return false;
++    if (filter->has_remote_ports && (remote_port < filter->remote_port_low || remote_port > filter->remote_port_high))
++      return false;
++  }
++  return filter->match_all || filter->has_local_ipv4 || filter->has_remote_ipv4 || filter->has_protocol ||
++         filter->has_local_ports || filter->has_remote_ports;
++}
++
++static uint8_t select_uplink_qfi(sdap_tun_iface_t *iface, const uint8_t *packet, size_t length, uint8_t default_qfi)
++{
++  uint8_t selected_qfi = default_qfi;
++  uint8_t selected_precedence = UINT8_MAX;
++  pthread_mutex_lock(&iface->qos_rules_lock);
++  for (int i = 0; i < NR_SDAP_MAX_QOS_RULES; ++i) {
++    const nr_sdap_qos_rule_t *rule = &iface->qos_rules[i];
++    if (!rule->active || rule->precedence > selected_precedence)
++      continue;
++    for (int filter_index = 0; filter_index < rule->packet_filter_count; ++filter_index) {
++      if (packet_filter_matches(&rule->packet_filters[filter_index], packet, length)) {
++        selected_qfi = rule->qfi;
++        selected_precedence = rule->precedence;
++        break;
++      }
++    }
++  }
++  pthread_mutex_unlock(&iface->qos_rules_lock);
++  return selected_qfi;
+ }
+ 
+ void nr_sdap_tun_attach(nr_sdap_entity_t *entity)
+@@ -71,8 +237,11 @@ void nr_sdap_tun_attach(nr_sdap_entity_t *entity)
+   if (iface == NULL)
+     return;
+ 
+-  if (!entity->is_gnb && iface->qfi >= 0 && iface->qfi < SDAP_MAX_QFI) {
+-    entity->qfi = iface->qfi;
++  pthread_mutex_lock(&iface->qos_rules_lock);
++  int cached_qfi = iface->qfi;
++  pthread_mutex_unlock(&iface->qos_rules_lock);
++  if (!entity->is_gnb && cached_qfi >= 0 && cached_qfi < SDAP_MAX_QFI) {
++    entity->qfi = cached_qfi;
+     LOG_I(SDAP, "UE %ld PDU session %d: cached QFI %d\n", entity->ue_id, entity->pdusession_id, entity->qfi);
+   }
+ 
+@@ -117,6 +286,7 @@ static sdap_tun_iface_t *sdap_tun_iface_register(ue_id_t ue_id, int pdusession_i
+   iface->pdusession_id = pdusession_id;
+   iface->sock = sock;
+   iface->qfi = -1;
++  pthread_mutex_init(&iface->qos_rules_lock, NULL);
+   iface->ifname = strdup(ifname);
+   AssertFatal(iface->ifname != NULL, "strdup(ifname) failed\n");
+   nr_sdap_entity_t *entity = nr_sdap_get_entity(ue_id, pdusession_id);
+@@ -210,6 +380,9 @@ static void *sdap_tun_read_thread(void *arg)
+     protocol_ctxt_t ctxt = {.enb_flag = entity->is_gnb, .rntiMaybeUEid = entity->ue_id};
+ 
+     bool dc = entity->is_gnb ? false : SDAP_HDR_UL_DATA_PDU;
++    sdap_tun_iface_t *iface = sdap_tun_iface_lookup(entity->ue_id, entity->pdusession_id);
++    DevAssert(iface != NULL);
++    uint8_t qfi = select_uplink_qfi(iface, (uint8_t *)rx_buf, len, entity->qfi);
+ 
+     entity->tx_entity(entity,
+                       &ctxt,
+@@ -221,7 +394,7 @@ static void *sdap_tun_read_thread(void *arg)
+                       PDCP_TRANSMISSION_MODE_DATA,
+                       NULL,
+                       NULL,
+-                      entity->qfi,
++                      qfi,
+                       dc);
+   }
+ 
+@@ -234,8 +407,11 @@ void nr_sdap_tun_detach(nr_sdap_entity_t *entity)
+   sdap_tun_iface_t *iface = NULL;
+   if (!entity->is_gnb) {
+     iface = sdap_tun_iface_lookup(entity->ue_id, entity->pdusession_id);
+-    if (iface != NULL && entity->qfi >= 0 && entity->qfi < SDAP_MAX_QFI)
++    if (iface != NULL && entity->qfi >= 0 && entity->qfi < SDAP_MAX_QFI) {
++      pthread_mutex_lock(&iface->qos_rules_lock);
+       iface->qfi = entity->qfi; // store the QFI for the next attach
++      pthread_mutex_unlock(&iface->qos_rules_lock);
++    }
+   }
+   if (entity->pdusession_sock < 0)
+     return;
+@@ -274,6 +450,7 @@ void nr_sdap_tun_destroy(ue_id_t ue_id, int pdusession_id)
+   close(iface->sock);
+   tuntap_destroy(iface->ifname);
+   LOG_I(SDAP, "Destroyed TUN dataplane for UE %ld PDU session %d (%s)\n", iface->ue_id, iface->pdusession_id, iface->ifname);
++  pthread_mutex_destroy(&iface->qos_rules_lock);
+   free(iface->ifname);
+   free(iface);
+ }
+diff --git a/openair2/SDAP/nr_sdap/nr_sdap.h b/openair2/SDAP/nr_sdap/nr_sdap.h
+index b55acaf..9e4d38a 100644
+--- a/openair2/SDAP/nr_sdap/nr_sdap.h
++++ b/openair2/SDAP/nr_sdap/nr_sdap.h
+@@ -6,11 +6,45 @@
+ #define _NR_SDAP_GNB_H_
+ 
+ #include <stdbool.h>
++#include <stddef.h>
+ #include <stdint.h>
+ #include "common/platform_types.h"
+ 
+ struct nr_sdap_entity_s;
+ 
++#define NR_SDAP_MAX_QOS_RULES 64
++#define NR_SDAP_MAX_PACKET_FILTERS 15
++
++typedef struct nr_sdap_qos_packet_filter_s {
++  uint8_t id;
++  uint8_t direction;
++  bool match_all;
++  bool has_local_ipv4;
++  uint8_t local_ipv4[4];
++  uint8_t local_ipv4_mask[4];
++  bool has_remote_ipv4;
++  uint8_t remote_ipv4[4];
++  uint8_t remote_ipv4_mask[4];
++  bool has_protocol;
++  uint8_t protocol;
++  bool has_local_ports;
++  uint16_t local_port_low;
++  uint16_t local_port_high;
++  bool has_remote_ports;
++  uint16_t remote_port_low;
++  uint16_t remote_port_high;
++} nr_sdap_qos_packet_filter_t;
++
++typedef struct nr_sdap_qos_rule_s {
++  bool active;
++  uint8_t id;
++  uint8_t operation;
++  uint8_t precedence;
++  uint8_t qfi;
++  uint8_t packet_filter_count;
++  nr_sdap_qos_packet_filter_t packet_filters[NR_SDAP_MAX_PACKET_FILTERS];
++} nr_sdap_qos_rule_t;
++
+ /*
+  * TS 37.324 4.4 Functions
+  * Transfer of user plane data
+@@ -46,5 +80,10 @@ void nr_sdap_tun_attach(struct nr_sdap_entity_s *entity);
+ void nr_sdap_tun_detach(struct nr_sdap_entity_s *entity);
+ void nr_sdap_tun_destroy(ue_id_t ue_id, int pdusession_id);
+ void nr_sdap_tun_store_qfi(ue_id_t ue_id, int pdusession_id, uint8_t qfi);
++int nr_sdap_tun_apply_qos_rules(
++    ue_id_t ue_id,
++    int pdusession_id,
++    const nr_sdap_qos_rule_t *updates,
++    size_t update_count);
+ 
+ #endif
+diff --git a/openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c b/openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c
+index b630c3b..3d52576 100644
+--- a/openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c
++++ b/openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c
+@@ -100,25 +100,31 @@ int encode_fgs_uplink_nas_transport(const fgs_uplink_nas_transport_msg *fgs_up_n
+     encoded += encode_result;
+   }
+ 
+-  *(buffer + encoded) = 0x12;
+-  encoded++;
+-
+-  IES_ENCODE_U8(buffer, encoded, fgs_up_nas_transport->pdusessionid);
++  if (fgs_up_nas_transport->pdusessionid != 0) {
++    *(buffer + encoded) = 0x12;
++    encoded++;
++    IES_ENCODE_U8(buffer, encoded, fgs_up_nas_transport->pdusessionid);
++  }
+ 
+-  // set request type
+-  *(buffer + encoded) = (0x8 << 4) | (fgs_up_nas_transport->requesttype & 0x7);
+-  encoded++;
++  if (fgs_up_nas_transport->requesttype != 0) {
++    *(buffer + encoded) = (0x8 << 4) | (fgs_up_nas_transport->requesttype & 0x7);
++    encoded++;
++  }
+ 
+-  if ((encode_result = encode_nssai(&fgs_up_nas_transport->snssai, 0x22, buffer + encoded)) < 0) {
+-    return encode_result;
+-  } else {
+-    encoded += encode_result;
++  if (fgs_up_nas_transport->snssai.length != 0) {
++    if ((encode_result = encode_nssai(&fgs_up_nas_transport->snssai, 0x22, buffer + encoded)) < 0) {
++      return encode_result;
++    } else {
++      encoded += encode_result;
++    }
+   }
+ 
+-  if ((encode_result = encode_dnn(&fgs_up_nas_transport->dnn, 0x25, buffer + encoded)) < 0) {
+-    return encode_result;
+-  } else {
+-    encoded += encode_result;
++  if (fgs_up_nas_transport->dnn.length != 0) {
++    if ((encode_result = encode_dnn(&fgs_up_nas_transport->dnn, 0x25, buffer + encoded)) < 0) {
++      return encode_result;
++    } else {
++      encoded += encode_result;
++    }
+   }
+ 
+   return encoded;
+diff --git a/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c b/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c
+index 6b99b75..b8b07c1 100644
+--- a/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c
++++ b/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c
+@@ -84,6 +84,16 @@ int encode_registration_request(const registration_request_msg *registration_req
+       encoded += encode_result;
+   }
+ 
+-  // TODO, Encoding optional fields
++  if (registration_request->presencemask & REGISTRATION_REQUEST_PAYLOAD_CONTAINER_PRESENT) {
++    const OctetString *payload=&registration_request->ue_policy_container;
++    if ((uint32_t)encoded+4+payload->length>len) return -1;
++    buffer[encoded++]=REGISTRATION_REQUEST_PAYLOAD_CONTAINER_TYPE_IEI|5;
++    buffer[encoded++]=REGISTRATION_REQUEST_PAYLOAD_CONTAINER_IEI;
++    buffer[encoded++]=payload->length>>8;
++    buffer[encoded++]=payload->length;
++    memcpy(buffer+encoded,payload->value,payload->length);
++    encoded+=payload->length;
++  }
++  // TODO, Encoding remaining optional fields
+   return encoded;
+ }
+diff --git a/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h b/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h
+index 10aa7ff..00efaeb 100644
+--- a/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h
++++ b/openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h
+@@ -86,6 +86,7 @@ typedef struct registration_request_msg_tag {
+   uint32_t presencemask;
+   FGMMCapability fgmmcapability;
+   NrUESecurityCapability nruesecuritycapability;
++  OctetString ue_policy_container;
+ } registration_request_msg;
+ 
+ int decode_registration_request(registration_request_msg *registrationrequest, const uint8_t *buffer, uint32_t len);
+diff --git a/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c b/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c
+index a9c26d4..b683c39 100644
+--- a/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c
++++ b/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c
+@@ -4,52 +4,127 @@
+ 
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
++#include <string.h>
+ #include "PduSessionEstablishmentAccept.h"
+ #include "common/utils/LOG/log.h"
+ #include "common/utils/utils.h" // text_info_t, TO_ENUM, TO_TEXT
+ #include "fgs_nas_utils.h"
+ 
+-/**
+- * @brief Returns the size of the single QoS rule IE
+- */
+-static uint8_t get_len_qos_rule(qos_rule_t *rule)
++static int decode_packet_filter(packet_filter_t *filter, const uint8_t **cursor, const uint8_t *end)
+ {
+-  return rule->length + sizeof(rule->id) + sizeof(rule->length);
++  if (end - *cursor < 2)
++    return -1;
++  filter->direction = (**cursor & 0x30) >> 4;
++  filter->id = *(*cursor)++ & 0x0f;
++  uint8_t length = *(*cursor)++;
++  if (end - *cursor < length)
++    return -1;
++  const uint8_t *filter_end = *cursor + length;
++  while (*cursor < filter_end) {
++    uint8_t type = *(*cursor)++;
++    switch (type) {
++      case 0x01:
++        filter->match_all = true;
++        break;
++      case 0x10:
++        if (filter_end - *cursor < 8) return -1;
++        filter->has_remote_ipv4 = true;
++        memcpy(filter->remote_ipv4, *cursor, 4);
++        memcpy(filter->remote_ipv4_mask, *cursor + 4, 4);
++        *cursor += 8;
++        break;
++      case 0x11:
++        if (filter_end - *cursor < 8) return -1;
++        filter->has_local_ipv4 = true;
++        memcpy(filter->local_ipv4, *cursor, 4);
++        memcpy(filter->local_ipv4_mask, *cursor + 4, 4);
++        *cursor += 8;
++        break;
++      case 0x30:
++        if (filter_end - *cursor < 1) return -1;
++        filter->has_protocol = true;
++        filter->protocol = *(*cursor)++;
++        break;
++      case 0x40:
++      case 0x50: {
++        if (filter_end - *cursor < 2) return -1;
++        uint16_t port = 0;
++        GET_SHORT(*cursor, port);
++        *cursor += 2;
++        if (type == 0x40) {
++          filter->has_local_ports = true;
++          filter->local_port_low = filter->local_port_high = port;
++        } else {
++          filter->has_remote_ports = true;
++          filter->remote_port_low = filter->remote_port_high = port;
++        }
++        break;
++      }
++      case 0x41:
++      case 0x51: {
++        if (filter_end - *cursor < 4) return -1;
++        uint16_t low = 0;
++        uint16_t high = 0;
++        GET_SHORT(*cursor, low);
++        GET_SHORT(*cursor + 2, high);
++        *cursor += 4;
++        if (type == 0x41) {
++          filter->has_local_ports = true;
++          filter->local_port_low = low;
++          filter->local_port_high = high;
++        } else {
++          filter->has_remote_ports = true;
++          filter->remote_port_low = low;
++          filter->remote_port_high = high;
++        }
++        break;
++      }
++      default:
++        return -1;
++    }
++  }
++  return *cursor == filter_end ? 0 : -1;
+ }
+ 
+-/**
+- * @brief Decode QoS Rule (9.11.4.13 of 3GPP TS 24.501)
+- */
+-static qos_rule_t decode_qos_rule(uint8_t *buf)
++int decode_authorized_qos_rules(auth_qos_rule_t *rules, const uint8_t *buffer, uint32_t length)
+ {
+-  qos_rule_t qos_rule = {0};
+-  // octet 4
+-  qos_rule.id = *buf++;
+-  // octet 5 - 6
+-  GET_SHORT(buf, qos_rule.length);
+-  buf += sizeof(qos_rule.length);
+-  // octet 7
+-  qos_rule.oc = (*(buf)&0xE0) >> 5;
+-  qos_rule.dqr = (*(buf)&0x10) >> 4;
+-  qos_rule.nb_pf = *buf++ & 0x0F;
+-  // octet 8 - m
+-  for (int i = 0; i < qos_rule.nb_pf; i++) {
+-    packet_filter_t pf;
+-    if (qos_rule.oc == ROC_CREATE_NEW_QOS_RULE || qos_rule.oc == ROC_MODIFY_QOS_RULE_ADD_PF
+-        || qos_rule.oc == ROC_MODIFY_QOS_RULE_REPLACE_PF) {
+-      pf.pf_type.type_1.pf_dir = (*buf & 0x30) >> 4;
+-      pf.pf_type.type_1.pf_id = *buf++ & 0x0F;
+-      pf.pf_type.type_1.length = *buf++;
+-      buf += pf.pf_type.type_1.length; // skip PF content
+-    } else if (qos_rule.oc == ROC_MODIFY_QOS_RULE_DELETE_PF) {
+-      pf.pf_type.type_2.pf_id = *buf++;
++  memset(rules, 0, sizeof(*rules));
++  rules->length = length;
++  const uint8_t *cursor = buffer;
++  const uint8_t *end = buffer + length;
++  while (cursor < end) {
++    if (rules->rule_count == MAX_NUM_QOS_RULES || end - cursor < 4)
++      return -1;
++    qos_rule_t *rule = &rules->rule[rules->rule_count];
++    rule->id = *cursor++;
++    GET_SHORT(cursor, rule->length);
++    cursor += 2;
++    if (end - cursor < rule->length || rule->length < 3)
++      return -1;
++    const uint8_t *rule_end = cursor + rule->length;
++    rule->oc = (*cursor & 0xe0) >> 5;
++    rule->dqr = (*cursor & 0x10) >> 4;
++    rule->nb_pf = *cursor++ & 0x0f;
++    if (rule->oc == ROC_RESERVED_0 || rule->oc == ROC_RESERVED_1)
++      return -1;
++    if (rule->oc == ROC_MODIFY_QOS_RULE_DELETE_PF) {
++      if (rule_end - cursor < rule->nb_pf + 2)
++        return -1;
++      for (int i = 0; i < rule->nb_pf; ++i)
++        rule->packet_filters[i].id = *cursor++ & 0x0f;
++    } else {
++      for (int i = 0; i < rule->nb_pf; ++i) {
++        if (decode_packet_filter(&rule->packet_filters[i], &cursor, rule_end) != 0)
++          return -1;
++      }
+     }
++    if (rule_end - cursor != 2)
++      return -1;
++    rule->precendence = *cursor++;
++    rule->qfi = *cursor++ & 0x3f;
++    rules->rule_count++;
+   }
+-  // octet m + 1
+-  qos_rule.precendence = *buf++;
+-  // octet m + 2
+-  qos_rule.qfi = *buf++ & 0x3F;
+-  return qos_rule;
++  return cursor == end ? (int)length : -1;
+ }
+ 
+ /**
+@@ -72,13 +147,9 @@ int decode_pdu_session_establishment_accept_msg(pdu_session_establishment_accept
+   curPtr += sizeof(qos_rules->length);
+   /* Decode rule IEs as long as the total length
+     of all IEs (qos_rules->length) is not reached */
+-  uint16_t rules_tot_len = 0;
+-  while (rules_tot_len < qos_rules->length)
+-  {
+-    qos_rules->rule[0] = decode_qos_rule(curPtr);
+-    rules_tot_len += get_len_qos_rule(&qos_rules->rule[0]);
+-    curPtr += get_len_qos_rule(&qos_rules->rule[0]);
+-  }
++  if (decode_authorized_qos_rules(qos_rules, curPtr, qos_rules->length) < 0)
++    return 0;
++  curPtr += qos_rules->length;
+   // Session-AMBR (M)
+   psea_msg->sess_ambr.length = *curPtr++;
+   curPtr += psea_msg->sess_ambr.length; // skip content
+diff --git a/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h b/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h
+index 3d4bc8e..f97c25d 100644
+--- a/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h
++++ b/openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h
+@@ -68,21 +68,24 @@ typedef enum { FOREACH_IEI(TO_ENUM) } pduSessionEstablishment_IEI_t;
+ 
+ /* Mandatory Presence IE - TS 24.501 Table 8.3.2.1.1 */
+ 
+-typedef struct packet_filter_create_qos_rule_s {
+-  uint8_t pf_dir; /* Packet filter direction */
+-  uint8_t pf_id; /* Packet filter identifier */
+-  uint8_t length; /* Length of packet filter contents */
+-} packet_filter_type1_t; /* TS 24.501 Figure 9.11.4.13.3 */
+-
+-typedef struct packet_filter_modify_qos_rule_s {
+-  uint8_t pf_id; /* Packet filter identifier */
+-} packet_filter_type2_t; /* TS 24.501 Figure 9.11.4.13.4 */
+-
+ typedef struct packet_filter_s {
+-  union pf_type {
+-    packet_filter_type1_t type_1;
+-    packet_filter_type2_t type_2;
+-  } pf_type;
++  uint8_t id;
++  uint8_t direction;
++  bool match_all;
++  bool has_local_ipv4;
++  uint8_t local_ipv4[4];
++  uint8_t local_ipv4_mask[4];
++  bool has_remote_ipv4;
++  uint8_t remote_ipv4[4];
++  uint8_t remote_ipv4_mask[4];
++  bool has_protocol;
++  uint8_t protocol;
++  bool has_local_ports;
++  uint16_t local_port_low;
++  uint16_t local_port_high;
++  bool has_remote_ports;
++  uint16_t remote_port_low;
++  uint16_t remote_port_high;
+ } packet_filter_t;
+ 
+ typedef struct qos_rule_s {
+@@ -96,6 +99,7 @@ typedef struct qos_rule_s {
+   bool dqr;
+   // Number of packet filters
+   uint8_t nb_pf;
++  packet_filter_t packet_filters[15];
+   // QoS rule precedence
+   uint8_t precendence;
+   // QoS Flow Identifier
+@@ -104,6 +108,7 @@ typedef struct qos_rule_s {
+ 
+ typedef struct auth_qos_rules_s {
+   uint16_t length; /* Length of QoS rules IE */
++  uint8_t rule_count;
+   // QoS rules (M)
+   qos_rule_t rule[MAX_NUM_QOS_RULES];
+ } auth_qos_rule_t; /* QoS Rule as defined in 24.501 Figure 9.11.4.13.2 */
+@@ -162,5 +167,6 @@ typedef struct pdu_session_establishment_accept_msg_s {
+ } pdu_session_establishment_accept_msg_t; /* 24.501 Table 8.3.2.1.1 */
+ 
+ int decode_pdu_session_establishment_accept_msg(pdu_session_establishment_accept_msg_t *psea_msg, uint8_t *buffer, uint32_t msg_length);
++int decode_authorized_qos_rules(auth_qos_rule_t *rules, const uint8_t *buffer, uint32_t length);
+ 
+ #endif
+diff --git a/openair3/NAS/NR_UE/CMakeLists.txt b/openair3/NAS/NR_UE/CMakeLists.txt
+index 3da5800..0330727 100644
+--- a/openair3/NAS/NR_UE/CMakeLists.txt
++++ b/openair3/NAS/NR_UE/CMakeLists.txt
+@@ -2,7 +2,7 @@
+ 
+ add_subdirectory(5GS)
+ 
+-add_library(nr_nas STATIC nr_nas_msg.c)
++add_library(nr_nas STATIC nr_nas_msg.c ue_policy.c ue_policy_service.c)
+ 
+ target_link_libraries(nr_nas PUBLIC asn1_lte_rrc_hdrs asn1_nr_rrc_hdrs)
+ target_link_libraries(nr_nas PUBLIC
+diff --git a/openair3/NAS/NR_UE/nr_nas_msg.c b/openair3/NAS/NR_UE/nr_nas_msg.c
+index 7ef3cbe..3697a93 100644
+--- a/openair3/NAS/NR_UE/nr_nas_msg.c
++++ b/openair3/NAS/NR_UE/nr_nas_msg.c
+@@ -25,6 +25,7 @@
+ #include "NrUESecurityCapability.h"
+ #include "OctetString.h"
+ #include "PduSessionEstablishRequest.h"
++#include "ue_policy_service.h"
+ #include "PduSessionEstablishmentAccept.h"
+ #include "RegistrationAccept.h"
+ #include "SORTransparentContainer.h"
+@@ -310,6 +311,10 @@ static fgs_nas_msg_t get_msg_type(uint8_t *pdu_buffer, uint32_t length)
+   int msg_type = pdu_buffer[9];
+ 
+   if (msg_type == FGS_DOWNLINK_NAS_TRANSPORT) {
++    if (length < 13)
++      goto error;
++    if ((pdu_buffer[10] & 15) != 1)
++      return FGS_DOWNLINK_NAS_TRANSPORT;
+     if (length < 17)
+       goto error;
+ 
+@@ -813,11 +818,15 @@ static void derive_ue_keys(uint8_t *buf, nr_ue_nas_t *nas)
+ 
+ nr_ue_nas_t *get_ue_nas_info(module_id_t module_id)
+ {
++  static pthread_mutex_t init_lock=PTHREAD_MUTEX_INITIALIZER;
+   AssertFatal(module_id < MAX_NUM_NR_UE_INST, "Invalid module_id %d\n", module_id);
++  pthread_mutex_lock(&init_lock);
+   if (!nr_ue_nas[module_id].uicc) {
+     nr_ue_nas[module_id].uicc = checkUicc(module_id);
+     nr_ue_nas[module_id].UE_id = module_id;
++    ue_policy_service_start(&nr_ue_nas[module_id]);
+   }
++  pthread_mutex_unlock(&init_lock);
+   return &nr_ue_nas[module_id];
+ }
+ 
+@@ -965,6 +974,22 @@ void generateRegistrationRequest(as_nas_info_t *initialNasMsg, nr_ue_nas_t *nas,
+     size_nct += sizeof(cap->length) + sizeof(cap->iei) + cap->length;
+   }
+ 
++  uint8_t policy_state[13]={1,4,0,0,1,0};
++  if (nas->policy_path[0]) {
++    size_t state_len=6;
++    pthread_mutex_lock(&nas->ue_policy_lock);
++    if (nas->ue_policy.rule_count) {
++      policy_state[3]=7; policy_state[4]=0; policy_state[5]=5;
++      memcpy(policy_state+6,nas->ue_policy.plmn,3);
++      policy_state[9]=nas->ue_policy.upsc>>8; policy_state[10]=nas->ue_policy.upsc;
++      policy_state[11]=1; policy_state[12]=0; state_len=13;
++    }
++    pthread_mutex_unlock(&nas->ue_policy_lock);
++    full_rr->presencemask|=REGISTRATION_REQUEST_PAYLOAD_CONTAINER_PRESENT|REGISTRATION_REQUEST_PAYLOAD_CONTAINER_TYPE_PRESENT;
++    full_rr->ue_policy_container=(OctetString){.value=policy_state,.length=state_len};
++    size_nct+=4+state_len; cleartext_only=false;
++  }
++
+   if (is_security_mode) {
+     /* Encode both cleartext IEs and non-cleartext IEs Registration Request message in Security Mode Complete.
+        The UE includes the full Registration Request in the NAS container IE
+@@ -1058,7 +1083,7 @@ void generateServiceRequest(as_nas_info_t *initialNasMsg, nr_ue_nas_t *nas)
+   bool has_non_cleartext_ies = false;
+   for (int i = 0; i < nas->uicc->n_pdu_sessions; ++i) {
+     const int pdu_id = nas->uicc->pdu_sessions[i].id;
+-    if (pdu_id > 0 && pdu_id < MAX_NUM_PSI) {
++    if (pdu_id > 0 && pdu_id < MAX_NUM_PSI && (!nas->policy_dynamic_pdu || nas->policy_session_active[pdu_id])) {
+       pdu_session_status[pdu_id] = PDU_SESSION_ACTIVE;
+       has_non_cleartext_ies = true;
+     }
+@@ -1698,7 +1723,7 @@ static void process_pdu_session_addr(pdu_session_establishment_accept_msg_t *msg
+ /**
+  * @brief Handle PDU Session Establishment Accept and process decoded message
+  */
+-static void handle_pdu_session_accept(const nr_ue_nas_t *nas, uint8_t *pdu_buffer, uint32_t msg_length, int instance)
++static void handle_pdu_session_accept(nr_ue_nas_t *nas, uint8_t *pdu_buffer, uint32_t msg_length, int instance)
+ {
+   pdu_session_establishment_accept_msg_t msg = {0};
+   int size = 0;
+@@ -1741,6 +1766,7 @@ static void handle_pdu_session_accept(const nr_ue_nas_t *nas, uint8_t *pdu_buffe
+     return;
+   }
+ 
++  pthread_mutex_lock(&nas->ue_policy_lock);
+   int idx;
+   for (idx = 0; idx < nas->uicc->n_pdu_sessions; ++idx) {
+     const pdu_session_config_t *pdu = &nas->uicc->pdu_sessions[idx];
+@@ -1754,6 +1780,7 @@ static void handle_pdu_session_accept(const nr_ue_nas_t *nas, uint8_t *pdu_buffe
+           "PDU session establishment accept for ID %d type %d not in list of configured PDU sessions, abort transaction\n",
+           sm_header.pdu_session_id,
+           msg.pdu_type);
++    pthread_mutex_unlock(&nas->ue_policy_lock);
+     return;
+   }
+ 
+@@ -1769,21 +1796,216 @@ static void handle_pdu_session_accept(const nr_ue_nas_t *nas, uint8_t *pdu_buffe
+   } else {
+     LOG_W(NAS, "Unhandled PDU session type %d, ignoring PDU session ID %d\n", msg.pdu_type, sm_header.pdu_session_id);
+   }
++  if (sm_header.pdu_session_id>0 && sm_header.pdu_session_id<16) {
++    nas->policy_session_active[sm_header.pdu_session_id]=true;
++    nas->policy_session_pending[sm_header.pdu_session_id]=false;
++    nas->policy_session_error[sm_header.pdu_session_id]=0;
++    ue_policy_write_state(nas);
++  }
++  nr_sdap_qos_rule_t initial_rules[MAX_NUM_QOS_RULES] = {0};
++  for (int rule_index = 0; rule_index < msg.qos_rules.rule_count; ++rule_index) {
++    const qos_rule_t *source = &msg.qos_rules.rule[rule_index];
++    nr_sdap_qos_rule_t *target = &initial_rules[rule_index];
++    target->active = true;
++    target->id = source->id;
++    target->operation = source->oc;
++    target->precedence = source->precendence;
++    target->qfi = source->qfi;
++    target->packet_filter_count = source->nb_pf;
++    for (int filter_index = 0; filter_index < source->nb_pf; ++filter_index) {
++      const packet_filter_t *source_filter = &source->packet_filters[filter_index];
++      nr_sdap_qos_packet_filter_t *target_filter = &target->packet_filters[filter_index];
++      target_filter->id = source_filter->id;
++      target_filter->direction = source_filter->direction;
++      target_filter->match_all = source_filter->match_all;
++      target_filter->has_local_ipv4 = source_filter->has_local_ipv4;
++      memcpy(target_filter->local_ipv4, source_filter->local_ipv4, 4);
++      memcpy(target_filter->local_ipv4_mask, source_filter->local_ipv4_mask, 4);
++      target_filter->has_remote_ipv4 = source_filter->has_remote_ipv4;
++      memcpy(target_filter->remote_ipv4, source_filter->remote_ipv4, 4);
++      memcpy(target_filter->remote_ipv4_mask, source_filter->remote_ipv4_mask, 4);
++      target_filter->has_protocol = source_filter->has_protocol;
++      target_filter->protocol = source_filter->protocol;
++      target_filter->has_local_ports = source_filter->has_local_ports;
++      target_filter->local_port_low = source_filter->local_port_low;
++      target_filter->local_port_high = source_filter->local_port_high;
++      target_filter->has_remote_ports = source_filter->has_remote_ports;
++      target_filter->remote_port_low = source_filter->remote_port_low;
++      target_filter->remote_port_high = source_filter->remote_port_high;
++    }
++  }
++  if (nr_sdap_tun_apply_qos_rules(
++          instance, sm_header.pdu_session_id, initial_rules, msg.qos_rules.rule_count) != 0) {
++    LOG_E(NAS, "Failed to install authorized QoS rules for PDU session %u\n", sm_header.pdu_session_id);
++    pthread_mutex_unlock(&nas->ue_policy_lock);
++    return;
++  }
++  pthread_mutex_unlock(&nas->ue_policy_lock);
++}
++
++static void handle_pdu_session_reject(nr_ue_nas_t *nas,const uint8_t *buffer,int length)
++{
++  if (length<18 || buffer[13]!=FGS_SESSION_MANAGEMENT_MESSAGE || buffer[14]==0 || buffer[14]>15) {
++    LOG_E(NAS,"Invalid PDU Session Establishment Reject container\n");
++    return;
++  }
++  int id=buffer[14],cause=buffer[17];
++  pthread_mutex_lock(&nas->ue_policy_lock);
++  nas->policy_session_pending[id]=false;
++  nas->policy_session_active[id]=false;
++  nas->policy_session_error[id]=cause;
++  ue_policy_write_state(nas);
++  pthread_mutex_unlock(&nas->ue_policy_lock);
++  LOG_I(NAS,"UE_POLICY PDU_REJECT id=%d cause=%d\n",id,cause);
+ }
+ 
+ /**
+  * @brief Handle DL NAS Transport and process piggybacked 5GSM messages
+  */
+-void handleDownlinkNASTransport(const nr_ue_nas_t *nas, uint8_t * pdu_buffer, int pdu_length, int instance)
++static void generateUplinkNASTransport(
++    nr_ue_nas_t *nas,
++    as_nas_info_t *message,
++    const uint8_t *payload,
++    size_t length,
++    uint8_t container_type,
++    uint8_t pdu_session_id);
++
++static int convert_qos_rule_updates(
++    const auth_qos_rule_t *decoded,
++    nr_sdap_qos_rule_t updates[MAX_NUM_QOS_RULES])
++{
++  for (int rule_index = 0; rule_index < decoded->rule_count; ++rule_index) {
++    const qos_rule_t *source = &decoded->rule[rule_index];
++    nr_sdap_qos_rule_t *target = &updates[rule_index];
++    target->active = true;
++    target->id = source->id;
++    target->operation = source->oc;
++    target->precedence = source->precendence;
++    target->qfi = source->qfi;
++    target->packet_filter_count = source->nb_pf;
++    for (int filter_index = 0; filter_index < source->nb_pf; ++filter_index) {
++      const packet_filter_t *source_filter = &source->packet_filters[filter_index];
++      nr_sdap_qos_packet_filter_t *target_filter = &target->packet_filters[filter_index];
++      target_filter->id = source_filter->id;
++      target_filter->direction = source_filter->direction;
++      target_filter->match_all = source_filter->match_all;
++      target_filter->has_local_ipv4 = source_filter->has_local_ipv4;
++      memcpy(target_filter->local_ipv4, source_filter->local_ipv4, 4);
++      memcpy(target_filter->local_ipv4_mask, source_filter->local_ipv4_mask, 4);
++      target_filter->has_remote_ipv4 = source_filter->has_remote_ipv4;
++      memcpy(target_filter->remote_ipv4, source_filter->remote_ipv4, 4);
++      memcpy(target_filter->remote_ipv4_mask, source_filter->remote_ipv4_mask, 4);
++      target_filter->has_protocol = source_filter->has_protocol;
++      target_filter->protocol = source_filter->protocol;
++      target_filter->has_local_ports = source_filter->has_local_ports;
++      target_filter->local_port_low = source_filter->local_port_low;
++      target_filter->local_port_high = source_filter->local_port_high;
++      target_filter->has_remote_ports = source_filter->has_remote_ports;
++      target_filter->remote_port_low = source_filter->remote_port_low;
++      target_filter->remote_port_high = source_filter->remote_port_high;
++    }
++  }
++  return decoded->rule_count;
++}
++
++static void handle_pdu_session_modification_command(
++    nr_ue_nas_t *nas,
++    const uint8_t *payload,
++    size_t payload_length,
++    as_nas_info_t *response)
++{
++  if (payload_length < 4 || payload[0] != FGS_SESSION_MANAGEMENT_MESSAGE ||
++      payload[3] != FGS_PDU_SESSION_MODIFICATION_COMMAND)
++    return;
++  const uint8_t pdu_session_id = payload[1];
++  const uint8_t pti = payload[2];
++  const uint8_t *cursor = payload + 4;
++  const uint8_t *end = payload + payload_length;
++  auth_qos_rule_t decoded = {0};
++  while (cursor < end) {
++    uint8_t iei = *cursor++;
++    if (iei != 0x7a && iei != 0x79)
++      goto reject;
++    if (end - cursor < 2)
++      goto reject;
++    uint16_t length = 0;
++    GET_SHORT(cursor, length);
++    cursor += 2;
++    if (end - cursor < length)
++      goto reject;
++    if (iei == 0x7a && decode_authorized_qos_rules(&decoded, cursor, length) < 0)
++      goto reject;
++    cursor += length;
++  }
++  if (decoded.rule_count == 0)
++    goto reject;
++  nr_sdap_qos_rule_t updates[MAX_NUM_QOS_RULES] = {0};
++  int update_count = convert_qos_rule_updates(&decoded, updates);
++  if (nr_sdap_tun_apply_qos_rules(nas->UE_id, pdu_session_id, updates, update_count) != 0)
++    goto reject;
++  uint8_t complete[] = {
++      FGS_SESSION_MANAGEMENT_MESSAGE,
++      pdu_session_id,
++      pti,
++      FGS_PDU_SESSION_MODIFICATION_COMPLETE,
++  };
++  generateUplinkNASTransport(nas, response, complete, sizeof(complete), 1, pdu_session_id);
++  LOG_I(NAS, "Applied %d NAS QoS rule updates to PDU session %u\n", update_count, pdu_session_id);
++  return;
++
++reject:
++  ;
++  uint8_t reject[] = {
++      FGS_SESSION_MANAGEMENT_MESSAGE,
++      pdu_session_id,
++      pti,
++      FGS_PDU_SESSION_MODIFICATION_COMMAND_REJ,
++      95,
++  };
++  generateUplinkNASTransport(nas, response, reject, sizeof(reject), 1, pdu_session_id);
++  LOG_E(NAS, "Rejected invalid PDU Session Modification Command for session %u\n", pdu_session_id);
++}
++
++void handleDownlinkNASTransport(nr_ue_nas_t *nas, uint8_t *pdu_buffer, int pdu_length, int instance,as_nas_info_t *response)
+ {
+-  if (pdu_length < 17) {
++  if (pdu_length < 13) {
+     LOG_E(NAS, "Received DL NAS Transport message too short (%d)\n", pdu_length);
+     return;
+   }
+-  uint8_t msg_type = *(pdu_buffer + 16);
++  // Protected header (7), plain 5GMM header (3), container type (1), length (2).
++  uint8_t container_type=pdu_buffer[10]&15;
++  size_t payload_length=(size_t)pdu_buffer[11]<<8 | pdu_buffer[12];
++  if (payload_length>(size_t)pdu_length-13) { LOG_E(NAS,"Truncated NAS payload container\n"); return; }
++  if (container_type==5 && nas->policy_path[0]) {
++    ue_policy_t policy;
++    if (ue_policy_decode(pdu_buffer+13,payload_length,&policy)) {
++      LOG_E(NAS,"Invalid or unsupported UE Policy command\n"); return;
++    }
++    const char *imsi=nas->uicc->imsiStr;
++    const int mnc_len=nas->uicc->nmc_size;
++    uint8_t plmn[3]={ (imsi[1]-'0')<<4|(imsi[0]-'0'),
++      (mnc_len==2?15:imsi[5]-'0')<<4|(imsi[2]-'0'),(imsi[4]-'0')<<4|(imsi[3]-'0') };
++    pthread_mutex_lock(&nas->ue_policy_lock);
++    bool accepted=!memcmp(plmn,policy.plmn,3) &&
++      (!nas->ue_policy.rule_count || policy.upsc==nas->ue_policy.upsc) &&
++      ue_policy_save(nas->policy_path,pdu_buffer+13,payload_length)==0;
++    if (accepted) nas->ue_policy=policy;
++    pthread_mutex_unlock(&nas->ue_policy_lock);
++    uint8_t result[13];
++    size_t n=ue_policy_result(&policy,accepted,result);
++    generateUplinkNASTransport(nas, response, result, n, 5, 0);
++    LOG_I(NAS,"UE_POLICY %s PTI=%u UPSC=%u rules=%zu\n",accepted?"COMPLETE":"REJECT",policy.pti,policy.upsc,policy.rule_count);
++    return;
++  }
++  if (container_type!=1 || payload_length<4) { LOG_E(NAS,"Unsupported NAS container type %u\n",container_type); return; }
++  uint8_t msg_type = pdu_buffer[16];
+   if (msg_type == FGS_PDU_SESSION_ESTABLISHMENT_ACC) {
+     LOG_A(NAS, "Received PDU Session Establishment Accept in DL NAS Transport\n");
+     handle_pdu_session_accept(nas, pdu_buffer, pdu_length, instance);
++  } else if (msg_type == FGS_PDU_SESSION_ESTABLISHMENT_REJ) {
++    handle_pdu_session_reject(nas,pdu_buffer,pdu_length);
++  } else if (msg_type == FGS_PDU_SESSION_MODIFICATION_COMMAND) {
++    handle_pdu_session_modification_command(nas, pdu_buffer + 13, payload_length, response);
+   } else {
+     LOG_E(NAS, "Received unexpected message in DLinformationTransfer %d\n", msg_type);
+   }
+@@ -1864,7 +2086,7 @@ static void generatePduSessionEstablishRequest(nr_ue_nas_t *nas, as_nas_info_t *
+   pdu_session_establishment_request_msg pdu_session_establish;
+   pdu_session_establish.protocoldiscriminator = FGS_SESSION_MANAGEMENT_MESSAGE;
+   pdu_session_establish.pdusessionid = pdu_req->pdusession_id;
+-  pdu_session_establish.pti = 1;
++  pdu_session_establish.pti = pdu_req->pdusession_id;
+   pdu_session_establish.pdusessionestblishmsgtype = FGS_PDU_SESSION_ESTABLISHMENT_REQ;
+   pdu_session_establish.maxdatarate = 0xffff;
+   pdu_session_establish.pdusessiontype = pdu_req->pdusession_type;
+@@ -1956,6 +2178,40 @@ static void generatePduSessionEstablishRequest(nr_ue_nas_t *nas, as_nas_info_t *
+   }
+ }
+ 
++static void generateUplinkNASTransport(
++    nr_ue_nas_t *nas,
++    as_nas_info_t *message,
++    const uint8_t *payload,
++    size_t length,
++    uint8_t container_type,
++    uint8_t pdu_session_id)
++{
++  fgmm_nas_msg_security_protected_t msg={0};
++  msg.header.protocol_discriminator=FGS_MOBILITY_MANAGEMENT_MESSAGE;
++  msg.header.security_header_type=INTEGRITY_PROTECTED_AND_CIPHERED;
++  msg.header.sequence_number=nas->security.nas_count_ul&0xff;
++  msg.plain.header=set_mm_header(FGS_UPLINK_NAS_TRANSPORT,PLAIN_5GS_MSG);
++  msg.plain.mm_msg.uplink_nas_transport.payloadcontainertype.type=container_type;
++  msg.plain.mm_msg.uplink_nas_transport.fgspayloadcontainer.payloadcontainercontents=(OctetString){.value=(uint8_t *)payload,.length=length};
++  msg.plain.mm_msg.uplink_nas_transport.pdusessionid=pdu_session_id;
++  size_t capacity=15+length;
++  message->nas_data=malloc_or_fail(capacity);
++  int offset=nas_protected_security_header_encode(message->nas_data,&msg.header,capacity);
++  message->length=offset+mm_msg_encode(&msg.plain,message->nas_data+offset,capacity-offset);
++  nas_stream_cipher_t cipher={.context=nas->security_container->ciphering_context,
++    .count=nas->security.nas_count_ul,.bearer=1,.direction=0,
++    .message=message->nas_data+7,.blength=(message->length-7)*8};
++  uint8_t encrypted[message->length-7];
++  stream_compute_encrypt(nas->security_container->ciphering_algorithm,&cipher,encrypted);
++  memcpy(message->nas_data+7,encrypted,sizeof(encrypted));
++  cipher.context=nas->security_container->integrity_context;
++  cipher.count=nas->security.nas_count_ul++;
++  cipher.message=message->nas_data+6; cipher.blength=(message->length-6)*8;
++  uint8_t mac[4];
++  stream_compute_integrity(nas->security_container->integrity_algorithm,&cipher,mac);
++  memcpy(message->nas_data+2,mac,4);
++}
++
+ static void send_nas_uplink_data_req(nr_ue_nas_t *nas, const as_nas_info_t *initial_nas_msg)
+ {
+   MessageDef *msg = itti_alloc_new_message(TASK_NAS_NRUE, nas->UE_id, NAS_UPLINK_DATA_REQ);
+@@ -2099,7 +2355,16 @@ static void handle_registration_accept(nr_ue_nas_t *nas, const uint8_t *pdu_buff
+   }
+   if (nas->uicc->n_pdu_sessions == 0)
+     LOG_W(SIM, "no PDU sessions to request configured\n");
++  pthread_mutex_lock(&nas->ue_policy_lock);
++  nas->policy_allowed_count=0;
++  for (int i=0;i<NAS_MAX_NUMBER_SLICES;i++) {
++    const nr_nas_msg_snssai_t *allowed=&msg.nas_allowed_nssai[i];
++    if (allowed->sst)
++      nas->policy_allowed_nssai[nas->policy_allowed_count++]=(nssai_t){.sst=allowed->sst,.sd=allowed->sd?*allowed->sd:0xffffff};
++  }
++  ue_policy_write_state(nas);
+   for (const pdu_session_config_t *pdu = nas->uicc->pdu_sessions; pdu < nas->uicc->pdu_sessions + nas->uicc->n_pdu_sessions; ++pdu) {
++    if (nas->policy_dynamic_pdu && pdu!=nas->uicc->pdu_sessions) continue;
+     if (get_user_nssai_idx(pdu->nssai, msg.nas_allowed_nssai) < 0) {
+       LOG_E(NAS,
+             "PDU session ID %d NSSAI %d.%d: mismatch for allowed NSSAI. Couldn't request PDU session.\n",
+@@ -2108,9 +2373,12 @@ static void handle_registration_accept(nr_ue_nas_t *nas, const uint8_t *pdu_buff
+             pdu->nssai.sd);
+     } else {
+       LOG_I(NAS, "requested PDU session ID %d type %d NSSAI %d.%d DNN %s\n", pdu->id, pdu->type, pdu->nssai.sst, pdu->nssai.sd, pdu->dnn);
++      nas->policy_session_pending[pdu->id]=true;
++      nas->policy_session_started[pdu->id]=time(NULL);
+       request_pdusession(nas, pdu);
+     }
+   }
++  pthread_mutex_unlock(&nas->ue_policy_lock);
+   // Free local message after processing
+   free_fgmm_registration_accept(&msg);
+ }
+@@ -2393,6 +2661,11 @@ void *nas_nrue(void *args_p)
+           handle_pdu_session_accept(nas, ba.buf, ba.len, nas->UE_id);
+         } else if (msg_type == FGS_SERVICE_ACCEPT) {
+           handle_service_accept(nas, &ba);
++        } else if (msg_type == FGS_PDU_SESSION_MODIFICATION_COMMAND) {
++          as_nas_info_t response = {0};
++          handleDownlinkNASTransport(nas, ba.buf, ba.len, nas->UE_id, &response);
++          if (response.length > 0)
++            send_nas_uplink_data_req(nas, &response);
+         }
+ 
+         // Free NAS buffer memory after use (coming from RRC)
+@@ -2481,7 +2754,7 @@ void *nas_nrue(void *args_p)
+             handle_security_mode_command(nas, &initialNasMsg, pdu_buffer, pdu_length);
+             break;
+           case FGS_DOWNLINK_NAS_TRANSPORT:
+-            handleDownlinkNASTransport(nas, pdu_buffer, pdu_length, nas->UE_id);
++            handleDownlinkNASTransport(nas, pdu_buffer, pdu_length, nas->UE_id,&initialNasMsg);
+             break;
+           case FGS_REGISTRATION_ACCEPT:
+             handle_registration_accept(nas, pdu_buffer, pdu_length);
+@@ -2495,7 +2768,7 @@ void *nas_nrue(void *args_p)
+             handle_pdu_session_accept(nas, pdu_buffer, pdu_length, nas->UE_id);
+             break;
+           case FGS_PDU_SESSION_ESTABLISHMENT_REJ:
+-            LOG_E(NAS, "Received PDU Session Establishment reject\n");
++            handle_pdu_session_reject(nas,pdu_buffer,pdu_length);
+             break;
+           case FGS_REGISTRATION_REJECT:
+             handle_registration_reject(nas, &buffer);
+diff --git a/openair3/NAS/NR_UE/nr_nas_msg.h b/openair3/NAS/NR_UE/nr_nas_msg.h
+index 4a50e5a..92547ad 100644
+--- a/openair3/NAS/NR_UE/nr_nas_msg.h
++++ b/openair3/NAS/NR_UE/nr_nas_msg.h
+@@ -13,6 +13,8 @@
+ #include "as_message.h"
+ #include "NR_NAS_defs.h"
+ #include "secu_defs.h"
++#include "ue_policy.h"
++#include <pthread.h>
+ #include "NR_NAS_defs.h"
+ 
+ #define INITIAL_REGISTRATION 0b001
+@@ -77,6 +79,16 @@ typedef struct {
+   /* NAS Key Set Identifier associated to the security context */
+   uint8_t *ksi;
+   plmn_id_t *sn_id;
++  ue_policy_t ue_policy;
++  pthread_mutex_t ue_policy_lock;
++  bool policy_session_active[16];
++  bool policy_session_pending[16];
++  int policy_session_error[16];
++  time_t policy_session_started[16];
++  nssai_t policy_allowed_nssai[8];
++  int policy_allowed_count;
++  bool policy_dynamic_pdu;
++  char policy_path[512];
+ } nr_ue_nas_t;
+ 
+ nr_ue_nas_t *get_ue_nas_info(module_id_t module_id);
+diff --git a/openair3/NAS/NR_UE/test_ue_policy.c b/openair3/NAS/NR_UE/test_ue_policy.c
+new file mode 100644
+index 0000000..4b0db82
+--- /dev/null
++++ b/openair3/NAS/NR_UE/test_ue_policy.c
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: LicenseRef-CSSL-1.0 */
++#include "ue_policy.h"
++#include <assert.h>
++#include <stdio.h>
++#include <string.h>
++
++int main(int argc,char **argv)
++{
++  assert(argc==2);
++  FILE *file=fopen(argv[1],"rb"); assert(file);
++  uint8_t bytes[65536]; size_t n=fread(bytes,1,sizeof(bytes),file); fclose(file);
++  ue_policy_t policy;
++  assert(ue_policy_decode(bytes,n,&policy)==0);
++  assert(policy.rule_count==1 && policy.upsc==1 && policy.pti==1);
++  const ue_policy_rule_t *rule=ue_policy_match(&policy,0x01020304,17,5000);
++  assert(rule && !strcmp(rule->routes[0].dnn,"internet") && rule->routes[0].sd==0x010203);
++  uint8_t result[13]; assert(ue_policy_result(&policy,true,result)==2 && result[1]==2);
++  assert(ue_policy_result(&policy,false,result)==13 && result[12]==0x6f);
++  for (size_t i=0;i<n;i++) assert(ue_policy_decode(bytes,i,&policy)!=0);
++  for (size_t i=0;i<n;i++) {
++    for (unsigned bit=1;bit<256;bit<<=1) {
++      bytes[i]^=bit; ue_policy_decode(bytes,n,&policy); bytes[i]^=bit;
++    }
++  }
++  bytes[0]=0; assert(ue_policy_decode(bytes,n,&policy)!=0);
++  puts("UE policy wire decoder, classifier, result and truncation tests passed");
++}
+diff --git a/openair3/NAS/NR_UE/ue_policy.c b/openair3/NAS/NR_UE/ue_policy.c
+new file mode 100644
+index 0000000..175934a
+--- /dev/null
++++ b/openair3/NAS/NR_UE/ue_policy.c
+@@ -0,0 +1,159 @@
++/* SPDX-License-Identifier: LicenseRef-CSSL-1.0 */
++#include "ue_policy.h"
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++typedef struct { const uint8_t *p; size_t n; } cursor_t;
++static int take(cursor_t *c, size_t n, cursor_t *out)
++{
++  if (n > c->n) return -1;
++  *out = (cursor_t){c->p,n}; c->p += n; c->n -= n; return 0;
++}
++static int u8(cursor_t *c, uint8_t *out)
++{
++  if (!c->n) return -1;
++  *out = *c->p++; --c->n; return 0;
++}
++static int u16(cursor_t *c, uint16_t *out)
++{
++  if (c->n < 2) return -1;
++  *out = ((uint16_t)c->p[0] << 8) | c->p[1]; c->p += 2; c->n -= 2; return 0;
++}
++static int lv(cursor_t *c, cursor_t *out)
++{
++  uint16_t n; return u16(c,&n) || take(c,n,out) ? -1 : 0;
++}
++static uint32_t be32(const uint8_t *p)
++{
++  return (uint32_t)p[0]<<24 | (uint32_t)p[1]<<16 | (uint32_t)p[2]<<8 | p[3];
++}
++static int decode_dnn(cursor_t c, char out[101])
++{
++  size_t used=0;
++  while (c.n) {
++    uint8_t n; cursor_t label;
++    if (u8(&c,&n) || !n || n>63 || take(&c,n,&label) || used+n+(used!=0)>100) return -1;
++    if (used) out[used++]='.';
++    for (size_t i=0;i<n;i++) {
++      uint8_t ch=label.p[i];
++      if (!((ch>='a'&&ch<='z') || (ch>='0'&&ch<='9') || ch=='-')) return -1;
++      out[used++]=ch;
++    }
++  }
++  out[used]=0; return used ? 0 : -1;
++}
++static int decode_route(cursor_t c, ue_policy_route_t *route)
++{
++  cursor_t contents;
++  route->sd=0xffffff;
++  if (u8(&c,&route->precedence) || lv(&c,&contents) || c.n) return -1;
++  bool got_slice=false,got_dnn=false;
++  while (contents.n) {
++    uint8_t type,n; cursor_t value;
++    if (u8(&contents,&type) || u8(&contents,&n) || take(&contents,n,&value)) return -1;
++    if (type==2) {
++      if (got_slice || (n!=1 && n!=4)) return -1;
++      got_slice=true; route->sst=value.p[0];
++      if (n==4) route->sd=(uint32_t)value.p[1]<<16 | (uint32_t)value.p[2]<<8 | value.p[3];
++    } else if (type==4) {
++      if (got_dnn || decode_dnn(value,route->dnn)) return -1;
++      got_dnn=true;
++    } else { return -1; }
++  }
++  return got_slice && got_dnn ? 0 : -1;
++}
++static int decode_rule(cursor_t c, ue_policy_rule_t *rule)
++{
++  cursor_t td,rsds;
++  if (u8(&c,&rule->precedence) || lv(&c,&td) || !td.n || lv(&c,&rsds) || c.n) return -1;
++  unsigned fields=0;
++  while (td.n) {
++    uint8_t type; cursor_t value;
++    if (u8(&td,&type)) return -1;
++    switch (type) {
++      case 1: if (fields || td.n) return -1; fields=1; break;
++      case 0x10:
++        if ((fields&3) || take(&td,8,&value)) return -1;
++        fields|=2; rule->address=be32(value.p); rule->mask=be32(value.p+4); break;
++      case 0x30:
++        if ((fields&5) || u8(&td,&rule->protocol)) return -1;
++        fields|=4; break;
++      case 0x50:
++        if ((fields&9) || u16(&td,&rule->port)) return -1;
++        fields|=8; break;
++      default: return -1;
++    }
++  }
++  while (rsds.n) {
++    cursor_t rsd;
++    if (rule->route_count==UE_POLICY_MAX_ROUTES || lv(&rsds,&rsd)) return -1;
++    ue_policy_route_t *route=&rule->routes[rule->route_count++];
++    if (decode_route(rsd,route)) return -1;
++    for (size_t j=0;j+1<rule->route_count;j++)
++      if (rule->routes[j].precedence==route->precedence) return -1;
++  }
++  return rule->route_count ? 0 : -1;
++}
++int ue_policy_decode(const uint8_t *data, size_t size, ue_policy_t *out)
++{
++  ue_policy_t policy={0};
++  cursor_t c={data,size},list,sublist,plmn,instruction,rules;
++  uint8_t type; uint16_t part_length;
++  if (u8(&c,&policy.pti) || !policy.pti || policy.pti==255 || u8(&c,&type) || type!=1 || lv(&c,&list)) return -1;
++  /* Profile: one PLMN / one policy section / one URSP part, up to 32 rules. */
++  if (lv(&list,&sublist) || list.n || take(&sublist,3,&plmn) || lv(&sublist,&instruction) || sublist.n || u16(&instruction,&policy.upsc)) return -1;
++  memcpy(policy.plmn,plmn.p,3);
++  if (!instruction.n) { *out=policy; return 0; } /* Delete section. */
++  if (u16(&instruction,&part_length) || !part_length || u8(&instruction,&type) || type!=1 || take(&instruction,part_length-1,&rules) || instruction.n) return -1;
++  while (rules.n) {
++    cursor_t rule;
++    if (policy.rule_count==UE_POLICY_MAX_RULES || lv(&rules,&rule)) return -1;
++    ue_policy_rule_t *decoded=&policy.rules[policy.rule_count++];
++    if (decode_rule(rule,decoded)) return -1;
++    for (size_t j=0;j+1<policy.rule_count;j++)
++      if (policy.rules[j].precedence==decoded->precedence) return -1;
++  }
++  if (!policy.rule_count) return -1;
++  *out=policy; return 0;
++}
++const ue_policy_rule_t *ue_policy_match(const ue_policy_t *policy,uint32_t ipv4,uint8_t protocol,uint16_t port)
++{
++  const ue_policy_rule_t *best=NULL;
++  for (size_t i=0;i<policy->rule_count;i++) {
++    const ue_policy_rule_t *r=&policy->rules[i];
++    if ((ipv4&r->mask)!=(r->address&r->mask) || (r->protocol && r->protocol!=protocol) || (r->port && r->port!=port)) continue;
++    if (!best || r->precedence<best->precedence) best=r;
++  }
++  return best;
++}
++int ue_policy_save(const char *path,const uint8_t *data,size_t size)
++{
++  char temp[4096];
++  if (snprintf(temp,sizeof(temp),"%s.tmp",path)>=(int)sizeof(temp)) return -1;
++  FILE *f=fopen(temp,"wb");
++  if (!f) return -1;
++  int status=fwrite(data,1,size,f)==size && fflush(f)==0 && fsync(fileno(f))==0 ? 0 : -1;
++  if (fclose(f)!=0) status=-1;
++  if (status==0) status=rename(temp,path);
++  if (status!=0) unlink(temp);
++  return status;
++}
++int ue_policy_load(const char *path,ue_policy_t *out)
++{
++  FILE *f=fopen(path,"rb");
++  if (!f) return errno==ENOENT ? 1 : -1;
++  uint8_t data[65536]; size_t n=fread(data,1,sizeof(data),f);
++  int status=ferror(f) || n==sizeof(data) ? -1 : ue_policy_decode(data,n,out);
++  fclose(f); return status;
++}
++size_t ue_policy_result(const ue_policy_t *p,bool accepted,uint8_t out[13])
++{
++  out[0]=p->pti; out[1]=accepted?2:3;
++  if (accepted) return 2;
++  out[2]=0;out[3]=9;out[4]=1;memcpy(out+5,p->plmn,3);
++  out[8]=p->upsc>>8;out[9]=p->upsc;out[10]=0;out[11]=1;out[12]=0x6f;
++  return 13;
++}
+diff --git a/openair3/NAS/NR_UE/ue_policy.h b/openair3/NAS/NR_UE/ue_policy.h
+new file mode 100644
+index 0000000..4da0c12
+--- /dev/null
++++ b/openair3/NAS/NR_UE/ue_policy.h
+@@ -0,0 +1,35 @@
++/* SPDX-License-Identifier: LicenseRef-CSSL-1.0 */
++#ifndef OAI_UE_POLICY_H
++#define OAI_UE_POLICY_H
++#include <stdbool.h>
++#include <stddef.h>
++#include <stdint.h>
++
++#define UE_POLICY_MAX_RULES 32
++#define UE_POLICY_MAX_ROUTES 8
++typedef struct {
++  uint8_t precedence, sst;
++  uint32_t sd;
++  char dnn[101];
++} ue_policy_route_t;
++typedef struct {
++  uint8_t precedence, protocol;
++  uint16_t port;
++  uint32_t address, mask;
++  size_t route_count;
++  ue_policy_route_t routes[UE_POLICY_MAX_ROUTES];
++} ue_policy_rule_t;
++typedef struct {
++  uint8_t pti, plmn[3];
++  uint16_t upsc;
++  size_t rule_count;
++  ue_policy_rule_t rules[UE_POLICY_MAX_RULES];
++} ue_policy_t;
++
++/* All cursor checks enforce the external NAS wire boundary. */
++int ue_policy_decode(const uint8_t *data, size_t size, ue_policy_t *out);
++const ue_policy_rule_t *ue_policy_match(const ue_policy_t *policy, uint32_t ipv4, uint8_t protocol, uint16_t port);
++int ue_policy_save(const char *path, const uint8_t *data, size_t size);
++int ue_policy_load(const char *path, ue_policy_t *out);
++size_t ue_policy_result(const ue_policy_t *policy, bool accepted, uint8_t out[13]);
++#endif
+diff --git a/openair3/NAS/NR_UE/ue_policy_service.c b/openair3/NAS/NR_UE/ue_policy_service.c
+new file mode 100644
+index 0000000..f0fced1
+--- /dev/null
++++ b/openair3/NAS/NR_UE/ue_policy_service.c
+@@ -0,0 +1,144 @@
++/* SPDX-License-Identifier: LicenseRef-CSSL-1.0 */
++#include "ue_policy_service.h"
++#include <arpa/inet.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++#include <time.h>
++
++void ue_policy_write_state(nr_ue_nas_t *nas)
++{
++  if (!nas->policy_dynamic_pdu) return;
++  char path[560], temporary[564];
++  snprintf(path,sizeof(path),"%s.state.json",nas->policy_path);
++  snprintf(temporary,sizeof(temporary),"%s.tmp",path);
++  FILE *file=fopen(temporary,"w");
++  AssertFatal(file,"Cannot write UE NAS state: %s\n",strerror(errno));
++  fprintf(file,"{\"source\":\"oai_ue_nas\",\"allowed_nssai\":[");
++  for (int i=0;i<nas->policy_allowed_count;i++)
++    fprintf(file,"%s{\"sst\":%d,\"sd\":\"%06x\"}",i?",":"",nas->policy_allowed_nssai[i].sst,nas->policy_allowed_nssai[i].sd);
++  fprintf(file,"],\"sessions\":[");
++  for (int i=0;i<nas->uicc->n_pdu_sessions;i++) {
++    const pdu_session_config_t *p=&nas->uicc->pdu_sessions[i];
++    fprintf(file,"%s{\"id\":%d,\"dnn\":\"%s\",\"sst\":%d,\"sd\":\"%06x\",\"active\":%s,\"pending\":%s,\"error\":%d}",
++            i?",":"",p->id,p->dnn,p->nssai.sst,p->nssai.sd,
++            nas->policy_session_active[p->id]?"true":"false",nas->policy_session_pending[p->id]?"true":"false",nas->policy_session_error[p->id]);
++  }
++  fprintf(file,"]}\n");
++  AssertFatal(fclose(file)==0 && rename(temporary,path)==0,"Cannot commit UE NAS state\n");
++}
++
++static int select_session(nr_ue_nas_t *nas,const ue_policy_rule_t *rule)
++{
++  const ue_policy_route_t *route=NULL;
++  for (size_t j=0;j<rule->route_count;j++) {
++    const ue_policy_route_t *candidate=&rule->routes[j];
++    bool allowed=false;
++    if (!nas->policy_dynamic_pdu) {
++      for (int i=0;i<nas->uicc->n_pdu_sessions;i++) {
++        const pdu_session_config_t *p=&nas->uicc->pdu_sessions[i];
++        if (!strcmp(p->dnn,candidate->dnn) && p->nssai.sst==candidate->sst && p->nssai.sd==candidate->sd
++            && nas->policy_session_active[p->id]) allowed=true;
++      }
++    } else {
++      for (int i=0;i<nas->policy_allowed_count;i++)
++        if (nas->policy_allowed_nssai[i].sst==candidate->sst &&
++            nas->policy_allowed_nssai[i].sd==candidate->sd) allowed=true;
++    }
++    if (allowed && (!route || candidate->precedence<route->precedence)) route=candidate;
++  }
++  if (!route) return -1;
++  for (int i=0;i<nas->uicc->n_pdu_sessions;i++) {
++    const pdu_session_config_t *p=&nas->uicc->pdu_sessions[i];
++    if (!strcmp(p->dnn,route->dnn) && p->nssai.sst==route->sst && p->nssai.sd==route->sd) return i;
++  }
++  if (!nas->policy_dynamic_pdu) return -1;
++  int id;
++  for (id=1;id<16;id++) {
++    bool used=false;
++    for (int i=0;i<nas->uicc->n_pdu_sessions;i++) used|=nas->uicc->pdu_sessions[i].id==id;
++    if (!used) break;
++  }
++  if (id==16) return -1;
++  int index=nas->uicc->n_pdu_sessions++;
++  nas->uicc->pdu_sessions[index]=(pdu_session_config_t){.id=id,.type=1,
++    .nssai={.sst=route->sst,.sd=route->sd},.dnn=strdup(route->dnn)};
++  AssertFatal(nas->uicc->pdu_sessions[index].dnn,"Cannot allocate PDU DNN\n");
++  return index;
++}
++
++static void *serve(void *arg)
++{
++  nr_ue_nas_t *nas=arg;
++  int listener=socket(AF_UNIX,SOCK_STREAM,0);
++  AssertFatal(listener>=0,"UE policy socket: %s\n",strerror(errno));
++  struct sockaddr_un address={.sun_family=AF_UNIX};
++  int n=snprintf(address.sun_path,sizeof(address.sun_path),"%s.sock",nas->policy_path);
++  AssertFatal(n<(int)sizeof(address.sun_path),"UE policy socket path too long\n");
++  unlink(address.sun_path);
++  AssertFatal(bind(listener,(struct sockaddr *)&address,sizeof(address))==0,"UE policy bind: %s\n",strerror(errno));
++  AssertFatal(listen(listener,8)==0,"UE policy listen: %s\n",strerror(errno));
++  for (;;) {
++    int fd=accept(listener,NULL,NULL);
++    if (fd<0) { LOG_E(NAS,"UE policy accept: %s\n",strerror(errno)); break; }
++    struct timeval timeout={.tv_sec=2};
++    setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
++    char query[128]={0},ip[INET_ADDRSTRLEN]; unsigned protocol,port;
++    ssize_t got=recv(fd,query,sizeof(query)-1,0);
++    struct in_addr ipv4;
++    if (got<=0 || sscanf(query,"%15s %u %u",ip,&protocol,&port)!=3 || protocol>255 || port>65535 || inet_pton(AF_INET,ip,&ipv4)!=1) {
++      send(fd,"ERROR invalid-query\n",20,MSG_NOSIGNAL); close(fd); continue;
++    }
++    pthread_mutex_lock(&nas->ue_policy_lock);
++    const ue_policy_rule_t *rule=ue_policy_match(&nas->ue_policy,ntohl(ipv4.s_addr),protocol,port);
++    int idx=rule?select_session(nas,rule):-1;
++    char response[256];
++    if (idx<0) {
++      snprintf(response,sizeof(response),"NO_ROUTE\n");
++    } else {
++      const pdu_session_config_t *pdu=&nas->uicc->pdu_sessions[idx];
++      int id=pdu->id;
++      if (nas->policy_dynamic_pdu && !nas->policy_session_active[id] && !nas->policy_session_pending[id] && !nas->policy_session_error[id]) {
++        nas->policy_session_pending[id]=true;
++        nas->policy_session_started[id]=time(NULL);
++        request_pdusession(nas,pdu);
++        LOG_I(NAS,"UE_POLICY PDU_REQUEST id=%d dnn=%s sst=%d sd=%06x\n",id,pdu->dnn,pdu->nssai.sst,pdu->nssai.sd);
++        ue_policy_write_state(nas);
++      }
++      if (nas->policy_session_pending[id] && time(NULL)-nas->policy_session_started[id]>30) {
++        nas->policy_session_pending[id]=false;
++        nas->policy_session_error[id]=-1;
++        ue_policy_write_state(nas);
++      }
++      if (nas->policy_session_error[id]) {
++        snprintf(response,sizeof(response),"FAILED %d %d\n",id,nas->policy_session_error[id]);
++      } else if (!nas->policy_session_active[pdu->id]) {
++        snprintf(response,sizeof(response),"PENDING %d\n",pdu->id);
++      } else {
++        char interface[32];
++        if (idx==0) snprintf(interface,sizeof(interface),"oaitun_ue%ld",nas->UE_id+1);
++        else snprintf(interface,sizeof(interface),"oaitun_ue%ldp%d",nas->UE_id+1,pdu->id);
++        snprintf(response,sizeof(response),"ROUTE %s %d %u %u %u\n",interface,pdu->id,rule->precedence,nas->ue_policy.upsc,nas->ue_policy.pti);
++      }
++    }
++    pthread_mutex_unlock(&nas->ue_policy_lock);
++    send(fd,response,strlen(response),MSG_NOSIGNAL);
++    close(fd);
++  }
++  close(listener); return NULL;
++}
++void ue_policy_service_start(nr_ue_nas_t *nas)
++{
++  pthread_mutex_init(&nas->ue_policy_lock,NULL);
++  const char *dir=getenv("OAI_UE_POLICY_DIR");
++  if (!dir) return;
++  int n=snprintf(nas->policy_path,sizeof(nas->policy_path),"%s/%s.policy",dir,nas->uicc->imsiStr);
++  AssertFatal(n<(int)sizeof(nas->policy_path),"UE policy storage path too long\n");
++  AssertFatal(ue_policy_load(nas->policy_path,&nas->ue_policy)>=0,"Cannot load UE policy file\n");
++  nas->policy_dynamic_pdu=getenv("OAI_UE_DYNAMIC_PDU") && !strcmp(getenv("OAI_UE_DYNAMIC_PDU"),"1");
++  for (int i=0;i<nas->uicc->n_pdu_sessions;i++)
++    AssertFatal(nas->uicc->pdu_sessions[i].id>0 && nas->uicc->pdu_sessions[i].id<16,"PDU session identity must be 1..15\n");
++  ue_policy_write_state(nas);
++  pthread_t thread;
++  AssertFatal(pthread_create(&thread,NULL,serve,nas)==0,"Cannot start UE policy service\n");
++  pthread_detach(thread);
++}
+diff --git a/openair3/NAS/NR_UE/ue_policy_service.h b/openair3/NAS/NR_UE/ue_policy_service.h
+new file mode 100644
+index 0000000..815b95f
+--- /dev/null
++++ b/openair3/NAS/NR_UE/ue_policy_service.h
+@@ -0,0 +1,8 @@
++/* SPDX-License-Identifier: LicenseRef-CSSL-1.0 */
++#ifndef UE_POLICY_SERVICE_H
++#define UE_POLICY_SERVICE_H
++#include "nr_nas_msg.h"
++void ue_policy_service_start(nr_ue_nas_t *nas);
++/* Caller holds ue_policy_lock. */
++void ue_policy_write_state(nr_ue_nas_t *nas);
++#endif
+diff --git a/openair3/NGAP/ngap_gNB_decoder.c b/openair3/NGAP/ngap_gNB_decoder.c
+index 7b4ba3a..ffbc164 100644
+--- a/openair3/NGAP/ngap_gNB_decoder.c
++++ b/openair3/NGAP/ngap_gNB_decoder.c
+@@ -32,6 +32,7 @@ static int ngap_gNB_decode_initiating_message(NGAP_NGAP_PDU_t *pdu) {
+       free(res.buffer);
+       break;
+ 
++    case NGAP_ProcedureCode_id_UEContextModification:
+     case NGAP_ProcedureCode_id_UEContextRelease:
+       res = asn_encode_to_new_buffer(NULL, ATS_CANONICAL_XER, &asn_DEF_NGAP_NGAP_PDU, pdu);
+       free(res.buffer);
+diff --git a/openair3/NGAP/ngap_gNB_handlers.c b/openair3/NGAP/ngap_gNB_handlers.c
+index a0fd448..ba75b8b 100644
+--- a/openair3/NGAP/ngap_gNB_handlers.c
++++ b/openair3/NGAP/ngap_gNB_handlers.c
+@@ -22,6 +22,8 @@
+ #include "intertask_interface.h"
+ #include "ngap_common.h"
+ #include "ngap_gNB_decoder.h"
++#include "ngap_gNB_encoder.h"
++#include "ngap_gNB_itti_messaging.h"
+ #include "ngap_gNB_defs.h"
+ #include "ngap_gNB_nnsf.h"
+ #include "ngap_gNB_management_procedures.h"
+@@ -767,6 +769,10 @@ static int ngap_gNB_handle_initial_context_request(sctp_assoc_t assoc_id, uint32
+ 
+   ue_desc_p->rx_stream = stream;
+   ue_desc_p->amf_ue_ngap_id = amf_ue_ngap_id;
++
++  NGAP_FIND_PROTOCOLIE_BY_ID(NGAP_InitialContextSetupRequestIEs_t, ie, container,
++                            NGAP_ProtocolIE_ID_id_IndexToRFSP, false);
++  if (ie) ue_desc_p->index_to_rfsp = ie->value.choice.IndexToRFSP;
+   
+   MessageDef *message_p = itti_alloc_new_message(TASK_NGAP, 0, NGAP_INITIAL_CONTEXT_SETUP_REQ);
+   ngap_initial_context_setup_req_t * msg=&NGAP_INITIAL_CONTEXT_SETUP_REQ(message_p);
+@@ -1555,6 +1561,62 @@ static int ngap_gNB_handle_dl_ran_status_transfer(sctp_assoc_t assoc_id, uint32_
+ typedef int (*ngap_message_decoded_callback)(sctp_assoc_t assoc_id, uint32_t stream, NGAP_NGAP_PDU_t *pdu);
+ 
+ /* Handlers matrix. Only gNB related procedure present here */
++/* Store the policy in NGAP and dispatch the RAN-local mapping on the RRC task. */
++static int ngap_gNB_handle_rfsp_modification(sctp_assoc_t assoc_id, uint32_t stream, NGAP_NGAP_PDU_t *pdu)
++{
++  NGAP_UEContextModificationRequest_t *request = &pdu->choice.initiatingMessage->value.choice.UEContextModificationRequest;
++  NGAP_UEContextModificationRequestIEs_t *ie;
++  NGAP_FIND_PROTOCOLIE_BY_ID(NGAP_UEContextModificationRequestIEs_t, ie, request, NGAP_ProtocolIE_ID_id_AMF_UE_NGAP_ID, true);
++  unsigned long amf_id;
++  if (asn_INTEGER2ulong(&ie->value.choice.AMF_UE_NGAP_ID, &amf_id)) return -1;
++  NGAP_FIND_PROTOCOLIE_BY_ID(NGAP_UEContextModificationRequestIEs_t, ie, request, NGAP_ProtocolIE_ID_id_RAN_UE_NGAP_ID, true);
++  uint32_t ran_id = ie->value.choice.RAN_UE_NGAP_ID;
++  ngap_gNB_ue_context_t *ue = ngap_get_ue_context(ran_id);
++  if (!ue || ue->amf_ue_ngap_id != amf_id || ue->amf_ref->assoc_id != assoc_id) return -1;
++  for (int i=0; i<request->protocolIEs.list.count; i++) {
++    ie=request->protocolIEs.list.array[i];
++    if (ie->id!=NGAP_ProtocolIE_ID_id_AMF_UE_NGAP_ID && ie->id!=NGAP_ProtocolIE_ID_id_RAN_UE_NGAP_ID &&
++        ie->criticality==NGAP_Criticality_reject) {
++      NGAP_ERROR("Unsupported mandatory UEContextModification IE %ld\n",ie->id);
++      return -1;
++    }
++  }
++  NGAP_FIND_PROTOCOLIE_BY_ID(NGAP_UEContextModificationRequestIEs_t, ie, request, NGAP_ProtocolIE_ID_id_IndexToRFSP, true);
++  if (ie->value.choice.IndexToRFSP<1 || ie->value.choice.IndexToRFSP>256) return -1;
++  ue->index_to_rfsp=ie->value.choice.IndexToRFSP;
++  NGAP_NGAP_PDU_t response={.present=NGAP_NGAP_PDU_PR_successfulOutcome};
++  asn1cCalloc(response.choice.successfulOutcome, outcome);
++  outcome->procedureCode=NGAP_ProcedureCode_id_UEContextModification;
++  outcome->criticality=NGAP_Criticality_reject;
++  outcome->value.present=NGAP_SuccessfulOutcome__value_PR_UEContextModificationResponse;
++  NGAP_UEContextModificationResponse_t *body=&outcome->value.choice.UEContextModificationResponse;
++  {
++    asn1cSequenceAdd(body->protocolIEs.list, NGAP_UEContextModificationResponseIEs_t, field);
++    field->id=NGAP_ProtocolIE_ID_id_AMF_UE_NGAP_ID;
++    field->criticality=NGAP_Criticality_ignore;
++    field->value.present=NGAP_UEContextModificationResponseIEs__value_PR_AMF_UE_NGAP_ID;
++    asn_ulong2INTEGER(&field->value.choice.AMF_UE_NGAP_ID,amf_id);
++  }
++  {
++    asn1cSequenceAdd(body->protocolIEs.list, NGAP_UEContextModificationResponseIEs_t, field);
++    field->id=NGAP_ProtocolIE_ID_id_RAN_UE_NGAP_ID;
++    field->criticality=NGAP_Criticality_ignore;
++    field->value.present=NGAP_UEContextModificationResponseIEs__value_PR_RAN_UE_NGAP_ID;
++    field->value.choice.RAN_UE_NGAP_ID=ran_id;
++  }
++  uint8_t *buffer; uint32_t length;
++  int status=ngap_gNB_encode_pdu(&response,&buffer,&length);
++  ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_NGAP_NGAP_PDU,&response);
++  if (status<0) return -1;
++  ngap_gNB_itti_send_sctp_data_req(ue->gNB_instance->instance,assoc_id,buffer,length,ue->tx_stream);
++  MessageDef *rfsp_msg = itti_alloc_new_message(TASK_NGAP, 0, NGAP_RFSP_UPDATE);
++  NGAP_RFSP_UPDATE(rfsp_msg).gNB_ue_ngap_id = ran_id;
++  NGAP_RFSP_UPDATE(rfsp_msg).rfsp_index = ue->index_to_rfsp;
++  itti_send_msg_to_task(TASK_RRC_GNB, ue->gNB_instance->instance, rfsp_msg);
++  NGAP_INFO("RFSP_POLICY ran_ue_id=%u rfsp=%u response=sent radio_mapping=pending_rrc\n",ran_id,ue->index_to_rfsp);
++  return 0;
++}
++
+ const ngap_message_decoded_callback ngap_messages_callback[][3] = {
+     {0, 0, 0}, /* AMFConfigurationUpdate */
+     {0, 0, 0}, /* AMFStatusIndication */
+@@ -1596,7 +1658,7 @@ const ngap_message_decoded_callback ngap_messages_callback[][3] = {
+     {0, 0, 0}, /* RRCInactiveTransitionReport */
+     {0, 0, 0}, /* TraceFailureIndication */
+     {0, 0, 0}, /* TraceStart */
+-    {0, 0, 0}, /* UEContextModification */
++    {ngap_gNB_handle_rfsp_modification, 0, 0}, /* UEContextModification */
+     {ngap_gNB_handle_ue_context_release_command, 0, 0}, /* UEContextRelease */
+     {0, 0, 0}, /* UEContextReleaseRequest */
+     {0, 0, 0}, /* UERadioCapabilityCheck */
+diff --git a/openair3/NGAP/ngap_gNB_ue_context.h b/openair3/NGAP/ngap_gNB_ue_context.h
+index 40b2206..891ae51 100644
+--- a/openair3/NGAP/ngap_gNB_ue_context.h
++++ b/openair3/NGAP/ngap_gNB_ue_context.h
+@@ -38,6 +38,9 @@ typedef struct ngap_gNB_ue_context_s {
+ 
+   uint64_t amf_ue_ngap_id;
+ 
++  /* Operator RFSP index; radio mapping is outside the single-frequency profile. */
++  uint16_t index_to_rfsp;
++
+   /* Stream used for this particular UE */
+   int32_t tx_stream;
+   int32_t rx_stream;
+diff --git a/ue-policy.Dockerfile b/ue-policy.Dockerfile
+new file mode 100644
+index 0000000..85e933c
+--- /dev/null
++++ b/ue-policy.Dockerfile
+@@ -0,0 +1,2 @@
++FROM oaisoftwarealliance/oai-nr-ue:2026.w35
++COPY cmake_targets/ue-policy-build/nr-uesoftmodem /opt/oai-nr-ue/bin/nr-uesoftmodem

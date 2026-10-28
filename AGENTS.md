@@ -6,7 +6,7 @@
 
 现有采集资料和 PostgreSQL 数据保持原位；本轮恢复测试使用独立 `mergedsystem_testbed` 数据库。源码变化仅在运行任务退出、恢复及停止后部署，记录 runtime revision；保留失败、原始快照和已执行事实。禁止为了通过测试改目标、放宽断言、超时或验收。
 
-OAI 使用固定的已验收镜像及恢复补丁；没有完整重建过原 OAI 构建树，不得声称完成重新编译或证明历史无线故障唯一根因。
+2026-10-28 已找回 OAI 原始基础源码、Git 对象和未提交修改，恢复副本位于 `sources/openairinterface5g`。UE/gNB、RFsim 与配套六个库已重新编译；构建比较见 `docs/oai-rebuild-20261028.md`。重建镜像已完成 NAS URSP、NGAP RFSP、QoS 新增/修改/释放及精确恢复验收，见 `docs/oai-acceptance-20261028.md`。后续修复 HTTP 服务端小包发送等待，当前运行 `http-nodelay-20261028-1`，Python 版本 `http-nodelay-20261028`，133 项回归通过；原 20 ms HTTP 时延项通过十二个窗口验证，完整业务 SLA 尚未全部验收，详见 `docs/http-latency-validation-20261028.md`。旧场景已恢复并停止，原始证据和卷保留。RFSP 仅证明控制面应答，同 5QI 多 QFI 证据不足时保持 incomplete；不得声称全部行为等价或证明历史无线故障唯一根因。
 
 ---
 

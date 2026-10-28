@@ -26,8 +26,6 @@ def bootstrap(run_dir: Path) -> None:
         if len(associations) != 1:
             raise RuntimeError(f"{ue.supi}: expected one active UE policy association")
         association = associations[0]
-        if association["version"] != 0:
-            raise RuntimeError(f"{ue.supi}: bootstrap requires a new association")
         sessions = {item.id: item for item in ue.sessions}
         rules = []
         for index, flow in enumerate((item for item in scenario.flows if item.ue_id == ue.id), 1):
@@ -46,6 +44,25 @@ def bootstrap(run_dir: Path) -> None:
             )
         policy = URSPPolicy.model_validate({"plmn": plmn, "upsc": 1, "rules": rules})
         validate_subscription(policy, subscribers.get(ue.supi, plmn))
+        if association["version"] != 0:
+            if association["status"] == "complete" and association["policy"] == policy.model_dump(
+                mode="json", exclude_none=True
+            ):
+                print(
+                    json.dumps(
+                        {
+                            "supi": ue.supi,
+                            "status": "complete",
+                            "version": association["version"],
+                            "reused_initial_policy": True,
+                        }
+                    ),
+                    flush=True,
+                )
+                continue
+            raise RuntimeError(
+                f"{ue.supi}: existing policy differs from the initial policy; preserve it"
+            )
         pcf.apply_ue_policy(
             ue.supi,
             "ursp",

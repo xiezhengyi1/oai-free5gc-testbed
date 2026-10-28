@@ -27,6 +27,8 @@ class TcpSinkServer(socketserver.ThreadingTCPServer):
 class Handler(BaseHTTPRequestHandler):
     service_instance_id: str
     protocol_version = "HTTP/1.1"
+    # Headers and small bodies are separate writes; do not hold the body for a delayed ACK.
+    disable_nagle_algorithm = True
 
     def do_GET(self) -> None:
         request = urlparse(self.path)

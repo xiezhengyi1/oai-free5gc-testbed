@@ -36,6 +36,19 @@ def test_unscoped_release_never_guesses_between_pdu_sessions():
         assert "ambiguous" in result["correlation_error"]
 
 
+def test_native_qos_update_observation_replaces_old_five_qi_and_is_cached():
+    docker = Logs()
+    history = SessionLogHistory()
+    docker.text = stamped(0, assignment(1, 1, 1))
+    history.read(docker, "gnb")
+    docker.text = stamped(1, "UE 1: updated DRB 1 to QFI 1 (5QI 2) in PDU session 1")
+    records = history.read(docker, "gnb")
+    result = parse_session_fields(records, "s", "d", 1, 1)
+    assert result["five_qi"] == 2
+    assert result["qfi"] == 1
+    assert len(history.events) == 2
+
+
 def test_scoped_release_and_other_ue_do_not_remove_protected_session():
     lines = [
         assignment(1, 1),

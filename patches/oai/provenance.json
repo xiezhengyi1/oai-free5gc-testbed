@@ -1,5 +1,5 @@
 {
-  "scope": "Recovered snapshots and patches; full OAI rebuild not performed",
+  "scope": "Recovered historical sources and patches; UE/gNB and RFsim targets rebuilt and tested offline; candidate images not selected for live scenario",
   "source_sha256": {
     "case128-drb-release/rrc_gNB.original.c": "f57ca989031d64685bbffb80c0399ba2dea5c65ee36a7340290529c6ea5d12ab",
     "case128-drb-release/original-harness.c": "670adf2001d8b3bb9c3e59575b43728a827525afeb75b867b0ce89b8ab66678f",
@@ -10,5 +10,14 @@
     "case101-ue15-mac-failure/mac-admission/phy_procedures_nr_ue.c": "c3c77311ad856b6b71458c5f38219b2fc0c60cafce5287e07519da6f07afccb6",
     "coverage-redesign161-200/native-health-recovery/dci-admission/nr_ue_procedures.c": "1a17b756ab6f584e28b2a75d5df90418b1f05b616be07365f0a3fe08e245ee3a",
     "coverage-redesign161-200/native-health-recovery/dci-admission/nr_ue_procedures.before.c": "db259398b22a92c27d67a76160edf33f4c84321b614026745d9a5d5ad2129129"
+  },
+  "recovery_build_20261028": {
+    "historical_head": "56ffb40e275ba584a3032b926203c4ec03890497",
+    "historical_archive_sha256": "186e2a5043f524af7add6b0cc0732e0b25276ca5d33c50d83b68563914715f37",
+    "git_fsck_passed": true,
+    "patch_chain": "recovery-chain.json",
+    "replayed_source_files_equal": 4325,
+    "report": "../../docs/oai-rebuild-20261028.json",
+    "live_candidate_validation_completed": false
   }
 }

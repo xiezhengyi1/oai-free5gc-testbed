@@ -15,9 +15,9 @@ def verify_policy(action: PolicyAction, snapshot: UnifiedSnapshot) -> dict[str, 
     session = flow["session"]
     ran = flow["ran"]
     observed = {
-        "five_qi": session["five_qi"],
-        "qfi": session["qfi"],
-        "drb_id": ran["drb_id"],
+        "five_qi": session.get("five_qi"),
+        "qfi": session.get("qfi"),
+        "drb_id": ran.get("drb_id"),
     }
     if observed["five_qi"] != action.parameters.five_qi:
         raise RuntimeError(

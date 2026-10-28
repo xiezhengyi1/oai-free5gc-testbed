@@ -1,0 +1,202 @@
+{
+  "recorded_at": "2026-10-28T08:51:56.445456+00:00",
+  "historical_source": {
+    "head": "56ffb40e275ba584a3032b926203c4ec03890497",
+    "archive_sha256": "186e2a5043f524af7add6b0cc0732e0b25276ca5d33c50d83b68563914715f37",
+    "archive_bytes": 135569909,
+    "git_fsck_returncode": 0,
+    "preserved_modified_files": 17,
+    "canonical_server_path": "/home/xzy/MergedSystem/TestBed/sources/openairinterface5g",
+    "filtered_archive_sha256": "d990218034548f6d9d56d1b9a176ac71767a93872b17a1f0a5817e6a595d1e38"
+  },
+  "patch_chain": {
+    "upstream_commit": "ceccfc8ffa4340d5bdc08a9fc84d2e6ab3f9472c",
+    "recovered_head": "56ffb40e275ba584a3032b926203c4ec03890497",
+    "historical_archive_sha256": "186e2a5043f524af7add6b0cc0732e0b25276ca5d33c50d83b68563914715f37",
+    "patch_sequence": [
+      "recovered-base.patch",
+      "mac-admission.patch",
+      "dci-admission.patch",
+      "drb-release.patch",
+      "recovered-runtime.patch"
+    ],
+    "patch_sha256": {
+      "recovered-base.patch": "257ebf42c0bd681236ffb2d57e8de7eba40cec067272e927fa6c465892338125",
+      "mac-admission.patch": "0de4671032e7a1ef0eb1cf2e1cea22152ee2cd88f7e018c181028623131a33d4",
+      "dci-admission.patch": "e93cb88826192d906e1fcf73e64bdab77a0ece7fb850efcc99f815d99befff18",
+      "drb-release.patch": "8cf86c696cb11f3ecc35b6eb988eebd9ebcce1cd06e9db0684270e84371571c5",
+      "recovered-runtime.patch": "ae17425500c5e135c6e9ef8607a9aa4e8cd34c9b93e9ea3d6c90908ef6312b86"
+    },
+    "base_changes": [
+      "common/utils/system.c",
+      "docker/Dockerfile.build.ubuntu",
+      "gnb-policy.Dockerfile",
+      "openair2/COMMON/ngap_messages_def.h",
+      "openair2/COMMON/ngap_messages_types.h",
+      "openair2/F1AP/f1ap_cu_rrc_message_transfer.c",
+      "openair2/F1AP/f1ap_ids.h",
+      "openair2/GNB_APP/gnb_config.c",
+      "openair2/RRC/NR/nr_rrc_defs.h",
+      "openair2/RRC/NR/rrc_gNB.c",
+      "openair2/RRC/NR/rrc_gNB_mobility.c",
+      "openair2/RRC/NR/rrc_gNB_mobility.h",
+      "openair2/SDAP/nr_sdap/nr_sdap.c",
+      "openair2/SDAP/nr_sdap/nr_sdap.h",
+      "openair3/NAS/NR_UE/5GS/5GMM/MSG/FGSUplinkNasTransport.c",
+      "openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.c",
+      "openair3/NAS/NR_UE/5GS/5GMM/MSG/RegistrationRequest.h",
+      "openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.c",
+      "openair3/NAS/NR_UE/5GS/5GSM/MSG/PduSessionEstablishmentAccept.h",
+      "openair3/NAS/NR_UE/CMakeLists.txt",
+      "openair3/NAS/NR_UE/nr_nas_msg.c",
+      "openair3/NAS/NR_UE/nr_nas_msg.h",
+      "openair3/NAS/NR_UE/test_ue_policy.c",
+      "openair3/NAS/NR_UE/ue_policy.c",
+      "openair3/NAS/NR_UE/ue_policy.h",
+      "openair3/NAS/NR_UE/ue_policy_service.c",
+      "openair3/NAS/NR_UE/ue_policy_service.h",
+      "openair3/NGAP/ngap_gNB_decoder.c",
+      "openair3/NGAP/ngap_gNB_handlers.c",
+      "openair3/NGAP/ngap_gNB_ue_context.h",
+      "ue-policy.Dockerfile"
+    ],
+    "late_runtime_changes": [
+      "openair2/RRC/NR/rrc_gNB.c",
+      "openair2/RRC/NR/rrc_gNB_NGAP.c"
+    ],
+    "replayed_source_files_equal": 4325,
+    "different": [],
+    "excluded": [
+      ".git",
+      ".cpm",
+      "optional flexric submodule"
+    ],
+    "historical_cmake_omission": "HEAD tracked helper files restored; remaining clean upstream helper files retained"
+  },
+  "build": {
+    "compiler": "GCC 12.3.0",
+    "avx2": true,
+    "avx512": false,
+    "asn1c_commit": "940dd5fa9f3917913fd487b13dfddfacd0ded06e",
+    "targets": [
+      "nr-softmodem",
+      "nr-uesoftmodem",
+      "rfsimulator",
+      "params_libconfig",
+      "dfts",
+      "coding",
+      "ldpc",
+      "ldpc_orig"
+    ],
+    "build_cpus": "0-3,16-19",
+    "max_jobs": 8,
+    "nice": 19,
+    "gpu_used": false
+  },
+  "offline_controls": {
+    "passed": true,
+    "ursp_golden_truncation_mutation_sanitized": true,
+    "mac_valid_controls": 61231,
+    "dci_controls": 6144,
+    "drb_encoding_controls": 6,
+    "drb_pending_controls": 7
+  },
+  "binary_comparison": {
+    "gnb": {
+      "existing_sha256": "f0380928c32baabb51008adba001c393201f552fd309e5a4ab1e93570f02e4c6",
+      "rebuilt_sha256": "a75ae62773006cf5ac2c805ccc0b4ef90a11848f6c1404b2b6734e76fcd72ee6",
+      "byte_identical": false,
+      "existing_only_functions": 0,
+      "rebuilt_only_functions": 0,
+      "common_functions": 13843,
+      "same_size_common_functions": 13843,
+      "missing_feature_functions": []
+    },
+    "ue": {
+      "existing_sha256": "7a2c18c5e7768d69fa01351fc7553f9a4e980f716e09d3c9975352ce72fd4f34",
+      "rebuilt_sha256": "e6f8750df85dcb67f9118dcfa88ddff31cdc718185a4cd5820e7d2fe61aa0ac4",
+      "byte_identical": false,
+      "existing_only_functions": 0,
+      "rebuilt_only_functions": 0,
+      "common_functions": 4903,
+      "same_size_common_functions": 4897,
+      "missing_feature_functions": []
+    }
+  },
+  "candidate_images": {
+    "gnb": {
+      "candidate_image": "mergedsystem/oai-gnb:recovered-source-20261028",
+      "candidate_image_id": "sha256:c67fe2b1bdd1f738470b3b19976e7d82b5afdaed65a0833feb2783f1891bf246",
+      "base_image_id": "sha256:35c36ceeefc4ac606a634042ee973dca21d3f4419ee61521cb94c4ceaca43bc3",
+      "help_passed": true,
+      "ldd_resolved": true,
+      "changed_files": [
+        "opt/oai-gnb/bin/nr-softmodem",
+        "usr/local/lib/libcoding.so",
+        "usr/local/lib/libdfts.so",
+        "usr/local/lib/libldpc.so",
+        "usr/local/lib/libldpc_orig.so",
+        "usr/local/lib/libparams_libconfig.so",
+        "usr/local/lib/librfsimulator.so",
+        "var/cache/ldconfig/aux-cache"
+      ]
+    },
+    "ue": {
+      "candidate_image": "mergedsystem/oai-nr-ue:recovered-source-20261028",
+      "candidate_image_id": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "base_image_id": "sha256:b74726fe050a99d5cd7939f4bf3229747b948c3b1dcf2cb34535540b0d7a2e0b",
+      "help_passed": true,
+      "ldd_resolved": true,
+      "changed_files": [
+        "opt/oai-nr-ue/bin/nr-uesoftmodem",
+        "usr/local/lib/libcoding.so",
+        "usr/local/lib/libdfts.so",
+        "usr/local/lib/libldpc.so",
+        "usr/local/lib/libldpc_orig.so",
+        "usr/local/lib/libparams_libconfig.so",
+        "usr/local/lib/librfsimulator.so",
+        "var/cache/ldconfig/aux-cache"
+      ]
+    }
+  },
+  "current_runtime": {
+    "run_id": "merged-recovery-protocols-20261028-1",
+    "snapshot_id": "snapshot-15814874625ea2c0f25b",
+    "complete_fresh_available_flows": 3,
+    "images_unchanged": true,
+    "application_cpu_quota_restored": 1,
+    "containers": {
+      "oai-gnb-1": {
+        "container_id": "470be4bff082a0a0949ea1c21d2995b420ab14a0b0afb1e93105cddfbbeb10bd",
+        "image": "oai-free5gc-testbed/oai-gnb:lifecycle-drb-release-20261019",
+        "image_id": "sha256:35c36ceeefc4ac606a634042ee973dca21d3f4419ee61521cb94c4ceaca43bc3",
+        "started_at": "2026-10-28T07:16:25.018065912Z"
+      },
+      "oai-nrue-1": {
+        "container_id": "9c1f95971298febdc09720228e5d43b804d364ac01d744f6e69965d816eea36a",
+        "image": "oai-free5gc-testbed/oai-nr-ue:lifecycle-dci-admission-20261019",
+        "image_id": "sha256:b74726fe050a99d5cd7939f4bf3229747b948c3b1dcf2cb34535540b0d7a2e0b",
+        "started_at": "2026-10-28T07:16:28.224366855Z"
+      }
+    }
+  },
+  "limits": [
+    "ELF and image hashes differ; no byte-for-byte image reproduction claim",
+    "No live NAS UE policy/RFSP end-to-end equivalence validation of the candidate images in this run",
+    "E2 Agent and all physical SDR drivers were not rebuilt",
+    "Existing running scenario and raw execution/restoration evidence preserved"
+  ],
+  "ue_size_differences": {
+    "logging_source_prefix_functions": [
+      "ComputeOPc",
+      "f2345",
+      "mm_msg_encode",
+      "usim_api_authenticate",
+      "usim_api_authenticate_test"
+    ],
+    "normalized_instruction_forms_equal": true,
+    "source_prefix_length_difference": 73,
+    "additional_function": "build_RRCReconfiguration_IEs",
+    "additional_function_reason": "Rebuilt UE links the shared RRC encoder with the recovered gNB release-only fix; the old UE retained an earlier encoder object. The 6 offline encode/decode controls passed."
+  }
+}

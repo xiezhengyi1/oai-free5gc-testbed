@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 SESSION_QOS = re.compile(
-    r"UE (\d+): assigned DRB (\d+) to QFI (\d+) \(5QI (\d+)\) in PDU session (\d+)",
+    r"UE (\d+): (?:assigned|updated) DRB (\d+) to QFI (\d+) \(5QI (\d+)\) in PDU session (\d+)",
     re.IGNORECASE,
 )
 SESSION_QOS_RELEASE = re.compile(
@@ -78,6 +78,7 @@ def parse_session_fields(
             value for (session_id, _), value in active.items() if session_id == pdu_session_id
         ]
         if current:
+            result["qos_flows"] = sorted(current, key=lambda row: row["qfi"])
             result.update(current[-1])
     for block in _session_blocks(log_text, cu_ue_id, pdu_session_id):
         for session_id, teid in SESSION_UL_TEID.findall(block):

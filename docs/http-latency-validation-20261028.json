@@ -1,0 +1,459 @@
+{
+  "recorded_at": "2026-10-28T09:56:08.040035+00:00",
+  "run_id": "http-nodelay-20261028-1",
+  "phase": "RUNNING",
+  "status": "passed_original_20ms_http_latency_clause",
+  "runtime_revision": "http-nodelay-20261028",
+  "implementation": "Handler.disable_nagle_algorithm=True on accepted HTTP server sockets",
+  "runtime_source_change": {
+    "changed_runtime_files": [
+      "traffic/app_server.py"
+    ],
+    "before": {
+      "traffic/app_server.py": "b44d8678c392f0ac7a4c17bfb1c6b74c90a8b56f6c0944b7252150350f63e490"
+    },
+    "after": {
+      "traffic/app_server.py": "6a01eb48a06bb98d7eca41a0ad6575225d8fc49a919ec33152560b2c8aee3f5c"
+    }
+  },
+  "scenario_unchanged": true,
+  "native_images_unchanged": true,
+  "scenario_sha256": "7bd7952ddabe3f3637899bc044ca077c2415f458fc46ae98a3b446a8d57c6c8a",
+  "regression": {
+    "passed": 133,
+    "failed": 0
+  },
+  "functional_checks": {
+    "baseline": {
+      "time": "2026-10-28T09:52:44.722398+00:00",
+      "rfsp_fixture": 64
+    },
+    "ursp": {
+      "native_NAS_roundtrip": true,
+      "preestablished_PDU_count": 4
+    },
+    "rfsp": {
+      "roundtrip": [
+        64,
+        65,
+        64
+      ],
+      "scope": "NGAP control plane; no radio mapping"
+    },
+    "negatives": {
+      "rejected_without_native_mutation": 6
+    },
+    "sm": {
+      "native_add_modify_delete": true,
+      "exact_kernel_restore": true
+    },
+    "final": {
+      "stable_windows": 3,
+      "all_six_receiver_counters_increased": true,
+      "exact_kernel_graph_restored": true,
+      "no_container_restarts": true,
+      "application_cpus": 1,
+      "runtime_source_files": 93
+    }
+  },
+  "formal_metric": "existing snapshot's mean of exported full HTTP transaction latency samples",
+  "latency_threshold_ms": 20,
+  "nonoverlapping_windows": 12,
+  "observation_seconds": 125.65345618803985,
+  "http": {
+    "inference-edge-http": {
+      "before_window_ms": {
+        "min": 53.63421854351393,
+        "max": 55.140214739367366
+      },
+      "after_window_ms": {
+        "min": 4.6896413497796114,
+        "max": 6.96380981455811,
+        "mean": 5.870793578320775
+      },
+      "throughput_dl_mbps": [
+        0.9808534733290247,
+        0.9886490204352285,
+        0.9888464914491657,
+        0.9863234311634085,
+        0.984688185176596,
+        0.9801122137632301,
+        0.9823101143385813,
+        0.9892215120231427,
+        0.9892467906380923,
+        0.9730868521415637,
+        0.9896486279600438,
+        0.9893653413110887
+      ],
+      "jitter_ms": [
+        1.84714865971688,
+        1.683276980664,
+        1.6794904505885577,
+        1.9205907424202373,
+        1.6506692827485119,
+        1.779229357522447,
+        1.6555070866896768,
+        1.812373914736648,
+        1.8117833491821131,
+        1.9820066714029816,
+        1.5169027540600502,
+        1.5016793763252416
+      ],
+      "loss_rate": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "protected-inference-edge-http": {
+      "before_window_ms": {
+        "min": 53.95899290769276,
+        "max": 57.55603736774488
+      },
+      "after_window_ms": {
+        "min": 5.125770990906114,
+        "max": 7.453844554468312,
+        "mean": 6.4528502892547595
+      },
+      "throughput_dl_mbps": [
+        0.9507571733187962,
+        0.9771498771796371,
+        0.9785560015531624,
+        0.9591626127111145,
+        0.9602731881236811,
+        0.9564189936838534,
+        0.9561128027817921,
+        0.9781625892783442,
+        0.9746572524645803,
+        0.9357856416512566,
+        0.9798427194064413,
+        0.9629574518961619
+      ],
+      "jitter_ms": [
+        1.916411563357305,
+        1.5477389262260746,
+        1.3771942374942425,
+        1.6580611837991848,
+        1.9167797767225145,
+        1.792393123817272,
+        1.884780779547137,
+        1.4941158498968499,
+        1.5777724491815777,
+        2.112851295834876,
+        1.4962767806474404,
+        1.8064740032381983
+      ],
+      "loss_rate": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "normal_client_probe_summary": {
+    "1": {
+      "samples": 64,
+      "quickack_override": false,
+      "client_nodelay": false,
+      "median_ms": 6.062479922547936,
+      "mean_ms": 6.207385837114998,
+      "sample_p95_ms": 9.380942094139755,
+      "maximum_ms": 12.099651037715375
+    },
+    "2": {
+      "samples": 64,
+      "quickack_override": false,
+      "client_nodelay": false,
+      "median_ms": 7.380625058431178,
+      "mean_ms": 7.495001342249452,
+      "sample_p95_ms": 10.911885066889226,
+      "maximum_ms": 12.161220074631274
+    }
+  },
+  "containers": {
+    "oai-gnb-1": {
+      "id": "40f0d7ca1b977c800594f0dfa8b8e1aae5170d08fe9185f76dc01af43da9c426",
+      "image": "sha256:c67fe2b1bdd1f738470b3b19976e7d82b5afdaed65a0833feb2783f1891bf246",
+      "started_at": "2026-10-28T09:52:02.848303234Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 6000000000
+    },
+    "oai-nrue-1": {
+      "id": "2f30edca2804a507cad6b82be115e6d2bcf4ac0ab7a52e82fac8f864c3aeede3",
+      "image": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "started_at": "2026-10-28T09:52:06.115086616Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 4000000000
+    },
+    "oai-nrue-2": {
+      "id": "aeaffc8d072677f551e1d47829b0ba2509376034821a7407ec37497eb14cf009",
+      "image": "sha256:06b30e6436dc083c80c7ce7d3a52036a4eba6e4a544dca9875567e41da9bd399",
+      "started_at": "2026-10-28T09:52:08.775520696Z",
+      "running": true,
+      "restart_count": 0,
+      "health": "healthy",
+      "nano_cpus": 4000000000
+    },
+    "free5gc-upf-edge": {
+      "id": "5cdc3cbe1c27b3a2a24a5c30d0a735103d6a9fc491a05330610b5ddb237dc5c2",
+      "image": "sha256:bb37f20be6793321ec180f12c39240d7a6d97a0ccc505412507a4c62923e013b",
+      "started_at": "2026-10-28T09:51:58.638644292Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 2000000000
+    },
+    "free5gc-upf-alternate": {
+      "id": "fa617217daa5bc851029ad8d0f4aa9667168a484aaf05344047e352f646e0e8e",
+      "image": "sha256:bb37f20be6793321ec180f12c39240d7a6d97a0ccc505412507a4c62923e013b",
+      "started_at": "2026-10-28T09:51:58.640442062Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 2000000000
+    },
+    "free5gc-pcf": {
+      "id": "9fc1bb4d929784a8ccb17455b9373c9bdce890943a296339b0bea1bdf982c357",
+      "image": "sha256:fbcafda58e37758806bd561c5afb7b4ead5418da906339ae765f3a388edf58c3",
+      "started_at": "2026-10-28T09:51:54.717429448Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "free5gc-smf": {
+      "id": "ba9b693eb5bf61f3547e15e90beae0a71e294730498f8a73e628b4b5a79686ff",
+      "image": "sha256:ac18f248e55db50c288e43b41381c10a36fe599c8aa77eee3351009c64082511",
+      "started_at": "2026-10-28T09:51:59.298783015Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "free5gc-amf": {
+      "id": "0ae42916c8d293e2fdb8a2c730247d74ef0bfe3027429f6bf14ecf9c60044bb9",
+      "image": "sha256:f1a096415005d6ca19ca58cb610dee16be65864c7c671e7bd17d8dca67bf60cd",
+      "started_at": "2026-10-28T09:51:56.070257825Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "action-gateway": {
+      "id": "538a9632af58627d79bafd189b3436c7ff85326eb0f759d7e79cce0ff5fd35ed",
+      "image": "sha256:5035f514723bf18910b25dfe5cb2c3f80403b8bbd153116f37cd8cac19ffb396",
+      "started_at": "2026-10-28T09:52:23.761059702Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "snapshot-builder": {
+      "id": "be764408284314ec99ca11baac9cfb61636385f552c37660f31b38e2516337c9",
+      "image": "sha256:5035f514723bf18910b25dfe5cb2c3f80403b8bbd153116f37cd8cac19ffb396",
+      "started_at": "2026-10-28T09:52:23.759252531Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "session-tracker": {
+      "id": "52d6521c5f9b15e82295def866034fe5bcc8ac0ccf8757ab109620a09946975e",
+      "image": "sha256:5035f514723bf18910b25dfe5cb2c3f80403b8bbd153116f37cd8cac19ffb396",
+      "started_at": "2026-10-28T09:52:14.647424386Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "traffic-sidecar-ue-1": {
+      "id": "3dbd1e72652ce96c00622c034b7ece5f34f6a1a569ae602a2c318a52efec2ab1",
+      "image": "sha256:f85e1428dba64a489c537dddbfd9cd68f1c0763d4292cbc63e5fdd776d4dce89",
+      "started_at": "2026-10-28T09:52:13.694946199Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "traffic-sidecar-ue-2": {
+      "id": "c1bf03da57ef458104d17dfd63040d97c37971fd5221b66724b992bc56a8a4f8",
+      "image": "sha256:f85e1428dba64a489c537dddbfd9cd68f1c0763d4292cbc63e5fdd776d4dce89",
+      "started_at": "2026-10-28T09:52:14.189158621Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 0
+    },
+    "mec-app-edge": {
+      "id": "df016842c4cea6d698252642bcd51e3f6ce655a27e134ff67ffd7ff1311aa10d",
+      "image": "sha256:f42b0586e009222a7154721cdcf01caf4327b01a69438add17887e3d58cb41a5",
+      "started_at": "2026-10-28T09:52:05.759371697Z",
+      "running": true,
+      "restart_count": 0,
+      "health": null,
+      "nano_cpus": 1000000000
+    }
+  },
+  "previous_run_id": "oai-acceptance-20261028-4",
+  "previous_run_stopped_after_exact_recovery": true,
+  "runtime_sources": {
+    "action-gateway": {
+      "files": 93,
+      "equal": true
+    },
+    "snapshot-builder": {
+      "files": 93,
+      "equal": true
+    },
+    "session-tracker": {
+      "files": 93,
+      "equal": true
+    },
+    "traffic-sidecar-ue-1": {
+      "files": 93,
+      "equal": true
+    },
+    "traffic-sidecar-ue-2": {
+      "files": 93,
+      "equal": true
+    },
+    "mec-app-edge": {
+      "files": 93,
+      "equal": true
+    }
+  },
+  "full_business_sla_accepted": null,
+  "limits": [
+    "The formal latency metric is a window average of exported transaction samples, not a production p99 guarantee",
+    "This validates the latency clause; all original bandwidth, jitter and loss measurements are retained separately",
+    "No radio handover, physical SDR or model-inference claim"
+  ],
+  "evidence_root": "/home/xzy/MergedSystem/TestBed/artifacts/runs/http-nodelay-20261028-1/evidence",
+  "evidence_sha256": {
+    "oai-live-acceptance/sm-modify-stable-00.json": "34b483095edeecedeaaf52578a3ac8064bdea51cb15e57862056fd124b369cc6",
+    "oai-live-acceptance/negative-duplicate-precedence-before.json": "c67b5f65c1345b210c4daafae8443c383332436b47356c61a65a829f9652bcd5",
+    "oai-live-acceptance/final-complete.json": "ec0d604b31fa83b56b7ac53234d8e03dd19bd117d2325f48826a7d6233bd5626",
+    "oai-live-acceptance/ursp-to-alternate-before.json": "9f68545b3f8c986fc3934a581dd35c83d535cb14098612ff3d0bfba8250ae807",
+    "oai-live-acceptance/sm-modify-request.json": "95ccb367e8426d66ae729a220735aaa0afeda8b40269321d65b0d64bf8c34cf2",
+    "oai-live-acceptance/sm-start.json": "222c7fdcacb54ff843c7665ea8c2a50147f034c9208b4c8108ab6400d692d35e",
+    "oai-live-acceptance/negative-duplicate-precedence-request.json": "de64ad161bb914b7b95b047e73949006b75b895494a81b33b631aa2494f05060",
+    "oai-live-acceptance/sm-complete.json": "525f4d8dc657cd9ca10e6d469f3fce3ecd87232699e97d0427867d86a449d8e6",
+    "oai-live-acceptance/sm-modify-radio.json": "3e14cb7b16130e3d49e57ff616ddbc1189525c044395772214359b863cd4ce6c",
+    "oai-live-acceptance/negative-duplicate-precedence-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/sm-add-radio.json": "9aac4848d077652d4099b82cc8afbdc85999e0d22790fc73f81f267c1bc44966",
+    "oai-live-acceptance/negative-wrong-principal-before.json": "aacbce333cfe53a2f44b39a593b8d241a2627b3386e2ea9a2fc22461aebab0c0",
+    "oai-live-acceptance/pre-fixture-policy.json": "620d99bb2d302782ff5245ad270b5160f569e519f9b52c010dc059c49402d95b",
+    "oai-live-acceptance/sm-add-before.json": "62efd5bdb084e5ce0672e1eadce757578c4403e670744c9a09317fa601c957b7",
+    "oai-live-acceptance/rfsp-to-65-before.json": "1f76a695966886e1cd0bd7479efce841dff34490b25f99d54da123fe756d72d5",
+    "oai-live-acceptance/negative-unsubscribed-slice-request.json": "bca5f3997e5157aa08f5384c79c2554a0aceb9d98d5f3a6614870ace648eedab",
+    "oai-live-acceptance/negative-unknown-ue-response.json": "045c63c2b0607ba746791eba353758d81d44e12f2031322f95589c8f21bcd983",
+    "oai-live-acceptance/negative-stale-version-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/sm-restored-radio.json": "f872721c3e951360985880912926ff2a273b5d9e514b8d81880c122006cb2a34",
+    "oai-live-acceptance/ursp-complete.json": "25c8ff1a81648b03c027f8ec59305c5e2447645d0278b84c6246b3435540a6d0",
+    "oai-live-acceptance/alternate-kernel.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "oai-live-acceptance/final-window-2-00.json": "497d3bc5f4e44be8fb8c06eeebc152eda7265a8ae6596282286a1506dd7fcb70",
+    "oai-live-acceptance/baseline-kernel.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "oai-live-acceptance/negative-unsubscribed-dnn-request.json": "ac67b1ed6b33776fc1e8ea4207789cf98083cf0d4d9004c3de5ae7f28d583063",
+    "oai-live-acceptance/rfsp-restore-64-request.json": "49f74da20f15cb69e5c4a0770be008aa9e0456eb1111f351fec760d1065ded15",
+    "oai-live-acceptance/sm-add-stable-00.json": "2209bf1856460b9df5499cb83b12c5a1ccbe2d87c4719d54f16437c07394ae06",
+    "oai-live-acceptance/ursp-restored-stable-00.json": "6adad830db37d7ca2cab2581f8be36d1967996f27bec249bcee26f6bc53ca463",
+    "oai-live-acceptance/sm-restored-stable-00.json": "1dd9082627e18faae001d59e259bdd3812844f9e09997eb020b116a8ceb15502",
+    "oai-live-acceptance/negative-stale-version-request.json": "cb290535f9d210b4d214e3a99f8a5eb62c231879e935c2813d74b0575e45a7dd",
+    "oai-live-acceptance/rfsp-complete.json": "0dcdf3b76115a4b0c08dd47a50e39ca14d44ebe5d8701875d60e74dd79b4c08d",
+    "oai-live-acceptance/alternate-stable-00.json": "f7e8f7e9e0abcb6fa7b52f7112ffb00106b2e6b66ce3533f91f3e46f01be1e50",
+    "oai-live-acceptance/rfsp-fixture-64-request.json": "1baa056cd398d9185e1f9d27570c6868814af74d0e9f99cce757cc272a2196b1",
+    "oai-live-acceptance/sm-modify-policy.json": "2b480357898aa905d29120089a5374ba3cc979524c662f270d57e0de16d6536e",
+    "oai-live-acceptance/negative-unsubscribed-slice-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/initial-stable-00.json": "d6cfeb8f35a4be9f9c8bffafdcc060e6044f02104b4b94c40176f4e5d92a7d45",
+    "oai-live-acceptance/sm-initial-policy.json": "57825a88ffbe788ddf3a81d703dd083f00c39d3e75a18e74d996395be73915be",
+    "oai-live-acceptance/protected-policy.json": "b084c7432e8c133d0c48f2f88ff4375b976639de5807512b2d58a7b9b4662694",
+    "oai-live-acceptance/sm-modify-before.json": "ed45367898d14371a097578bec3ff8326d08f7f74e4e36e1c05f29ceea390b6d",
+    "oai-live-acceptance/negative-unknown-ue-request.json": "4f982c93235b21610b3fc1fc0df407dd0f79876ed1b03687194615bd656a2145",
+    "oai-live-acceptance/rfsp-fixture-64-before.json": "1d9ae50ade88f489ba1f240734f6af7f953c352b03fecf8a997bb79e49043a3f",
+    "oai-live-acceptance/baseline-policy.json": "24cabe19d9c9e15b22199cdece15511c2e01f44ee887951aec393f0ed3af1f11",
+    "oai-live-acceptance/rfsp-restore-64-before.json": "73de2d68a65dabc61f35876fdef0c9e5e56ab7d05ba131584133d86fe800c96e",
+    "oai-live-acceptance/negatives-complete.json": "e9849d9a65a748aafcadc46f7d7b44712fc536fa49ee41d7644a295745024e59",
+    "oai-live-acceptance/final-window-0-00.json": "b080f92537a5c9f4a12ab3e3ef91f818d0d612f726ace77ed730519e0fc2aa50",
+    "oai-live-acceptance/sm-initial-kernel.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "oai-live-acceptance/negative-unknown-ue-before.json": "bdecc29f5a9401859fedb5b959c197a52060ce1270e6ca1e3568f927e9118350",
+    "oai-live-acceptance/baseline-allocations.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "oai-live-acceptance/negative-unsubscribed-dnn-response.json": "49e92b6f110c00e8618d397e6afdbce4242307a9c61bafb8e17b2b481af5e4a6",
+    "oai-live-acceptance/baseline-containers.json": "4fbad1371f2cf0a9fa96fb8aa089ee4855261c26f9d264f7e3dbde9ca75ee3ac",
+    "oai-live-acceptance/sm-modify-kernel.json": "649dc6253ed0dda1004ed6a745a33f4b677e32a5f6d55152721edae55f7d4418",
+    "oai-live-acceptance/negative-wrong-principal-request.json": "0166fd2170ef3e1217680667750f1fd4acf9153563776a87d4fdd4033d647f72",
+    "oai-live-acceptance/baseline.json": "d6cfeb8f35a4be9f9c8bffafdcc060e6044f02104b4b94c40176f4e5d92a7d45",
+    "oai-live-acceptance/runtime-source-hashes.json": "d08a8d995800c39ba7e3889b4a912abedd2e51e76ddf27fa7976fa8547f76c9d",
+    "oai-live-acceptance/negative-unsubscribed-dnn-before.json": "d3e79765c66d6ae4e45b857cc3f6e8ead0ed75285b89f21cc077e9b3ab8b2f00",
+    "oai-live-acceptance/sm-add-response.json": "9d91cb418b87cc6bd9e7a814995a0112f8935075fd8bb0ab0f72e55f30b7836e",
+    "oai-live-acceptance/negative-duplicate-precedence-response.json": "f02e0cf1ed0b4e7ec2ed8241eaa00e9b0f1b45f1e87b1fca5e3da7d25e7068af",
+    "oai-live-acceptance/baseline-complete.json": "5fbbb759394286691bf05076aa2c6ed217d8ca87d874f49bfd2ec9d3bea59c1b",
+    "oai-live-acceptance/sm-add-request.json": "21a1fe498954b2cd67cb12c813b740a490e6df90c2e9ee55aa437b1e2709f1c2",
+    "oai-live-acceptance/sm-add-kernel.json": "07255bd99ba4a626f14e827a6586358b431d6922fda06102f41ceb73ce2c697b",
+    "oai-live-acceptance/rfsp-to-65-response.json": "7feb9f0cedcb36141fc4635a1e5fb2fced819e2e455f37b35968c18c7b3bd84e",
+    "oai-live-acceptance/sm-restore-readback-00.json": "fe945711999113e6802f034fc49095be2ade4370f797f3b853e7fee23ee2ad10",
+    "oai-live-acceptance/rfsp-restore-64-response.json": "b40783876f689ab7a5cc62f6dfc479aae2cd43c8cbb3873a9148d92b042681c5",
+    "oai-live-acceptance/ursp-to-alternate-request.json": "f105f8692f27426b43e181e9e9fbf86a6e5e6f151937155fa92e4022d91bcdcf",
+    "oai-live-acceptance/negative-stale-version-response.json": "668add84449748de05536d4d030dcc34e5b0504797f0fbf4b9164b23bf7af5f5",
+    "oai-live-acceptance/rfsp-to-65-request.json": "ada5d56f54fd0fdbf687550769ec6ce549d1923a72f230cce305cf532ed9fd67",
+    "oai-live-acceptance/ursp-restore-before.json": "649717eda49550c645ed497bd69c58ba105dd9da0d040bc0dd0aeec233f0b54b",
+    "oai-live-acceptance/sm-restore-request.json": "506840870057256232fbe5710cb8053a3bd9e775b980269f6be73bd503675e09",
+    "oai-live-acceptance/negative-unknown-ue-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/ursp-restore-request.json": "fb4ac5dd0e5dc6b4092ac30b3b63bbd74da08bb892b2f5809c95a9f14a2fa5ce",
+    "oai-live-acceptance/sm-restored-allocations.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "oai-live-acceptance/sm-add-policy.json": "51e81bb39764ecf32107f0573f782bfdb9d014cd06b4fae8954237f175fd408c",
+    "oai-live-acceptance/negative-unsubscribed-slice-response.json": "ef3522dd5213129567bbd466df4b6398b868de969b63cd1147f27878c64e9e17",
+    "oai-live-acceptance/rfsp-65-stable-00.json": "085c28dd07d286a6202feeb2dcb990a39afe293ddc0ce1e2666bddf5e961d322",
+    "oai-live-acceptance/ursp-to-alternate-response.json": "c8faebca5a10ceaea383be92183767a60607453818e6161871d2d1293a8ba26d",
+    "oai-live-acceptance/negative-wrong-principal-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/final-window-1-00.json": "89c277d9643436148da1b67254add5030354ed18fefde80d0ed748ace92f82c6",
+    "oai-live-acceptance/final-containers.json": "4fbad1371f2cf0a9fa96fb8aa089ee4855261c26f9d264f7e3dbde9ca75ee3ac",
+    "oai-live-acceptance/rfsp-fixture-64-response.json": "b02b53fb193ac35323390534d8bada8954e517fc135743c49bc03ffa3d9a4936",
+    "oai-live-acceptance/negative-wrong-principal-response.json": "33bede7b5f8f28f1a9f7f9c3855142139b4fe7514ec200090ee803668bf881e4",
+    "oai-live-acceptance/sm-restore-response.json": "5484f55824ecf821b30fac0ec862ca94238a57c1db7706e35d9c7b715161ec40",
+    "oai-live-acceptance/sm-modify-response.json": "8842bb3b4ad06a193db2d09d1ed7cbb1319f1b38aee129bf77d32edda72a18b5",
+    "oai-live-acceptance/negative-unsubscribed-slice-before.json": "4e683c7347fba6f917a46670a1486fa62f821f49f27a19b371ab8c356960b7f7",
+    "oai-live-acceptance/negative-unsubscribed-dnn-readback.json": "4cb775a09eda28137f2bcde28c0a136d16f88ea3833588565fd35a5af40fee9d",
+    "oai-live-acceptance/negative-stale-version-before.json": "33c7fe5178802863604e17a2d832ec4d1fb38e22763caff71e6dfd7e76615219",
+    "oai-live-acceptance/final-kernel.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "oai-live-acceptance/sm-restore-readback-01.json": "7c6d2897c77adfe3f58437503d6791c28050d91a60c4d7ab3db72b2b7ceadee1",
+    "oai-live-acceptance/sm-restored-kernel.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "oai-live-acceptance/ursp-restore-response.json": "fb45c8646ca5b7522021c5392e90e212a6ded7a5d6e0836935204de709eed704",
+    "http-latency-validation/window-01.json": "c71a8199a658c8ca76193b1bb68c9584ddd8b8adfe239b68b0d2bb84098c6f98",
+    "http-latency-validation/window-05.json": "422c521b3e75408d588c449d41168299fa5cbab1249737c79ea021a40ea03b45",
+    "http-latency-validation/window-11.json": "7fe5a85299320dc496204c5c749672e8fc2f2a689e8cc0e9b290bcfdd4f5df8a",
+    "http-latency-validation/kernel-after-soak.json": "c020d86f6c33b01e7da2067cf0da9f16ab2fd10f3f4e9d9ce4f4a11a6e97a53e",
+    "http-latency-validation/normal-client-probes.json": "9d1c2c389f4827d0bf92c0ab482411e754ff7b6a0027875d299e3e6b87b3779a",
+    "http-latency-validation/window-03.json": "e54d0b4602e4be444193768469e29d74e9f57364bc305ccc2c3abdf86750d871",
+    "http-latency-validation/window-09.json": "94e6e249bc3efcb10a47da516ff76a9a1e20455f443f3a86eed2992a15f55841",
+    "http-latency-validation/window-07.json": "b7036012b3c955fd04664eea48f459808083605f9f6561a874009407fda9a032",
+    "http-latency-validation/window-04.json": "1794e31139f6e67a0e71d997eba998fec3dc8044e34ebba7a1f5e1b89182295d",
+    "http-latency-validation/window-08.json": "7bde71e7fbc26afa210f241ef6d7c09f69f259ede834ed7aa6a3c2825c65972f",
+    "http-latency-validation/window-02.json": "e8fc190f1fd530b320e12fb0af9253c5bd57ab523b162b28110034b3aa26df42",
+    "http-latency-validation/window-00.json": "17f4b5653598743fabcb011c1b1a666a8ba5173c6abf2698deb173c151d4cd6d",
+    "http-latency-validation/window-06.json": "12bd26a64863091159451b6ab88d81fbfd1b645535818d804c2867fa770fb433",
+    "http-latency-validation/window-10.json": "7773e371db8af3613c3e39ffafacfa8b812033b1822ca6d6629e68ac97ee72a5",
+    "http-latency-validation/summary.json": "b9f7a133a1e3eecdbe745ca3d7045288129424017733a04b9a4b58c536ed0060"
+  }
+}

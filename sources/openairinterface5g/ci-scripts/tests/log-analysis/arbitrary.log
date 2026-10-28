@@ -1,0 +1,9 @@
+[UTIL]   threadCreate() for L1_rx_thread: creating thread (no affinity, default priority)
+[UTIL]   threadCreate() for L1_tx_thread: creating thread (no affinity, default priority)
+[UTIL]   threadCreate() for L1_stats: creating thread (no affinity, default priority)
+TYPE <CTRL-C> TO TERMINATE
+[PHY]    got sync (ru_thread)
+[PHY]    RU 0 rf device ready
+[PHY]    RU 0 RF started cpu_meas_enabled 0
+[HW]     No connected device, generating void samples...
+[PHY]    got sync (L1_stats_thread)
