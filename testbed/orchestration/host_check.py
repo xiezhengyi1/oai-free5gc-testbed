@@ -10,6 +10,7 @@ from pathlib import Path
 
 from testbed.orchestration.network_setup import host_route_conflicts
 from testbed.scenario.schema import Scenario
+from testbed.orchestration.host_profile import configured_profile
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +57,12 @@ def _git_tag(path: str, expected: str) -> str:
     return f"{root}@{tag}"
 
 
+def _cpu_avx() -> str:
+    if " avx " not in f" {Path('/proc/cpuinfo').read_text()} ":
+        raise RuntimeError("AVX CPU flag is absent")
+    return "AVX CPU flag is present"
+
+
 def _image_digest(image: str) -> str:
     payload = json.loads(_command(["docker", "image", "inspect", image]))
     if not isinstance(payload, list) or len(payload) != 1:
@@ -73,6 +80,14 @@ def lock_images(lock_path: Path) -> dict[str, object]:
 
 
 def _verify_images(lock_path: Path) -> str:
+    profile = configured_profile()
+    if profile is not None:
+        mismatches = {image: {"expected": expected, "observed": observed}
+                      for image, expected in profile.digests.items()
+                      if (observed := _image_digest(image)) != expected}
+        if mismatches:
+            raise RuntimeError(f"host image digest mismatches: {mismatches}")
+        return f"verified {len(profile.digests)} host profile images"
     payload = json.loads(lock_path.read_text(encoding="utf-8"))
     if payload.get("locked") is not True:
         raise RuntimeError("deployment/images.lock.json has not been locked")
@@ -97,12 +112,7 @@ def run_host_checks(repository_root: Path, scenario: Scenario) -> list[CheckResu
                 f"found {platform.system()}/{platform.machine()}",
             ),
         ),
-        _check(
-            "cpu-avx",
-            lambda: _require(
-                " avx " in f" {Path('/proc/cpuinfo').read_text()} ", "AVX CPU flag is absent"
-            ),
-        ),
+        _check("cpu-avx", _cpu_avx),
         _check("tun-device", lambda: str(Path("/dev/net/tun").resolve(strict=True))),
         _check(
             "gtp5g-module",
@@ -113,7 +123,7 @@ def run_host_checks(repository_root: Path, scenario: Scenario) -> list[CheckResu
             lambda: _command(["docker", "version", "--format", "{{.Server.Version}}"]),
         ),
         _check("docker-compose", _compose_version),
-        _check("sctp-kernel", lambda: _command(["modinfo", "sctp"])),
+        _check("sctp-kernel", lambda: _command(["modinfo", "-F", "name", "sctp"])),
         _check(
             "route-overlap",
             lambda: _require(

@@ -13,6 +13,7 @@ from testbed.scenario.loader import load_scenario
 from testbed.state.models import RunPhase, RunState
 from testbed.state.run_store import RunStore
 from testbed.state.slice_store import SliceStore
+from testbed.orchestration.cpu_isolation import isolate_current_run
 
 
 class LaunchPhaseError(RuntimeError):
@@ -103,6 +104,7 @@ class Launcher:
                 )
             gnb_evidence["subscriber_count"] = len(subscribers)
             on_ready(RunPhase.GNB_READY, gnb_evidence)
+            isolate_current_run(self.docker, self.run_dir, self.scenario)
 
             self.docker.compose_up(application_services)
             registered_supis: list[str] = []

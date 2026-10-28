@@ -1,5 +1,7 @@
 # ibn3090 仿真主机与 Windows 中转
 
+> 2026-10-28：当前源码与仿真入口已恢复到 `/home/xzy/MergedSystem/TestBed`，使用本机数据库和接口。部署命令、固定镜像及真实验收见 [恢复部署记录](../../../docs/recovery-20261028.md)。下文为历史记录，其中旧目录、中转命令和历史运行状态不作为当前操作入口。
+
 > 2026-10-09 更新：Qwen3-8B、vLLM、Multiagents 和 PostgreSQL 已迁到 ibn3090 的 `/home/xzy` 下，运行不再依赖 Windows 中转。当前入口见相邻 Multiagents 仓库的 `deployment/hosts/ibn3090/README.md`；以下中转拓扑保留作迁移历史。
 
 仿真运行目录为 `xzy@10.112.50.129:/home/xzy/testbed`。此后的 free5GC、OAI RFsim、业务流量和仿真验收均在这台机器执行。yinyuexi 保留微调、vLLM、Multiagents 及其 PostgreSQL；旧仿真目录和证据保留用于追溯。

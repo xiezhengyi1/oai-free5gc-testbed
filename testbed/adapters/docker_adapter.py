@@ -112,12 +112,14 @@ class DockerAdapter:
         return self.inspect(container)["State"]["Running"] is True
 
     def container_logs(
-        self, container: str, *, tail: int | str = 5000, since: str | None = None
+        self, container: str, *, tail: int | str = 5000, since: str | None = None,
+        timestamps: bool = False,
     ) -> str:
         return self._run(
             [
                 "docker",
                 "logs",
+                *(["--timestamps"] if timestamps else []),
                 "--tail",
                 str(tail),
                 *(["--since", since] if since else []),

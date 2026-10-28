@@ -85,11 +85,11 @@ def correlate_flow(
             "packet_size": flow.packet_size_bytes * 8,
             "packet_size_unit": "bits",
             "packet_size_bytes": flow.packet_size_bytes,
-            "arrival_rate": (
-                flow.rate_mbps * 1_000_000 / (flow.packet_size_bytes * 8)
-            ),
+            "arrival_rate": (flow.timing.packet_rate(flow.packet_size_bytes, flow.rate_mbps)),
             "arrival_rate_unit": "packets_per_second",
-            "offered_rate_mbps": flow.rate_mbps,
+            "offered_rate_mbps": (
+                flow.timing.scheduled_rate_mbps(flow.packet_size_bytes, flow.rate_mbps)
+            ),
         },
         "telemetry": telemetry,
         "ran": {

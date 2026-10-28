@@ -378,6 +378,10 @@ def test_ran_exporter_waits_for_each_current_ue_rnti() -> None:
 
     assert not ran_records_ready(ues, rntis, records)
     records["gnb-2"][0xA505] = {}
+    assert not ran_records_ready(ues, rntis, records)
+    complete = dict(cu_ue_id=1, prb_ul=1, mcs_ul=1, mcs_dl=1, bler_ul=0, bler_dl=0)
+    records["gnb-1"][0xE404] = complete
+    records["gnb-2"][0xA505] = complete
     assert ran_records_ready(ues, rntis, records)
 
 

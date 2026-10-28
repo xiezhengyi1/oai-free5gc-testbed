@@ -2,16 +2,26 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from pathlib import Path
 
 from prometheus_client import Gauge, start_http_server
 
 from testbed.adapters.docker_adapter import DockerAdapter
 from testbed.adapters.oai.ue_adapter import session_interface
-from testbed.telemetry.free5gc_event_parser import parse_session_fields
-from testbed.telemetry.ran_exporter import parse_ran_ues, parse_ue_rnti
+from testbed.telemetry.free5gc_event_parser import (
+    SESSION_DL_TEID,
+    SESSION_QOS,
+    SESSION_QOS_RELEASE,
+    SESSION_UL_TEID,
+    parse_session_fields,
+)
+from testbed.telemetry.ran_exporter import UE_STATUS, parse_ran_ues, parse_ue_rnti
 
 SESSION_COMPLETE = Gauge(
     "testbed_session_correlation_complete",
@@ -20,30 +30,126 @@ SESSION_COMPLETE = Gauge(
 )
 
 
+class SessionLogHistory:
+    """Keep native events across overlapping reads, never across container restarts."""
+
+    def __init__(self, max_events: int = 100_000) -> None:
+        self.identity = None
+        self.since = None
+        self.events = {}
+        self.bindings = {}
+        self.last_read = {}
+        self.max_events = max_events
+
+    @staticmethod
+    def _identity(docker, container):
+        inspected = docker.inspect(container)
+        return inspected["Id"], inspected["State"]["StartedAt"]
+
+    def read(self, docker, container):
+        identity = self._identity(docker, container)
+        if identity != self.identity:
+            self.identity, self.since, self.events, self.bindings = identity, None, {}, {}
+        started_at = datetime.now(UTC).isoformat()
+        began = time.monotonic()
+        text = docker.container_logs(container, tail="all", since=self.since, timestamps=True)
+        if self._identity(docker, container) != identity:
+            self.identity, self.since, self.events, self.bindings = None, None, {}, {}
+            raise RuntimeError("gNB restarted during session history collection")
+        for line in text.splitlines():
+            timestamp, separator, body = line.partition(" ")
+            if not separator or not timestamp.endswith("Z"):
+                continue
+            status = UE_STATUS.search(body)
+            creation = re.search(r"UE ID (\d+) RNTI ([0-9a-fA-F]+)\)", body)
+            if status or creation:
+                rnti = int(status.group(1) if status else creation.group(2), 16)
+                current = self.bindings.get(rnti)
+                if current is None or timestamp >= current[0]:
+                    self.bindings[rnti] = timestamp, body
+            if any(
+                pattern.search(body)
+                for pattern in (SESSION_QOS, SESSION_QOS_RELEASE, SESSION_UL_TEID, SESSION_DL_TEID)
+            ):
+                self.events[timestamp, body] = body
+        if len(self.events) > self.max_events:
+            raise RuntimeError(
+                "session history capacity exceeded; archive evidence before restarting"
+            )
+        previous_since, self.since = self.since, started_at
+        self.last_read = dict(
+            since=previous_since,
+            input_bytes=len(text.encode()),
+            retained_events=len(self.events),
+            seconds=time.monotonic() - began,
+        )
+        return "\n".join(
+            [body for _, body in self.bindings.values()]
+            + [body for _, body in sorted(self.events.items(), key=lambda item: item[0][0])]
+        )
+
+
+def _session_gnb_history(docker, container):
+    if not hasattr(docker, "_session_histories"):
+        docker._session_histories = {}
+    history = docker._session_histories.setdefault(container, SessionLogHistory())
+    return history.read(docker, container)
+
+
+def _current_ue_rnti(docker, container):
+    # Connected stats are periodic. Fall back to full native history only if absent.
+    recent = docker.container_logs(container, tail="200")
+    try:
+        return parse_ue_rnti(recent)
+    except ValueError:
+        return parse_ue_rnti(docker.container_logs(container, tail="all"))
+
+
 def collect_sessions(run_dir: Path, docker: DockerAdapter) -> list[dict[str, object]]:
     compiled = json.loads((run_dir / "compiled-scenario.json").read_text(encoding="utf-8"))
     scenario = compiled["scenario"]
     dynamic = (run_dir / "ue-policy/dynamic-pdu.json").exists()
     slices = {item["id"]: item for item in scenario["slices"]}
-    gnb_logs = {
-        gnb["id"]: docker.container_logs(gnb["container"], tail="all")
-        for gnb in scenario["ran"]["gnbs"]
-    }
-    ran_by_gnb = {gnb_id: parse_ran_ues(log_text) for gnb_id, log_text in gnb_logs.items()}
-    records: list[dict[str, object]] = []
-    for ue in scenario["ues"]:
-        rnti = parse_ue_rnti(docker.container_logs(ue["container"], tail="all"))
-        ran_record = ran_by_gnb[ue["serving_gnb"]][rnti]
-        cu_ue_id = int(ran_record["cu_ue_id"])
+
+    def observe_ue(ue):
+        rnti = _current_ue_rnti(docker, ue["container"])
         interfaces = json.loads(docker.exec(ue["container"], ["ip", "-j", "addr", "show"]))
         interface_by_name = {item["ifname"]: item for item in interfaces}
         selected = list(enumerate(ue["sessions"], start=1))
         if dynamic:
-            state = json.loads((run_dir / "ue-policy" / ue["id"] / f"{ue['supi'].removeprefix('imsi-')}.policy.state.json").read_text())
-            selected = [(pdu["id"], next(session for session in ue["sessions"]
-                        if session["dnn"] == pdu["dnn"] and slices[session["slice_id"]]["sst"] == pdu["sst"]
-                        and slices[session["slice_id"]]["sd"] == pdu["sd"]))
-                        for pdu in state["sessions"] if pdu["active"]]
+            state = json.loads(
+                (
+                    run_dir
+                    / "ue-policy"
+                    / ue["id"]
+                    / f"{ue['supi'].removeprefix('imsi-')}.policy.state.json"
+                ).read_text()
+            )
+            selected = [
+                (
+                    pdu["id"],
+                    next(
+                        session
+                        for session in ue["sessions"]
+                        if session["dnn"] == pdu["dnn"]
+                        and slices[session["slice_id"]]["sst"] == pdu["sst"]
+                        and slices[session["slice_id"]]["sd"] == pdu["sd"]
+                    ),
+                )
+                for pdu in state["sessions"]
+                if pdu["active"]
+            ]
+        return ue, rnti, interface_by_name, selected
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        inputs = list(pool.map(observe_ue, scenario["ues"]))
+    gnb_logs = {
+        gnb["id"]: _session_gnb_history(docker, gnb["container"]) for gnb in scenario["ran"]["gnbs"]
+    }
+    ran_by_gnb = {gnb_id: parse_ran_ues(log_text) for gnb_id, log_text in gnb_logs.items()}
+    records: list[dict[str, object]] = []
+    for ue, rnti, interface_by_name, selected in inputs:
+        cu_ue_id = int(ran_by_gnb[ue["serving_gnb"]][rnti]["cu_ue_id"])
         for index, session in selected:
             record = parse_session_fields(
                 gnb_logs[ue["serving_gnb"]],

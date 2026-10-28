@@ -22,6 +22,7 @@ from testbed.scenario.compiler import compile_scenario
 from testbed.scenario.loader import load_scenario
 from testbed.state.run_store import RunStore
 from testbed.state.slice_store import SliceStore
+from testbed.orchestration.host_profile import apply_profile, configured_profile, record_profile
 
 TEMPLATES = (
     "base.compose.yaml.j2",
@@ -79,6 +80,10 @@ def _render_compose(repository_root: Path, layout: RunLayout, scenario: Any, run
             raise ValueError(f"compose template did not render a mapping: {name}")
         compose = _merge(compose, fragment)
     _apply_cpu_affinity(compose, scenario)
+    profile = configured_profile()
+    if profile is not None:
+        apply_profile(compose, profile)
+        record_profile(layout.root, profile)
     (layout.generated / "compose.yaml").write_text(
         yaml.safe_dump(compose, sort_keys=False), encoding="utf-8"
     )
@@ -105,4 +110,17 @@ def render_run(repository_root: Path, scenario_path: Path, run_id: str) -> RunLa
         json.dumps(compiled.model_dump(mode="json"), indent=2, default=str) + "\n",
         encoding="utf-8",
     )
+    set_generated_permissions(layout)
     return layout
+
+
+def set_generated_permissions(layout: RunLayout) -> None:
+    """Keep the host run private while allowing non-owner container users to read mounts."""
+    layout.root.chmod(0o700)
+    layout.generated.chmod(0o755)
+    for path in layout.generated.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("generated configuration must not contain symlinks")
+        desired = 0o755 if path.is_dir() or path.suffix == ".sh" else 0o644
+        if path.stat().st_mode & 0o777 != desired:
+            path.chmod(desired)

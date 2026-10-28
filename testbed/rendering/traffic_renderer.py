@@ -31,6 +31,8 @@ def render_traffic_profiles(scenario: Scenario, destination: Path) -> None:
                     "protocol": flow.protocol,
                 },
                 "rate_mbps": flow.rate_mbps,
+                "timing": flow.timing.model_dump(mode="json"),
+                "udp_response_bytes": flow.udp_response_bytes,
                 "packet_size_bytes": flow.packet_size_bytes,
                 "sla": flow.sla.model_dump(mode="json"),
             }

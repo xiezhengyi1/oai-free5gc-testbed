@@ -11,6 +11,7 @@ from typing import Any
 
 from testbed.scenario.compiler import CompiledScenario
 from testbed.scenario.schema import Scenario
+from testbed.orchestration.host_profile import load_run_profile
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +99,10 @@ def write_manifest(
         "generated_compose_sha256": _file_sha256(layout.generated / "compose.yaml"),
         "state": "CREATED",
     }
+    profile = load_run_profile(layout.root)
+    if profile is not None:
+        manifest["host_profile"] = profile.model_dump(mode="json")
+        manifest["host_profile_sha256"] = _file_sha256(layout.root / "host-profile.json")
     body = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     (layout.root / "run-manifest.json").write_text(body, encoding="utf-8")
     (layout.generated / "run-manifest.json").write_text(body, encoding="utf-8")

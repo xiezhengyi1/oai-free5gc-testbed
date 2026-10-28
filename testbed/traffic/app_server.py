@@ -5,6 +5,7 @@ import os
 import signal
 import socket
 import socketserver
+import struct
 import subprocess
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -89,6 +90,13 @@ def main() -> None:
                 payload, address = udp_socket.recvfrom(65535)
             except TimeoutError:
                 continue
+            if payload[16:20] == b"LCT1":
+                if len(payload) < 22:
+                    continue
+                size = struct.unpack("!H", payload[20:22])[0]
+                if not 16 <= size <= 65507:
+                    continue
+                payload = payload[:16] + b"x" * (size - 16)
             udp_socket.sendto(payload, address)
 
     signal.signal(signal.SIGTERM, shutdown)

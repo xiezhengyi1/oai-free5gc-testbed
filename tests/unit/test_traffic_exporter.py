@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import socket
 import subprocess
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -71,6 +72,7 @@ def test_ping_worker_terminates_process_when_stop_is_set(
     assert process.terminated is True
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="SO_BINDTODEVICE requires Linux")
 def test_tcp_sink_accepts_concurrent_flow_workers() -> None:
     server = TcpSinkServer(("127.0.0.1", 0), TcpSinkHandler)
     server_thread = threading.Thread(target=server.serve_forever)
@@ -126,6 +128,9 @@ def test_bound_http_connection_reuses_declared_source_port(
         def settimeout(self, _timeout: float) -> None:
             return
 
+        def dup(self):
+            return FakeSocket()
+
         def setsockopt(self, level: int, option: int, value: object) -> None:
             self.options.append((level, option, value))
 
@@ -136,6 +141,7 @@ def test_bound_http_connection_reuses_declared_source_port(
             return
 
     created = FakeSocket()
+    monkeypatch.setattr(socket, "SO_BINDTODEVICE", 25, raising=False)
     monkeypatch.setattr(socket, "socket", lambda *_args: created)
     profile = TrafficProfile.model_validate(
         {

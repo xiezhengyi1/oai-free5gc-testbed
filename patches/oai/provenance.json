@@ -1,0 +1,14 @@
+{
+  "scope": "Recovered snapshots and patches; full OAI rebuild not performed",
+  "source_sha256": {
+    "case128-drb-release/rrc_gNB.original.c": "f57ca989031d64685bbffb80c0399ba2dea5c65ee36a7340290529c6ea5d12ab",
+    "case128-drb-release/original-harness.c": "670adf2001d8b3bb9c3e59575b43728a827525afeb75b867b0ce89b8ab66678f",
+    "case128-drb-release/radio_bearers.original.c": "467a18a65830ed161f86e5dee2072ea25c087b0808f83d0ab9193756e6bc9da9",
+    "case128-drb-release/asn1_msg.original.c": "78919ad05bb922a149440f73fa15555f62674a6cf78e9714e7ceda7b5a6e3a07",
+    "case101-ue15-mac-failure/mac-admission/nr_ue_procedures.c": "db259398b22a92c27d67a76160edf33f4c84321b614026745d9a5d5ad2129129",
+    "case101-ue15-mac-failure/mac-admission/nr_dlsch_decoding.c": "d2b5a2cc816fc84deb6ece9e99c5b2fedbb1f996ca517c8841b44eb7c85b0030",
+    "case101-ue15-mac-failure/mac-admission/phy_procedures_nr_ue.c": "c3c77311ad856b6b71458c5f38219b2fc0c60cafce5287e07519da6f07afccb6",
+    "coverage-redesign161-200/native-health-recovery/dci-admission/nr_ue_procedures.c": "1a17b756ab6f584e28b2a75d5df90418b1f05b616be07365f0a3fe08e245ee3a",
+    "coverage-redesign161-200/native-health-recovery/dci-admission/nr_ue_procedures.before.c": "db259398b22a92c27d67a76160edf33f4c84321b614026745d9a5d5ad2129129"
+  }
+}

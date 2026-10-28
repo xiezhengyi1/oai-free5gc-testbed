@@ -9,3 +9,7 @@ htmlcov/
 artifacts/runs/*
 !artifacts/runs/.gitkeep
 
+
+configs/hosts/*.env
+logs/
+scenarios/validation/ibn3090-*.yaml

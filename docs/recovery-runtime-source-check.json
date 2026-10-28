@@ -1,0 +1,30 @@
+{
+  "action-gateway": {
+    "files_checked": 93,
+    "missing": [],
+    "changed": [],
+    "passed": true,
+    "image": "mergedsystem/testbed-control:recovery-20261028"
+  },
+  "snapshot-builder": {
+    "files_checked": 93,
+    "missing": [],
+    "changed": [],
+    "passed": true,
+    "image": "mergedsystem/testbed-control:recovery-20261028"
+  },
+  "traffic-sidecar-ue-1": {
+    "files_checked": 93,
+    "missing": [],
+    "changed": [],
+    "passed": true,
+    "image": "mergedsystem/testbed-traffic:recovery-20261028"
+  },
+  "mec-app-edge": {
+    "files_checked": 93,
+    "missing": [],
+    "changed": [],
+    "passed": true,
+    "image": "mergedsystem/testbed-app:recovery-20261028"
+  }
+}

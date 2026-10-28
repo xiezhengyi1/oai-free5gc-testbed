@@ -1,0 +1,91 @@
+{
+  "run_id": "merged-recovery-protocols-20261028-1",
+  "checked_at": "2026-10-28T07:17:11.718749+00:00",
+  "scope": "real RFsim startup, telemetry, resource action and restoration; no SLA claim",
+  "wrong_principal_rejected_before_write": true,
+  "resource_apply_verified": true,
+  "resource_restored_exactly": true,
+  "stable_actual_traffic": [
+    {
+      "snapshot_id": "snapshot-f0593bbbbcacd7bfad1c",
+      "tcp_sink_received_bytes": 4750800,
+      "flows": {
+        "inference-edge-flow": {
+          "protocol": "udp",
+          "received": 68316.0,
+          "throughput_ul": 17.116801630813633,
+          "throughput_dl": 17.11505724829323
+        },
+        "inference-edge-tcp": {
+          "protocol": "tcp",
+          "received": 190.0,
+          "throughput_ul": 0.9924090812197729,
+          "throughput_dl": 0.0
+        },
+        "inference-edge-http": {
+          "protocol": "http",
+          "received": 712.0,
+          "throughput_ul": 0.0,
+          "throughput_dl": 0.17793858740632432
+        }
+      }
+    },
+    {
+      "snapshot_id": "snapshot-877d1635b20bfef356cb",
+      "tcp_sink_received_bytes": 5384400,
+      "flows": {
+        "inference-edge-flow": {
+          "protocol": "udp",
+          "received": 77394.0,
+          "throughput_ul": 17.24974190199563,
+          "throughput_dl": 17.25584963730034
+        },
+        "inference-edge-tcp": {
+          "protocol": "tcp",
+          "received": 215.0,
+          "throughput_ul": 0.9925409408054212,
+          "throughput_dl": 0.0
+        },
+        "inference-edge-http": {
+          "protocol": "http",
+          "received": 806.0,
+          "throughput_ul": 0.0,
+          "throughput_dl": 0.17830558932040633
+        }
+      }
+    },
+    {
+      "snapshot_id": "snapshot-d84abc04ebae01556591",
+      "tcp_sink_received_bytes": 6020400,
+      "flows": {
+        "inference-edge-flow": {
+          "protocol": "udp",
+          "received": 86524.0,
+          "throughput_ul": 17.439830647711975,
+          "throughput_dl": 17.44244819970709
+        },
+        "inference-edge-tcp": {
+          "protocol": "tcp",
+          "received": 240.0,
+          "throughput_ul": 0.9928286225175967,
+          "throughput_dl": 0.0
+        },
+        "inference-edge-http": {
+          "protocol": "http",
+          "received": 901.0,
+          "throughput_ul": 0.0,
+          "throughput_dl": 0.18046243117079314
+        }
+      }
+    }
+  ],
+  "sessions_and_policies_preserved": true,
+  "database_projection": {
+    "snapshot_id": "snapshot-d84abc04ebae01556591",
+    "projection_version": "network-state-1",
+    "applied_count": 16,
+    "history_rows": 88
+  },
+  "cpu_isolation_recorded": true,
+  "passed": true
+}

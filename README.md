@@ -1,3 +1,5 @@
+> 2026-10-28 恢复部署：当前入口为服务器 `/home/xzy/MergedSystem/TestBed`，使用私有主机环境和固定镜像。运行说明及验收见 [恢复记录](docs/recovery-20261028.md)。下文旧机器路径保留为历史说明。
+
 # OAI + free5GC 融合仿真环境
 
 本项目在一台 Linux 服务器上使用 Docker Compose 组织 OAI gNB、OAI nrUE、free5GC、边缘/云应用、链路仿真和监控组件。项目把严格校验的 YAML 场景编译为独立运行目录，再按固定顺序完成核心网、RAN、UE、业务流和监控系统的启动。

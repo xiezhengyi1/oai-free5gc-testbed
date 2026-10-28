@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from testbed.traffic.timing import TrafficTiming
+
 import re
 from pathlib import PurePosixPath
 from typing import Annotated, Literal
@@ -248,6 +250,8 @@ class FlowAllocationSpec(StrictModel):
 
 
 class FlowSpec(StrictModel):
+    timing: TrafficTiming = Field(default_factory=TrafficTiming)
+    udp_response_bytes: int | None = Field(default=None, ge=16, le=65507)
     id: Identifier
     ue_id: Identifier
     session_id: Identifier
@@ -262,6 +266,8 @@ class FlowSpec(StrictModel):
 
     @model_validator(mode="after")
     def allocation_covers_guaranteed_bandwidth(self) -> FlowSpec:
+        if self.udp_response_bytes is not None and self.protocol != "udp":
+            raise ValueError("udp_response_bytes requires UDP")
         if (
             self.allocation.allocated_bandwidth_ul_mbps
             < self.sla.guaranteed_bandwidth_ul_mbps

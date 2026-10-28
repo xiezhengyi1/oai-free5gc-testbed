@@ -11,6 +11,7 @@ from testbed.adapters.docker_adapter import DockerAdapter
 from testbed.adapters.oai.ue_adapter import UeAdapter, session_interface
 from testbed.adapters.prometheus_adapter import PrometheusAdapter
 from testbed.scenario.schema import GnbSpec, Scenario, UeSpec
+from testbed.telemetry.models import UnifiedSnapshot
 
 
 class Readiness:
@@ -99,9 +100,7 @@ class Readiness:
     def pfcp_associations(self, expected: int) -> dict[str, int]:
         accepted = self.pfcp_count()
         if accepted < expected:
-            raise RuntimeError(
-                f"expected {expected} PFCP associations, found {accepted}"
-            )
+            raise RuntimeError(f"expected {expected} PFCP associations, found {accepted}")
         return {"accepted_associations": accepted}
 
     def gnb_connected(self, gnb: GnbSpec) -> dict[str, str]:
@@ -182,9 +181,7 @@ class Readiness:
         )
         expected_targets = 4 + len(self.scenario.ues)
         if len(up) != expected_targets:
-            raise RuntimeError(
-                f"expected {expected_targets} Prometheus targets, found {len(up)}"
-            )
+            raise RuntimeError(f"expected {expected_targets} Prometheus targets, found {len(up)}")
         down = [item["metric"] for item in up if float(item["value"][1]) != 1.0]
         if down:
             raise RuntimeError(f"Prometheus targets are down: {down}")
@@ -207,9 +204,7 @@ class Readiness:
         up = prometheus.instant_query("up")
         expected_targets = 6 + len(self.scenario.ues)
         if len(up) != expected_targets:
-            raise RuntimeError(
-                f"expected {expected_targets} Prometheus targets, found {len(up)}"
-            )
+            raise RuntimeError(f"expected {expected_targets} Prometheus targets, found {len(up)}")
         down = [item["metric"] for item in up if float(item["value"][1]) != 1.0]
         if down:
             raise RuntimeError(f"Prometheus targets are down: {down}")
@@ -217,8 +212,27 @@ class Readiness:
         snapshot_health.raise_for_status()
         gateway_health = httpx.get("http://127.0.0.1:8080/health", timeout=5)
         gateway_health.raise_for_status()
+        response = httpx.post(
+            "http://127.0.0.1:8081/v1/snapshots",
+            params={"trigger_event": "TelemetryReadiness"},
+            timeout=self.scenario.runtime.action_timeout_seconds,
+        )
+        response.raise_for_status()
+        snapshot = UnifiedSnapshot.model_validate(response.json())
+        if {flow["flow_id"] for flow in snapshot.flows} != {
+            flow.id for flow in self.scenario.flows
+        }:
+            raise RuntimeError("telemetry snapshot does not cover the declared flows")
+        if any(
+            flow["data_quality"]["correlation_status"] != "complete"
+            or flow["data_quality"]["stale"]
+            for flow in snapshot.flows
+        ):
+            raise RuntimeError("telemetry snapshot has incomplete or stale flow evidence")
         return {
             "targets": len(up),
             "snapshot_builder": snapshot_health.json(),
             "action_gateway": gateway_health.json(),
+            "snapshot_id": snapshot.snapshot_id,
+            "run_id": snapshot.run_id,
         }

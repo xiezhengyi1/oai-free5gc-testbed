@@ -44,6 +44,9 @@ def parse_ran_ues(log_text: str) -> dict[int, dict[str, float | int | str]]:
     for raw_rnti, raw_cu_ue_id in UE_STATUS.findall(log_text):
         rnti = int(raw_rnti, 16)
         records.setdefault(rnti, {}).update(rnti=rnti, cu_ue_id=int(raw_cu_ue_id))
+    for raw_cu_ue_id, raw_rnti in re.findall(r"UE ID (\d+) RNTI ([0-9a-fA-F]+)\)", log_text):
+        rnti = int(raw_rnti, 16)
+        records.setdefault(rnti, {}).update(rnti=rnti, cu_ue_id=int(raw_cu_ue_id))
     for raw_rnti, raw_bler, raw_mcs in UE_DLSCH.findall(log_text):
         rnti = int(raw_rnti, 16)
         records.setdefault(rnti, {}).update(bler_dl=float(raw_bler), mcs_dl=int(raw_mcs))
@@ -70,6 +73,9 @@ def ran_records_ready(
 ) -> bool:
     return all(
         rnti_by_ue[str(ue["id"])] in records_by_gnb[str(ue["serving_gnb"])]
+        and {"cu_ue_id", "prb_ul", "mcs_ul", "mcs_dl", "bler_ul", "bler_dl"}.issubset(
+            records_by_gnb[str(ue["serving_gnb"])][rnti_by_ue[str(ue["id"])]]
+        )
         for ue in ues
     )
 
@@ -104,7 +110,7 @@ def main() -> None:
             stop.wait(1)
             continue
         records_by_gnb = {
-            gnb_id: parse_ran_ues(docker.container_logs(gnb["container"]))
+            gnb_id: parse_ran_ues(docker.exec(gnb["container"], ["cat", "nrMAC_stats.log"]))
             for gnb_id, gnb in gnbs.items()
         }
         if not ran_records_ready(scenario["ues"], rnti_by_ue, records_by_gnb):

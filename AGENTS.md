@@ -1,3 +1,15 @@
+# 当前恢复部署约定（2026-10-28）
+
+源码与当前仿真运行目录改为 `xzy@10.112.50.129:/home/xzy/MergedSystem/TestBed`。参考依赖在 `/home/xzy/MergedSystem/.dependencies`，Python 在 `/home/xzy/MergedSystem/.runtime/python`。下文的 `/home/xzy/testbed` 是已删除旧目录的历史记录，不能再作为当前路径。
+
+使用 `bash with-testbed.sh <命令>` 加载私有 `configs/hosts/ibn3090.env`（指向服务器 `.env`）；不得打印或提交私有配置。真实仿真单并发，只在 ibn3090 执行。启动前检查 CPU/GPU 空闲、镜像哈希和主机配置；使用匹配实际场景的 run ID。不要自动恢复已暂停的数据采集或训练。
+
+现有采集资料和 PostgreSQL 数据保持原位；本轮恢复测试使用独立 `mergedsystem_testbed` 数据库。源码变化仅在运行任务退出、恢复及停止后部署，记录 runtime revision；保留失败、原始快照和已执行事实。禁止为了通过测试改目标、放宽断言、超时或验收。
+
+OAI 使用固定的已验收镜像及恢复补丁；没有完整重建过原 OAI 构建树，不得声称完成重新编译或证明历史无线故障唯一根因。
+
+---
+
 # 仿真主机约定
 
 自 2026-10-08 起，所有真实仿真、RFsim、free5GC、业务流和集成验收只在 `xzy@10.112.50.129` 的 `/home/xzy/testbed` 执行。Windows 工作区用于编辑和证据保存；运行期不依赖 Windows 中转。
